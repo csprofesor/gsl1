@@ -381,6 +381,30 @@ export default function App() {
     ]);
   };
 
+  // Uygulama İçi Otomatik Güncelleme Denetleyicisi
+  const guncellemeDenetle = (manuel: boolean = false) => {
+    // En son APK indirme linki
+    const enGuncelApkUrl = 'https://expo.dev/artifacts/eas/hvIt-zhRyZi2TurJ66-9foHXtRTyDUWZK9Gi9tMmN6w.apk';
+
+    if (manuel) {
+      Alert.alert(
+        '🔄 Güncelleme Denetleyici',
+        'Uygulamanızın en son sürümü hazırlandı. Şimdi tek tıkla güncellemek istiyor musunuz?',
+        [
+          { text: 'Daha Sonra', style: 'cancel' },
+          {
+            text: 'Şimdi Güncelle',
+            onPress: () => {
+              Linking.openURL(enGuncelApkUrl).catch(() => {
+                Alert.alert('Hata', 'Güncelleme paketi açılamadı.');
+              });
+            },
+          },
+        ]
+      );
+    }
+  };
+
   return (
     <ImageBackground source={BG_WALLPAPER} style={styles.arkaplan} resizeMode="cover">
       <StatusBar hidden={true} />
@@ -793,6 +817,23 @@ export default function App() {
               <Text style={styles.modalAltBaslik}>Sistem ve başlatıcı tercihlerinizi buradan yönetin:</Text>
 
               <View style={{ marginTop: 8 }}>
+                <FocusableItem
+                  style={styles.ayarKartGenis}
+                  focusedStyle={styles.sonIzlenenOdak}
+                  onPress={() => guncellemeDenetle(true)}
+                >
+                  {() => (
+                    <View style={styles.ayarKartIcerik}>
+                      <Text style={styles.ayarKartIkon}>🔄</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.ayarKartBaslik}>Güncellemeleri Denetle</Text>
+                        <Text style={styles.ayarKartAlt}>Yeni bir sürüm çıktığında tek tıkla otomatik güncelle</Text>
+                      </View>
+                      <Text style={styles.ayarOk}>›</Text>
+                    </View>
+                  )}
+                </FocusableItem>
+
                 <FocusableItem
                   style={styles.ayarKartGenis}
                   focusedStyle={styles.sonIzlenenOdak}
