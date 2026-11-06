@@ -1,4 +1,9 @@
 {
   "name": "GSTVLauncher",
-  "displayName": "GSTVLauncher"
+  "displayName": "GSTVLauncher",
+  "extra": {
+    "eas": {
+      "projectId": "ed15a92d-f04e-4f48-a3df-b8f2ed21c884"
+    }
+  }
 }
