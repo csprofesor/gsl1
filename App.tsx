@@ -7,7 +7,6 @@ import {
   ScrollView,
   TextInput,
   ImageBackground,
-  Image,
   SafeAreaView,
   Linking,
   Alert,
@@ -26,6 +25,7 @@ const CARD_OPP = require('./src/assets/card_oppenheimer.jpg');
 
 interface FocusableItemProps {
   onPress: () => void;
+  onLongPress?: () => void;
   style?: any;
   focusedStyle?: any;
   hasPreferredFocus?: boolean;
@@ -34,6 +34,7 @@ interface FocusableItemProps {
 
 const FocusableItem: React.FC<FocusableItemProps> = ({
   onPress,
+  onLongPress,
   style,
   focusedStyle,
   hasPreferredFocus = false,
@@ -48,6 +49,7 @@ const FocusableItem: React.FC<FocusableItemProps> = ({
       onFocus={() => setIsFocused(true)}
       onBlur={() => setIsFocused(false)}
       onPress={onPress}
+      onLongPress={onLongPress}
       style={[
         style,
         isFocused && [styles.defaultFocused, focusedStyle],
@@ -58,75 +60,127 @@ const FocusableItem: React.FC<FocusableItemProps> = ({
   );
 };
 
-// Başlangıç Favori Uygulamaları (Görseldeki Gibi)
-const INITIAL_FAVORILER = [
-  { id: '1', name: 'Nuvio', color: '#3A1448', text: '▶', pkg: 'com.nuvio', url: 'nuvio://' },
-  { id: '2', name: 'Cloudstream', color: '#1B355A', text: '☁️', pkg: 'com.lagradost.cloudstream3', url: 'cloudstream://' },
-  { id: '3', name: 'Kodi', color: '#15324D', text: '🔹', pkg: 'org.xbmc.kodi', url: 'org.xbmc.kodi://' },
-  { id: '4', name: 'YouTube', color: '#5A1616', text: '▶ YouTube', pkg: 'com.google.android.youtube.tv', url: 'vnd.youtube://' },
-  { id: '5', name: 'NETFLIX', color: '#161616', text: 'NETFLIX', textColor: '#E50914', pkg: 'com.netflix.ninja', url: 'nflx://' },
-  { id: '6', name: 'Disney+', color: '#0A2544', text: 'Disney+', pkg: 'com.disney.disneyplus', url: 'disneyplus://' },
-  { id: '7', name: 'prime video', color: '#002B49', text: 'prime video', pkg: 'com.amazon.amazonvideo.livingroom', url: 'primevideo://' },
+// Başlangıç Favori Uygulamaları
+interface UygulamaItem {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  pkg?: string;
+  url?: string;
+}
+
+const DEFAULT_FAVORILER: UygulamaItem[] = [
+  { id: '1', name: 'Nuvio', color: '#3A1448', icon: '▶', pkg: 'com.nuvio', url: 'nuvio://' },
+  { id: '2', name: 'Cloudstream', color: '#1B355A', icon: '☁️', pkg: 'com.lagradost.cloudstream3', url: 'cloudstream://' },
+  { id: '3', name: 'Kodi', color: '#15324D', icon: '🔹', pkg: 'org.xbmc.kodi', url: 'org.xbmc.kodi://' },
+  { id: '4', name: 'YouTube', color: '#5A1616', icon: '▶', pkg: 'com.google.android.youtube.tv', url: 'vnd.youtube://' },
+  { id: '5', name: 'Netflix', color: '#161616', icon: 'N', pkg: 'com.netflix.ninja', url: 'nflx://' },
+  { id: '6', name: 'Disney+', color: '#0A2544', icon: 'D+', pkg: 'com.disney.disneyplus', url: 'disneyplus://' },
+  { id: '7', name: 'Prime Video', color: '#002B49', icon: 'P', pkg: 'com.amazon.amazonvideo.livingroom', url: 'primevideo://' },
 ];
 
-// Eklenebilir Diğer Popüler TV Uygulamaları Havuzu
-const TUM_TV_UYGULAMALARI = [
-  { id: '8', name: 'Stremio', color: '#3F2B68', text: '🍿 Stremio', pkg: 'com.stremio.one', url: 'stremio://' },
-  { id: '9', name: 'TiviMate', color: '#1A3B44', text: '📡 TiviMate', pkg: 'ar.tvplayer.tv', url: 'tivimate://' },
-  { id: '10', name: 'Spotify', color: '#123D24', text: '🎵 Spotify', pkg: 'com.spotify.tv.android', url: 'spotify://' },
-  { id: '11', name: 'SmartTube', color: '#4A1818', text: '📺 SmartTube', pkg: 'com.teamsmart.videomanager.tv', url: 'smarttube://' },
-  { id: '12', name: 'VLC Player', color: '#4A2800', text: '🟧 VLC', pkg: 'org.videolan.vlc', url: 'vlc://' },
-  { id: '13', name: 'Exxen', color: '#423800', text: '🟡 Exxen', pkg: 'com.exxen.android', url: 'exxen://' },
-  { id: '14', name: 'BluTV', color: '#002B44', text: '🔵 BluTV', pkg: 'com.blutv', url: 'blutv://' },
-  { id: '15', name: 'Gain', color: '#2B2B2B', text: '⚪ Gain', pkg: 'com.gain.tv', url: 'gain://' },
-  { id: '16', name: 'TOD TV', color: '#3B1A40', text: '🟣 TOD TV', pkg: 'com.digiturk.tod', url: 'tod://' },
-  { id: '17', name: 'S Sport Plus', color: '#1A1A3A', text: '⚽ S Sport+', pkg: 'com.ssportplus.tv', url: 'ssport://' },
-];
+// Gerçek İzleme Kayıtları
+interface IzlenenItem {
+  id: string;
+  title: string;
+  image: any;
+  progress: number;
+}
 
-// Son İzlediklerim (Görseldekilerin Birebir Aynısı)
-const INITIAL_SON_IZLENENLER = [
+const DEFAULT_IZLENENLER: IzlenenItem[] = [
   { id: '101', title: 'Dune: Part Two', image: CARD_DUNE, progress: 65 },
   { id: '102', title: 'The Last of Us', image: CARD_TLOU, progress: 42 },
   { id: '103', title: 'House of the Dragon', image: CARD_HOTD, progress: 87 },
   { id: '104', title: 'Oppenheimer', image: CARD_OPP, progress: 30 },
 ];
 
-// Sol Menü Sekmeleri
-const SOL_MENU = [
-  { id: 'Ana Ekran', icon: '🏠' },
-  { id: 'Uygulamalar', icon: '⊞' },
-  { id: 'Filmler', icon: '🎬' },
-  { id: 'Diziler', icon: '📺' },
-  { id: 'Canlı TV', icon: '📡' },
-  { id: 'Favoriler', icon: '🤍' },
-  { id: 'Ayarlar', icon: '⚙️' },
+// Uygulama İçerik Şeritleri (Kanal Satırları - Prime Video / Netflix reklam şeridi gibi)
+interface IcerikKarti {
+  id: string;
+  title: string;
+  image: any;
+  badge?: string;
+}
+
+interface IcerikSeridi {
+  id: string;
+  appName: string;
+  appColor: string;
+  pkg: string;
+  kartlar: IcerikKarti[];
+}
+
+const DEFAULT_SERITLER: IcerikSeridi[] = [
+  {
+    id: 's_prime',
+    appName: 'Prime Video',
+    appColor: '#00A8E1',
+    pkg: 'com.amazon.amazonvideo.livingroom',
+    kartlar: [
+      { id: 'pv1', title: 'Yüzüklerin Efendisi: Güç Yüzükleri', image: CARD_HOTD, badge: 'Öne Çıkan' },
+      { id: 'pv2', title: 'The Boys - 4. Sezon', image: CARD_OPP, badge: 'Yeni Bölüm' },
+      { id: 'pv3', title: 'Reacher', image: CARD_DUNE, badge: 'Top 10' },
+      { id: 'pv4', title: 'Fallout', image: CARD_TLOU, badge: 'Popüler' },
+    ],
+  },
+  {
+    id: 's_netflix',
+    appName: 'Netflix',
+    appColor: '#E50914',
+    pkg: 'com.netflix.ninja',
+    kartlar: [
+      { id: 'nf1', title: 'Stranger Things 5', image: CARD_DUNE, badge: 'Yakında' },
+      { id: 'nf2', title: 'Squid Game 2', image: CARD_OPP, badge: 'Trend #1' },
+      { id: 'nf3', title: 'Black Mirror', image: CARD_TLOU, badge: 'Yeni Sezon' },
+      { id: 'nf4', title: 'Wednesday', image: CARD_HOTD, badge: 'Popüler' },
+    ],
+  },
 ];
 
-// Örnek Canlı TV Kanalları
-const CANLI_KANALLAR = [
-  { id: 'c1', name: 'TRT 1 HD', cat: 'Ulusal', color: '#901E1E' },
-  { id: 'c2', name: 'ATV HD', cat: 'Ulusal', color: '#B04A00' },
-  { id: 'c3', name: 'Show TV', cat: 'Ulusal', color: '#7E1C7E' },
-  { id: 'c4', name: 'Kanal D', cat: 'Ulusal', color: '#1B4D7E' },
-  { id: 'c5', name: 'TV8 HD', cat: 'Ulusal', color: '#8F1E1E' },
-  { id: 'c6', name: 'NOW TV', cat: 'Ulusal', color: '#B51B35' },
-  { id: 'c7', name: 'TRT Spor', cat: 'Spor', color: '#0E5C2F' },
-  { id: 'c8', name: 'A Spor', cat: 'Spor', color: '#1E688F' },
-  { id: 'c9', name: 'NTV', cat: 'Haber', color: '#821414' },
-  { id: 'c10', name: 'CNN Türk', cat: 'Haber', color: '#8F1212' },
+// Popüler TV Uygulama Şablonları (Tek Tıkla Ekleme Kolaylığı İçin)
+const HAZIR_UYGULAMALAR = [
+  { name: 'Stremio', icon: '🍿', color: '#3F2B68', pkg: 'com.stremio.one' },
+  { name: 'TiviMate', icon: '📡', color: '#1A3B44', pkg: 'ar.tvplayer.tv' },
+  { name: 'Spotify', icon: '🎵', color: '#123D24', pkg: 'com.spotify.tv.android' },
+  { name: 'SmartTube', icon: '📺', color: '#4A1818', pkg: 'com.teamsmart.videomanager.tv' },
+  { name: 'VLC', icon: '🟧', color: '#4A2800', pkg: 'org.videolan.vlc' },
+  { name: 'Exxen', icon: '🟡', color: '#423800', pkg: 'com.exxen.android' },
+  { name: 'BluTV', icon: '🔵', color: '#002B44', pkg: 'com.blutv' },
+  { name: 'Gain', icon: '⚪', color: '#2B2B2B', pkg: 'com.gain.tv' },
+  { name: 'TOD TV', icon: '🟣', color: '#3B1A40', pkg: 'com.digiturk.tod' },
+  { name: 'S Sport+', icon: '⚽', color: '#1A1A3A', pkg: 'com.ssportplus.tv' },
 ];
 
 export default function App() {
-  const [aktifMenu, setAktifMenu] = useState('Ana Ekran');
-  const [favoriler, setFavoriler] = useState(INITIAL_FAVORILER);
-  const [sonIzlenenler, setSonIzlenenler] = useState(INITIAL_SON_IZLENENLER);
+  const [favoriler, setFavoriler] = useState<UygulamaItem[]>(DEFAULT_FAVORILER);
+  const [sonIzlenenler, setSonIzlenenler] = useState<IzlenenItem[]>(DEFAULT_IZLENENLER);
+  const [seritler, setSeritler] = useState<IcerikSeridi[]>(DEFAULT_SERITLER);
   const [aramaMetni, setAramaMetni] = useState('');
-  const [modalAcik, setModalAcik] = useState(false);
 
   // Canlı Saat & Tarih
   const [saat, setSaat] = useState('20:15');
   const [tarih, setTarih] = useState('6 Kasım Per');
 
+  // Canlı Hava Durumu (IP Konumuyla Otomatik Çekilir)
+  const [havaDurumu, setHavaDurumu] = useState({ sehir: 'Konum alınıyor...', derece: '12°C', ikon: '⛅' });
+
+  // Modallar
+  const [ayarlarAcik, setAyarlarAcik] = useState(false);
+  const [uygulamaEkleAcik, setUygulamaEkleAcik] = useState(false);
+  const [izlemeEkleAcik, setIzlemeEkleAcik] = useState(false);
+  const [seritEkleAcik, setSeritEkleAcik] = useState(false);
+
+  // Form State'leri
+  const [yeniAppName, setYeniAppName] = useState('');
+  const [yeniAppPkg, setYeniAppPkg] = useState('');
+  const [yeniAppIcon, setYeniAppIcon] = useState('▶');
+  const [yeniAppColor, setYeniAppColor] = useState('#2563EB');
+
+  const [yeniFilmBaslik, setYeniFilmBaslik] = useState('');
+  const [yeniFilmYuzde, setYeniFilmYuzde] = useState('50');
+
+  // Canlı Saat & Tarih Güncelleme
   useEffect(() => {
     const guncelle = () => {
       const simdi = new Date();
@@ -138,7 +192,43 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Uygulamayı Başlat
+  // Kullanıcının Kendi Şehrinden Canlı Hava Durumunu Çekme (IP Tabanlı - Ücretsiz & API Key İstemez)
+  useEffect(() => {
+    const havaDurumuGetir = async () => {
+      try {
+        const ipRes = await fetch('http://ip-api.com/json');
+        const ipData = await ipRes.json();
+        if (ipData && ipData.status === 'success') {
+          const { city, lat, lon } = ipData;
+          const meteoRes = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
+          );
+          const meteoData = await meteoRes.json();
+          if (meteoData && meteoData.current_weather) {
+            const temp = Math.round(meteoData.current_weather.temperature);
+            const code = meteoData.current_weather.weathercode;
+            let icon = '⛅';
+            if (code === 0) icon = '☀️';
+            else if (code >= 51 && code <= 82) icon = '🌧️';
+            else if (code >= 71 && code <= 86) icon = '❄️';
+            else if (code >= 95) icon = '⛈️';
+
+            setHavaDurumu({
+              sehir: city,
+              derece: `${temp}°C`,
+              ikon: icon,
+            });
+          }
+        }
+      } catch {
+        // Hata durumunda varsayılan göster
+        setHavaDurumu({ sehir: 'Türkiye', derece: '14°C', ikon: '⛅' });
+      }
+    };
+    havaDurumuGetir();
+  }, []);
+
+  // Uygulama Başlatma
   const uygulamaBaslat = async (app: { name: string; pkg?: string; url?: string }) => {
     try {
       const url =
@@ -164,16 +254,89 @@ export default function App() {
     }
   };
 
-  // Favoriye Ekleme / Çıkarma
-  const favoriToggle = (item: (typeof TUM_TV_UYGULAMALARI)[0]) => {
-    const zatenVar = favoriler.some((f) => f.id === item.id);
-    if (zatenVar) {
-      setFavoriler(favoriler.filter((f) => f.id !== item.id));
-      Alert.alert('Favoriler', `"${item.name}" favorilerden çıkarıldı.`);
-    } else {
-      setFavoriler([...favoriler, item]);
-      Alert.alert('Favoriler', `"${item.name}" ana ekrana eklendi! 🎉`);
+  // Yeni Özel Uygulama Ekleme
+  const favoriEkle = () => {
+    if (!yeniAppName.trim()) {
+      Alert.alert('Eksik Bilgi', 'Lütfen uygulama adını yazın.');
+      return;
     }
+    const yeniItem: UygulamaItem = {
+      id: Date.now().toString(),
+      name: yeniAppName.trim(),
+      color: yeniAppColor,
+      icon: yeniAppIcon,
+      pkg: yeniAppPkg.trim() || undefined,
+    };
+    setFavoriler([...favoriler, yeniItem]);
+    setYeniAppName('');
+    setYeniAppPkg('');
+    setUygulamaEkleAcik(false);
+    Alert.alert('Başarılı', `"${yeniItem.name}" favorilerinize eklendi! 🎉`);
+  };
+
+  // Favori Uygulama Silme
+  const favoriSil = (id: string, name: string) => {
+    Alert.alert('Uygulama Kaldır', `"${name}" uygulamasını favorilerden kaldırmak istiyor musunuz?`, [
+      { text: 'Vazgeç', style: 'cancel' },
+      {
+        text: 'Kaldır',
+        style: 'destructive',
+        onPress: () => {
+          setFavoriler(favoriler.filter((f) => f.id !== id));
+        },
+      },
+    ]);
+  };
+
+  // Yeni İzleme Kaydı Ekleme
+  const izlemeKaydiEkle = () => {
+    if (!yeniFilmBaslik.trim()) {
+      Alert.alert('Eksik Bilgi', 'Lütfen film veya dizi adını yazın.');
+      return;
+    }
+    const yuzde = Math.min(100, Math.max(1, parseInt(yeniFilmYuzde, 10) || 50));
+    const yeniIzlenen: IzlenenItem = {
+      id: Date.now().toString(),
+      title: yeniFilmBaslik.trim(),
+      image: CARD_DUNE,
+      progress: yuzde,
+    };
+    setSonIzlenenler([yeniIzlenen, ...sonIzlenenler]);
+    setYeniFilmBaslik('');
+    setIzlemeEkleAcik(false);
+  };
+
+  // İzleme Kaydı Silme
+  const izlemeSil = (id: string, title: string) => {
+    Alert.alert('Geçmişten Kaldır', `"${title}" izleme geçmişinizden silinsin mi?`, [
+      { text: 'Vazgeç', style: 'cancel' },
+      {
+        text: 'Sil',
+        style: 'destructive',
+        onPress: () => {
+          setSonIzlenenler(sonIzlenenler.filter((i) => i.id !== id));
+        },
+      },
+    ]);
+  };
+
+  // Yeni İçerik Şeridi (Kanal) Ekleme
+  const seritEkle = (appName: string, pkg: string, appColor: string) => {
+    const yeniSerit: IcerikSeridi = {
+      id: Date.now().toString(),
+      appName: `${appName} İçerikleri`,
+      appColor: appColor,
+      pkg: pkg,
+      kartlar: [
+        { id: 'c1', title: `${appName} Popüler 1`, image: CARD_DUNE, badge: 'Trend' },
+        { id: 'c2', title: `${appName} Yeni Dizi`, image: CARD_TLOU, badge: 'Yeni' },
+        { id: 'c3', title: `${appName} Aksiyon`, image: CARD_HOTD, badge: '4K Ultra' },
+        { id: 'c4', title: `${appName} Sinema`, image: CARD_OPP, badge: 'Öne Çıkan' },
+      ],
+    };
+    setSeritler([...seritler, yeniSerit]);
+    setSeritEkleAcik(false);
+    Alert.alert('Şerit Eklendi', `"${appName}" içerik satırı ana sayfanıza eklendi! 🎉`);
   };
 
   // Varsayılan Başlatıcı Ayarı
@@ -221,18 +384,17 @@ export default function App() {
   return (
     <ImageBackground source={BG_WALLPAPER} style={styles.arkaplan} resizeMode="cover">
       <StatusBar hidden={true} />
-      {/* Transparan Cam Karartma Katmanı */}
+      {/* Transparan Cam Katmanı */}
       <SafeAreaView style={styles.camKatman}>
         {/* ================= ÜST BAR ================= */}
         <View style={styles.ustBar}>
-          {/* Sol: Mi Box Logosu */}
+          {/* Sol: Mi Box Logosu & Arama */}
           <View style={styles.ustSol}>
             <View style={styles.miLogoKare}>
               <Text style={styles.miLogoYazi}>mi</Text>
             </View>
             <Text style={styles.miBoxBaslik}>Mi Box</Text>
 
-            {/* Arama Çubuğu */}
             <View style={styles.aramaKapsul}>
               <Text style={styles.aramaIkon}>🔍</Text>
               <TextInput
@@ -245,7 +407,7 @@ export default function App() {
             </View>
           </View>
 
-          {/* Sağ: İkonlar, Saat & Hava Durumu */}
+          {/* Sağ: İkonlar, Canlı Saat, Otomatik Hava Durumu ve Ayarlar İkonu */}
           <View style={styles.ustSag}>
             <Text style={styles.durumIkon}>📶</Text>
             <Text style={styles.durumIkon}>ᛒ</Text>
@@ -255,441 +417,433 @@ export default function App() {
               <Text style={styles.tarihYazi}>{tarih}</Text>
             </View>
 
+            {/* Otomatik Çekilen Şehir & Hava Durumu */}
             <View style={styles.havaKutu}>
-              <Text style={styles.havaIkon}>⛅</Text>
+              <Text style={styles.havaIkon}>{havaDurumu.ikon}</Text>
               <View>
-                <Text style={styles.havaDerece}>12°C</Text>
-                <Text style={styles.havaSehir}>Kayseri</Text>
+                <Text style={styles.havaDerece}>{havaDurumu.derece}</Text>
+                <Text style={styles.havaSehir}>{havaDurumu.sehir}</Text>
               </View>
             </View>
+
+            {/* Sağ Üst Ayarlar Butonu (Sol Menü Yerine) */}
+            <FocusableItem
+              style={styles.ustAyarButon}
+              focusedStyle={styles.ustAyarOdak}
+              onPress={() => setAyarlarAcik(true)}
+            >
+              {() => <Text style={styles.ustAyarIkon}>⚙️</Text>}
+            </FocusableItem>
           </View>
         </View>
 
-        {/* ================= ANA GÖVDE ================= */}
-        <View style={styles.anaGovde}>
-          {/* SOL MENÜ (TRANSPARAN CAM KAPSÜL) */}
-          <View style={styles.solMenuKapsul}>
-            {SOL_MENU.map((item, index) => {
-              const aktif = aktifMenu === item.id;
-              return (
-                <FocusableItem
-                  key={item.id}
-                  hasPreferredFocus={index === 0}
-                  onPress={() => setAktifMenu(item.id)}
-                  style={[styles.menuSatir, aktif && styles.menuSatirAktif]}
-                  focusedStyle={styles.menuSatirOdak}
-                >
-                  {(isFocused) => (
-                    <>
-                      <Text style={[styles.menuIkon, (aktif || isFocused) && styles.menuMetinParlak]}>
-                        {item.icon}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.menuMetin,
-                          aktif && styles.menuMetinAktif,
-                          isFocused && styles.menuMetinParlak,
-                        ]}
-                      >
-                        {item.id}
-                      </Text>
-                    </>
-                  )}
-                </FocusableItem>
-              );
-            })}
-          </View>
-
-          {/* SAĞ İÇERİK ALANI (MENÜYE GÖRE DİNAMİK DEĞİŞİR) */}
-          <ScrollView style={styles.sagIcerik} showsVerticalScrollIndicator={false}>
-            {/* ====== 1. ANA EKRAN ====== */}
-            {aktifMenu === 'Ana Ekran' && (
-              <>
-                {/* DUNE PART TWO HERO BANNER */}
-                <View style={styles.heroKapsayici}>
-                  <ImageBackground source={HERO_DUNE} style={styles.heroResim} imageStyle={styles.heroResimStil}>
-                    <View style={styles.heroKarartma}>
-                      <View style={styles.heroSolOk}>
-                        <Text style={styles.okYazi}>‹</Text>
-                      </View>
-
-                      <View style={styles.heroIcerik}>
-                        <FocusableItem
-                          style={styles.simdiIzleButon}
-                          focusedStyle={styles.simdiIzleOdak}
-                          onPress={() => Alert.alert('Oynatılıyor', 'Dune: Part Two başlatılıyor...')}
-                        >
-                          {() => (
-                            <View style={styles.simdiIzleIcerik}>
-                              <Text style={styles.oynatUcgen}>▶</Text>
-                              <Text style={styles.simdiIzleYazi}>Şimdi İzle</Text>
-                            </View>
-                          )}
-                        </FocusableItem>
-
-                        {/* Pagination Dots */}
-                        <View style={styles.noktalarSatir}>
-                          <View style={[styles.nokta, styles.noktaAktif]} />
-                          <View style={styles.nokta} />
-                          <View style={styles.nokta} />
-                          <View style={styles.nokta} />
-                        </View>
-                      </View>
-
-                      <View style={styles.heroSagOk}>
-                        <Text style={styles.okYazi}>›</Text>
-                      </View>
-                    </View>
-                  </ImageBackground>
+        {/* ================= ANA İÇERİK (GENİŞ TAM EKRAN AKIŞ) ================= */}
+        <ScrollView style={styles.anaKaydirma} showsVerticalScrollIndicator={false}>
+          {/* 1. DUNE PART TWO HERO BANNER */}
+          <View style={styles.heroKapsayici}>
+            <ImageBackground source={HERO_DUNE} style={styles.heroResim} imageStyle={styles.heroResimStil}>
+              <View style={styles.heroKarartma}>
+                <View style={styles.heroSolOk}>
+                  <Text style={styles.okYazi}>‹</Text>
                 </View>
 
-                {/* FAVORİ UYGULAMALARIM BÖLÜMÜ */}
-                <View style={styles.bolumBaslikSatir}>
-                  <Text style={styles.bolumBaslik}>Favori Uygulamalarım</Text>
-                  <FocusableItem onPress={() => setAktifMenu('Uygulamalar')} style={styles.tumunuGorButon}>
-                    {() => <Text style={styles.tumunuGorYazi}>Tümünü Gör ›</Text>}
-                  </FocusableItem>
-                </View>
-
-                {/* Yatay Favori Uygulama Kartları */}
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
-                  {favoriler.map((app) => (
-                    <FocusableItem
-                      key={app.id}
-                      style={[styles.appKarti, { backgroundColor: app.color }]}
-                      focusedStyle={styles.appKartiOdak}
-                      onPress={() => uygulamaBaslat(app)}
-                    >
-                      {() => (
-                        <View style={styles.appKartIcerik}>
-                          <Text style={[styles.appIkonMetin, app.textColor ? { color: app.textColor } : {}]}>
-                            {app.text}
-                          </Text>
-                          <Text style={styles.appIsim} numberOfLines={1}>
-                            {app.name}
-                          </Text>
-                        </View>
-                      )}
-                    </FocusableItem>
-                  ))}
-
-                  {/* '+' FAVORİYE UYGULAMA EKLE KARTI */}
+                <View style={styles.heroIcerik}>
                   <FocusableItem
-                    style={styles.artiKarti}
-                    focusedStyle={styles.artiKartiOdak}
-                    onPress={() => setModalAcik(true)}
+                    style={styles.simdiIzleButon}
+                    focusedStyle={styles.simdiIzleOdak}
+                    onPress={() => Alert.alert('Oynatılıyor', 'Dune: Part Two başlatılıyor...')}
                   >
                     {() => (
-                      <View style={styles.artiIcerik}>
-                        <Text style={styles.artiIkon}>+</Text>
+                      <View style={styles.simdiIzleIcerik}>
+                        <Text style={styles.oynatUcgen}>▶</Text>
+                        <Text style={styles.simdiIzleYazi}>Şimdi İzle</Text>
                       </View>
                     )}
                   </FocusableItem>
-                </ScrollView>
 
-                {/* SON İZLEDİKLERİM BÖLÜMÜ */}
-                <View style={styles.bolumBaslikSatir}>
-                  <View style={styles.bolumBaslikIkonlu}>
-                    <Text style={styles.saatGecmisIkon}>🕒</Text>
-                    <Text style={styles.bolumBaslik}>Son İzlediklerim</Text>
+                  <View style={styles.noktalarSatir}>
+                    <View style={[styles.nokta, styles.noktaAktif]} />
+                    <View style={styles.nokta} />
+                    <View style={styles.nokta} />
+                    <View style={styles.nokta} />
                   </View>
                 </View>
 
-                {/* Yatay 4 Film / Dizi Kartı */}
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
-                  {sonIzlenenler.map((film) => (
-                    <FocusableItem
-                      key={film.id}
-                      style={styles.sonIzlenenKarti}
-                      focusedStyle={styles.sonIzlenenOdak}
-                      onPress={() => Alert.alert('Oynatılıyor', `${film.title} devam ettiriliyor...`)}
-                    >
-                      {() => (
-                        <ImageBackground source={film.image} style={styles.sonIzlenenResim} imageStyle={{ borderRadius: 14 }}>
-                          <View style={styles.sonIzlenenAltBar}>
-                            <View style={styles.sonIzlenenBilgiSatir}>
-                              <Text style={styles.sonIzlenenBaslik} numberOfLines={1}>
-                                {film.title}
-                              </Text>
-                              <Text style={styles.sonIzlenenYuzde}>%{film.progress}</Text>
-                            </View>
-                            {/* İlerleme Çubuğu */}
-                            <View style={styles.ilerlemeZemin}>
-                              <View style={[styles.ilerlemeDolu, { width: `${film.progress}%` }]} />
-                            </View>
-                          </View>
-                        </ImageBackground>
-                      )}
-                    </FocusableItem>
-                  ))}
-                </ScrollView>
-              </>
-            )}
-
-            {/* ====== 2. UYGULAMALAR MENÜSÜ ====== */}
-            {aktifMenu === 'Uygulamalar' && (
-              <View style={styles.doluMenuAlani}>
-                <View style={styles.bolumBaslikSatir}>
-                  <Text style={styles.bolumBaslik}>⊞ Yüklü ve Kullanılabilir TV Uygulamaları</Text>
-                  <FocusableItem style={styles.hizliAksiyonButon} onPress={() => setModalAcik(true)}>
-                    {() => <Text style={styles.hizliAksiyonYazi}>+ Yeni Ekle</Text>}
-                  </FocusableItem>
-                </View>
-                <Text style={styles.menuAltAciklama}>
-                  Aşağıdaki uygulamaları başlatabilir veya ana ekran favorilerinize ekleyip çıkarabilirsiniz:
-                </Text>
-
-                <View style={styles.gridKutusu}>
-                  {[...favoriler, ...TUM_TV_UYGULAMALARI.filter((u) => !favoriler.some((f) => f.id === u.id))].map(
-                    (app) => {
-                      const favoride = favoriler.some((f) => f.id === app.id);
-                      return (
-                        <FocusableItem
-                          key={app.id}
-                          style={[styles.gridAppKarti, { backgroundColor: app.color }]}
-                          focusedStyle={styles.appKartiOdak}
-                          onPress={() => uygulamaBaslat(app)}
-                        >
-                          {() => (
-                            <>
-                              <Text style={styles.gridAppMetin}>{app.text}</Text>
-                              <Text style={styles.gridAppIsim}>{app.name}</Text>
-                              <TouchableOpacity
-                                style={[styles.favoriRozet, favoride ? styles.rozetCikar : styles.rozetEkle]}
-                                onPress={() => favoriToggle(app as any)}
-                              >
-                                <Text style={styles.rozetYazi}>{favoride ? '★ Favori' : '+ Ekle'}</Text>
-                              </TouchableOpacity>
-                            </>
-                          )}
-                        </FocusableItem>
-                      );
-                    }
-                  )}
+                <View style={styles.heroSagOk}>
+                  <Text style={styles.okYazi}>›</Text>
                 </View>
               </View>
-            )}
+            </ImageBackground>
+          </View>
 
-            {/* ====== 3. FİLMLER MENÜSÜ ====== */}
-            {aktifMenu === 'Filmler' && (
-              <View style={styles.doluMenuAlani}>
-                <Text style={styles.bolumBaslik}>🎬 Popüler Filmler</Text>
-                <View style={styles.gridKutusu}>
-                  {[
-                    { id: 'f1', title: 'Dune: Part Two', image: CARD_DUNE, puan: '8.6' },
-                    { id: 'f2', title: 'Oppenheimer', image: CARD_OPP, puan: '8.9' },
-                    { id: 'f3', title: 'Interstellar', image: CARD_TLOU, puan: '8.7' },
-                    { id: 'f4', title: 'The Batman', image: CARD_HOTD, puan: '7.8' },
-                  ].map((film) => (
-                    <FocusableItem
-                      key={film.id}
-                      style={styles.filmGridKarti}
-                      focusedStyle={styles.sonIzlenenOdak}
-                      onPress={() => Alert.alert('Film', `${film.title} oynatılıyor...`)}
-                    >
-                      {() => (
-                        <ImageBackground source={film.image} style={styles.filmResim} imageStyle={{ borderRadius: 14 }}>
-                          <View style={styles.filmPuanRozet}>
-                            <Text style={styles.filmPuanYazi}>★ {film.puan}</Text>
-                          </View>
-                          <View style={styles.filmAltBilgi}>
-                            <Text style={styles.filmBaslikYazi}>{film.title}</Text>
-                          </View>
-                        </ImageBackground>
-                      )}
-                    </FocusableItem>
-                  ))}
+          {/* 2. FAVORİ UYGULAMALARIM BÖLÜMÜ */}
+          <View style={styles.bolumBaslikSatir}>
+            <Text style={styles.bolumBaslik}>Favori Uygulamalarım</Text>
+            <FocusableItem onPress={() => setUygulamaEkleAcik(true)} style={styles.tumunuGorButon}>
+              {() => <Text style={styles.tumunuGorYazi}>+ Uygulama Ekle</Text>}
+            </FocusableItem>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
+            {favoriler.map((app) => (
+              <FocusableItem
+                key={app.id}
+                style={[styles.appKarti, { backgroundColor: app.color }]}
+                focusedStyle={styles.appKartiOdak}
+                onPress={() => uygulamaBaslat(app)}
+                onLongPress={() => favoriSil(app.id, app.name)}
+              >
+                {() => (
+                  <View style={styles.appKartIcerik}>
+                    <Text style={styles.appIkonMetin}>{app.icon}</Text>
+                    <Text style={styles.appIsim} numberOfLines={1}>
+                      {app.name}
+                    </Text>
+                  </View>
+                )}
+              </FocusableItem>
+            ))}
+
+            {/* '+' FAVORİYE UYGULAMA EKLE KARTI */}
+            <FocusableItem
+              style={styles.artiKarti}
+              focusedStyle={styles.artiKartiOdak}
+              onPress={() => setUygulamaEkleAcik(true)}
+            >
+              {() => (
+                <View style={styles.artiIcerik}>
+                  <Text style={styles.artiIkon}>+</Text>
                 </View>
-              </View>
-            )}
-
-            {/* ====== 4. DİZİLER MENÜSÜ ====== */}
-            {aktifMenu === 'Diziler' && (
-              <View style={styles.doluMenuAlani}>
-                <Text style={styles.bolumBaslik}>📺 Popüler TV Dizileri</Text>
-                <View style={styles.gridKutusu}>
-                  {[
-                    { id: 'd1', title: 'The Last of Us', image: CARD_TLOU, sezon: '2. Sezon' },
-                    { id: 'd2', title: 'House of the Dragon', image: CARD_HOTD, sezon: '2. Sezon' },
-                    { id: 'd3', title: 'Breaking Bad', image: CARD_OPP, sezon: '5 Sezon' },
-                    { id: 'd4', title: 'Stranger Things', image: CARD_DUNE, sezon: '4 Sezon' },
-                  ].map((dizi) => (
-                    <FocusableItem
-                      key={dizi.id}
-                      style={styles.filmGridKarti}
-                      focusedStyle={styles.sonIzlenenOdak}
-                      onPress={() => Alert.alert('Dizi', `${dizi.title} açılıyor...`)}
-                    >
-                      {() => (
-                        <ImageBackground source={dizi.image} style={styles.filmResim} imageStyle={{ borderRadius: 14 }}>
-                          <View style={styles.filmPuanRozet}>
-                            <Text style={styles.filmPuanYazi}>{dizi.sezon}</Text>
-                          </View>
-                          <View style={styles.filmAltBilgi}>
-                            <Text style={styles.filmBaslikYazi}>{dizi.title}</Text>
-                          </View>
-                        </ImageBackground>
-                      )}
-                    </FocusableItem>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* ====== 5. CANLI TV MENÜSÜ ====== */}
-            {aktifMenu === 'Canlı TV' && (
-              <View style={styles.doluMenuAlani}>
-                <Text style={styles.bolumBaslik}>📡 Canlı TV Kanalları</Text>
-                <View style={styles.gridKutusu}>
-                  {CANLI_KANALLAR.map((kanal) => (
-                    <FocusableItem
-                      key={kanal.id}
-                      style={[styles.kanalKarti, { backgroundColor: kanal.color }]}
-                      focusedStyle={styles.appKartiOdak}
-                      onPress={() => Alert.alert('Canlı TV', `${kanal.name} yayını başlatılıyor...`)}
-                    >
-                      {() => (
-                        <>
-                          <Text style={styles.kanalKategori}>{kanal.cat}</Text>
-                          <Text style={styles.kanalIsim}>{kanal.name}</Text>
-                          <Text style={styles.canliYayindaRozet}>● CANLI</Text>
-                        </>
-                      )}
-                    </FocusableItem>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* ====== 6. FAVORİLER MENÜSÜ ====== */}
-            {aktifMenu === 'Favoriler' && (
-              <View style={styles.doluMenuAlani}>
-                <Text style={styles.bolumBaslik}>🤍 Favorileriniz</Text>
-                <Text style={styles.menuAltAciklama}>Seçtiğiniz favori uygulamalar:</Text>
-                <View style={styles.gridKutusu}>
-                  {favoriler.map((app) => (
-                    <FocusableItem
-                      key={app.id}
-                      style={[styles.gridAppKarti, { backgroundColor: app.color }]}
-                      focusedStyle={styles.appKartiOdak}
-                      onPress={() => uygulamaBaslat(app)}
-                    >
-                      {() => (
-                        <>
-                          <Text style={styles.gridAppMetin}>{app.text}</Text>
-                          <Text style={styles.gridAppIsim}>{app.name}</Text>
-                        </>
-                      )}
-                    </FocusableItem>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* ====== 7. AYARLAR MENÜSÜ ====== */}
-            {aktifMenu === 'Ayarlar' && (
-              <View style={styles.doluMenuAlani}>
-                <Text style={styles.bolumBaslik}>⚙️ Mi Box & Başlatıcı Ayarları</Text>
-                <Text style={styles.menuAltAciklama}>
-                  Varsayılan ana ekranı değiştirebilir veya eski arayüze dönebilirsiniz:
-                </Text>
-
-                <View style={styles.ayarSatirKutusu}>
-                  <FocusableItem
-                    style={styles.ayarKartGenis}
-                    focusedStyle={styles.sonIzlenenOdak}
-                    onPress={varsayilanLauncherAyariniAc}
-                  >
-                    {() => (
-                      <View style={styles.ayarKartIcerik}>
-                        <Text style={styles.ayarKartIkon}>⚡</Text>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.ayarKartBaslik}>Varsayılan Başlatıcı Olarak Ayarla</Text>
-                          <Text style={styles.ayarKartAlt}>Kumanda Home tuşuna basınca her zaman bu ekran açılsın</Text>
-                        </View>
-                        <Text style={styles.ayarOk}>›</Text>
-                      </View>
-                    )}
-                  </FocusableItem>
-
-                  <FocusableItem
-                    style={styles.ayarKartGenis}
-                    focusedStyle={styles.sonIzlenenOdak}
-                    onPress={orijinalTemayaDon}
-                  >
-                    {() => (
-                      <View style={styles.ayarKartIcerik}>
-                        <Text style={styles.ayarKartIkon}>🏠</Text>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.ayarKartBaslik}>Orijinal Mi Box Arayüzüne Dön</Text>
-                          <Text style={styles.ayarKartAlt}>Fabrika standart Google TV / Xiaomi ana ekranına geçiş yap</Text>
-                        </View>
-                        <Text style={styles.ayarOk}>›</Text>
-                      </View>
-                    )}
-                  </FocusableItem>
-
-                  <FocusableItem
-                    style={styles.ayarKartGenis}
-                    focusedStyle={styles.sonIzlenenOdak}
-                    onPress={() => Linking.sendIntent('android.settings.SETTINGS').catch(() => {})}
-                  >
-                    {() => (
-                      <View style={styles.ayarKartIcerik}>
-                        <Text style={styles.ayarKartIkon}>🛠️</Text>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.ayarKartBaslik}>Mi Box Cihaz Ayarları</Text>
-                          <Text style={styles.ayarKartAlt}>Wi-Fi, Bluetooth, Ses, Ekran ve Sistem ayarları</Text>
-                        </View>
-                        <Text style={styles.ayarOk}>›</Text>
-                      </View>
-                    )}
-                  </FocusableItem>
-                </View>
-              </View>
-            )}
+              )}
+            </FocusableItem>
           </ScrollView>
-        </View>
 
-        {/* ================= FAVORİ UYGULAMA EKLEME MODALI ================= */}
-        <Modal visible={modalAcik} transparent animationType="fade">
+          {/* 3. SON İZLEDİKLERİM BÖLÜMÜ (GERÇEK İZLEME GEÇMİŞİ) */}
+          <View style={styles.bolumBaslikSatir}>
+            <View style={styles.bolumBaslikIkonlu}>
+              <Text style={styles.saatGecmisIkon}>🕒</Text>
+              <Text style={styles.bolumBaslik}>Son İzlediklerim</Text>
+            </View>
+            <FocusableItem onPress={() => setIzlemeEkleAcik(true)} style={styles.tumunuGorButon}>
+              {() => <Text style={styles.tumunuGorYazi}>+ İzleme Ekle</Text>}
+            </FocusableItem>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
+            {sonIzlenenler.map((film) => (
+              <FocusableItem
+                key={film.id}
+                style={styles.sonIzlenenKarti}
+                focusedStyle={styles.sonIzlenenOdak}
+                onPress={() => Alert.alert('Oynatıcı', `"${film.title}" %${film.progress} noktasından devam ettiriliyor...`)}
+                onLongPress={() => izlemeSil(film.id, film.title)}
+              >
+                {() => (
+                  <ImageBackground source={film.image} style={styles.sonIzlenenResim} imageStyle={{ borderRadius: 14 }}>
+                    <View style={styles.sonIzlenenAltBar}>
+                      <View style={styles.sonIzlenenBilgiSatir}>
+                        <Text style={styles.sonIzlenenBaslik} numberOfLines={1}>
+                          {film.title}
+                        </Text>
+                        <Text style={styles.sonIzlenenYuzde}>%{film.progress}</Text>
+                      </View>
+                      <View style={styles.ilerlemeZemin}>
+                        <View style={[styles.ilerlemeDolu, { width: `${film.progress}%` }]} />
+                      </View>
+                    </View>
+                  </ImageBackground>
+                )}
+              </FocusableItem>
+            ))}
+          </ScrollView>
+
+          {/* 4. DİNAMİK UYGULAMA İÇERİK ŞERİTLERİ (Prime Video, Netflix vb. Reklam/Öneri Şeritleri) */}
+          {seritler.map((serit) => (
+            <View key={serit.id} style={styles.seritKapsayici}>
+              <View style={styles.bolumBaslikSatir}>
+                <View style={styles.bolumBaslikIkonlu}>
+                  <View style={[styles.seritNokta, { backgroundColor: serit.appColor }]} />
+                  <Text style={styles.bolumBaslik}>{serit.appName}</Text>
+                </View>
+                <FocusableItem
+                  onPress={() =>
+                    Alert.alert('Şeridi Kaldır', `"${serit.appName}" içerik şeridi kaldırılsın mı?`, [
+                      { text: 'Vazgeç', style: 'cancel' },
+                      { text: 'Kaldır', onPress: () => setSeritler(seritler.filter((s) => s.id !== serit.id)) },
+                    ])
+                  }
+                  style={styles.tumunuGorButon}
+                >
+                  {() => <Text style={styles.tumunuGorYazi}>✕ Şeridi Kaldır</Text>}
+                </FocusableItem>
+              </View>
+
+              {/* Yatay İçerik Kartları Akışı */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
+                {serit.kartlar.map((kart) => (
+                  <FocusableItem
+                    key={kart.id}
+                    style={styles.seritKarti}
+                    focusedStyle={styles.sonIzlenenOdak}
+                    onPress={() => uygulamaBaslat({ name: serit.appName, pkg: serit.pkg })}
+                  >
+                    {() => (
+                      <ImageBackground source={kart.image} style={styles.seritResim} imageStyle={{ borderRadius: 14 }}>
+                        {kart.badge && (
+                          <View style={[styles.seritRozet, { backgroundColor: serit.appColor }]}>
+                            <Text style={styles.seritRozetYazi}>{kart.badge}</Text>
+                          </View>
+                        )}
+                        <View style={styles.seritAltBar}>
+                          <Text style={styles.seritKartBaslik} numberOfLines={1}>
+                            {kart.title}
+                          </Text>
+                        </View>
+                      </ImageBackground>
+                    )}
+                  </FocusableItem>
+                ))}
+              </ScrollView>
+            </View>
+          ))}
+
+          {/* 5. '+ YENİ İÇERİK ŞERİDİ EKLE' BUTONU (En Altta) */}
+          <View style={styles.seritEklemeAlani}>
+            <FocusableItem
+              style={styles.yeniSeritButon}
+              focusedStyle={styles.yeniSeritOdak}
+              onPress={() => setSeritEkleAcik(true)}
+            >
+              {() => (
+                <View style={styles.yeniSeritIcerik}>
+                  <Text style={styles.yeniSeritArti}>➕</Text>
+                  <Text style={styles.yeniSeritYazi}>Yeni Uygulama İçerik Şeridi Ekle (Prime Video, Netflix vb.)</Text>
+                </View>
+              )}
+            </FocusableItem>
+          </View>
+        </ScrollView>
+
+        {/* ================= MODAL 1: UYGULAMA EKLE ================= */}
+        <Modal visible={uygulamaEkleAcik} transparent animationType="fade">
           <View style={styles.modalArkaplan}>
             <View style={styles.modalPencere}>
               <View style={styles.modalBaslikSatir}>
-                <Text style={styles.modalBaslik}>➕ Favori Uygulama Ekle / Yönet</Text>
-                <FocusableItem style={styles.modalKapatButon} onPress={() => setModalAcik(false)}>
+                <Text style={styles.modalBaslik}>➕ Favori Uygulama Ekle</Text>
+                <FocusableItem style={styles.modalKapatButon} onPress={() => setUygulamaEkleAcik(false)}>
                   {() => <Text style={styles.modalKapatYazi}>✕ Kapat</Text>}
                 </FocusableItem>
               </View>
+
+              <Text style={styles.modalAltBaslik}>Kendi uygulamanızı yazın veya aşağıdaki hazır listeden seçin:</Text>
+
+              {/* Form Alanı */}
+              <View style={styles.formSatir}>
+                <TextInput
+                  style={styles.modalGirdi}
+                  placeholder="Uygulama Adı (Örn: Stremio, Tivimate)"
+                  placeholderTextColor="#777"
+                  value={yeniAppName}
+                  onChangeText={setYeniAppName}
+                />
+                <TextInput
+                  style={styles.modalGirdi}
+                  placeholder="Paket Adı (İsteğe bağlı, örn: com.stremio.one)"
+                  placeholderTextColor="#777"
+                  value={yeniAppPkg}
+                  onChangeText={setYeniAppPkg}
+                />
+              </View>
+
+              {/* Renk Seçimi */}
+              <Text style={styles.formEtiket}>Kart Rengi Seçin:</Text>
+              <View style={styles.renkSecimSatir}>
+                {['#3A1448', '#1B355A', '#5A1616', '#123D24', '#B45309', '#1E1E1E'].map((c) => (
+                  <TouchableOpacity
+                    key={c}
+                    onPress={() => setYeniAppColor(c)}
+                    style={[styles.renkKare, { backgroundColor: c }, yeniAppColor === c && styles.renkSecili]}
+                  />
+                ))}
+              </View>
+
+              {/* Hızlı Seçim Listesi */}
+              <Text style={styles.formEtiket}>Veya Hazır TV Uygulamalarından Seçin:</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 8 }}>
+                {HAZIR_UYGULAMALAR.map((h) => (
+                  <FocusableItem
+                    key={h.name}
+                    style={[styles.hazirAppKutu, { backgroundColor: h.color }]}
+                    onPress={() => {
+                      setYeniAppName(h.name);
+                      setYeniAppPkg(h.pkg);
+                      setYeniAppIcon(h.icon);
+                      setYeniAppColor(h.color);
+                    }}
+                  >
+                    {() => (
+                      <>
+                        <Text style={{ fontSize: 16 }}>{h.icon}</Text>
+                        <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold', marginTop: 2 }}>{h.name}</Text>
+                      </>
+                    )}
+                  </FocusableItem>
+                ))}
+              </ScrollView>
+
+              <FocusableItem style={styles.kaydetButon} focusedStyle={styles.kaydetOdak} onPress={favoriEkle}>
+                {() => <Text style={styles.kaydetYazi}>✔ Favorilere Kaydet</Text>}
+              </FocusableItem>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ================= MODAL 2: İZLEME EKLE ================= */}
+        <Modal visible={izlemeEkleAcik} transparent animationType="fade">
+          <View style={styles.modalArkaplan}>
+            <View style={styles.modalPencereKucuk}>
+              <View style={styles.modalBaslikSatir}>
+                <Text style={styles.modalBaslik}>🕒 Son İzlenen Ekle</Text>
+                <FocusableItem style={styles.modalKapatButon} onPress={() => setIzlemeEkleAcik(false)}>
+                  {() => <Text style={styles.modalKapatYazi}>✕ Kapat</Text>}
+                </FocusableItem>
+              </View>
+
+              <Text style={styles.modalAltBaslik}>İzlediğiniz film veya diziyi ekleyin:</Text>
+
+              <TextInput
+                style={styles.modalGirdiTam}
+                placeholder="Film veya Dizi Adı"
+                placeholderTextColor="#777"
+                value={yeniFilmBaslik}
+                onChangeText={setYeniFilmBaslik}
+              />
+
+              <TextInput
+                style={styles.modalGirdiTam}
+                placeholder="İzlenme Yüzdesi (Örn: 65)"
+                placeholderTextColor="#777"
+                keyboardType="numeric"
+                value={yeniFilmYuzde}
+                onChangeText={setYeniFilmYuzde}
+              />
+
+              <FocusableItem style={styles.kaydetButon} focusedStyle={styles.kaydetOdak} onPress={izlemeKaydiEkle}>
+                {() => <Text style={styles.kaydetYazi}>✔ Listeme Ekle</Text>}
+              </FocusableItem>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ================= MODAL 3: İÇERİK ŞERİDİ EKLE (PRIME VIDEO, NETFLIX VB.) ================= */}
+        <Modal visible={seritEkleAcik} transparent animationType="fade">
+          <View style={styles.modalArkaplan}>
+            <View style={styles.modalPencere}>
+              <View style={styles.modalBaslikSatir}>
+                <Text style={styles.modalBaslik}>📺 Uygulama İçerik Şeridi Ekle</Text>
+                <FocusableItem style={styles.modalKapatButon} onPress={() => setSeritEkleAcik(false)}>
+                  {() => <Text style={styles.modalKapatYazi}>✕ Kapat</Text>}
+                </FocusableItem>
+              </View>
+
               <Text style={styles.modalAltBaslik}>
-                Ana ekrana eklemek veya çıkarmak istediğiniz uygulamanın üzerine tıklayın:
+                Ana sayfanızda reklam/öneri filmleri akacak sağlayıcıyı seçin:
               </Text>
 
-              <ScrollView style={{ maxHeight: 340 }}>
-                <View style={styles.gridKutusu}>
-                  {TUM_TV_UYGULAMALARI.map((app) => {
-                    const secili = favoriler.some((f) => f.id === app.id);
-                    return (
-                      <FocusableItem
-                        key={app.id}
-                        style={[styles.modalAppKarti, { backgroundColor: app.color }, secili && styles.modalAppSecili]}
-                        focusedStyle={styles.appKartiOdak}
-                        onPress={() => favoriToggle(app)}
-                      >
-                        {() => (
-                          <>
-                            <Text style={styles.gridAppMetin}>{app.text}</Text>
-                            <Text style={styles.gridAppIsim}>{app.name}</Text>
-                            <Text style={[styles.durumMetin, secili ? styles.metinYesil : styles.metinGri]}>
-                              {secili ? '✔ Eklendi' : '+ Ekle'}
-                            </Text>
-                          </>
-                        )}
-                      </FocusableItem>
-                    );
-                  })}
-                </View>
-              </ScrollView>
+              <View style={styles.seritSecimGrid}>
+                {[
+                  { name: 'Disney+', pkg: 'com.disney.disneyplus', color: '#113CCF' },
+                  { name: 'YouTube Trendler', pkg: 'com.google.android.youtube.tv', color: '#E50914' },
+                  { name: 'Kodi Sinema', pkg: 'org.xbmc.kodi', color: '#17B2E7' },
+                  { name: 'BluTV Popüler', pkg: 'com.blutv', color: '#00A8E1' },
+                  { name: 'Exxen Dizi', pkg: 'com.exxen.android', color: '#F59E0B' },
+                  { name: 'TOD Spor', pkg: 'com.digiturk.tod', color: '#8B5CF6' },
+                ].map((s) => (
+                  <FocusableItem
+                    key={s.name}
+                    style={[styles.seritSecimKarti, { borderColor: s.color }]}
+                    focusedStyle={styles.sonIzlenenOdak}
+                    onPress={() => seritEkle(s.name, s.pkg, s.color)}
+                  >
+                    {() => (
+                      <>
+                        <View style={[styles.seritSecimDaire, { backgroundColor: s.color }]} />
+                        <Text style={styles.seritSecimYazi}>{s.name}</Text>
+                        <Text style={styles.seritSecimAlt}>+ Şerit Olarak Ekle</Text>
+                      </>
+                    )}
+                  </FocusableItem>
+                ))}
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ================= MODAL 4: SAĞ ÜST AYARLAR MENÜSÜ ================= */}
+        <Modal visible={ayarlarAcik} transparent animationType="fade">
+          <View style={styles.modalArkaplan}>
+            <View style={styles.modalPencere}>
+              <View style={styles.modalBaslikSatir}>
+                <Text style={styles.modalBaslik}>⚙️ Mi Box & Başlatıcı Ayarları</Text>
+                <FocusableItem style={styles.modalKapatButon} onPress={() => setAyarlarAcik(false)}>
+                  {() => <Text style={styles.modalKapatYazi}>✕ Kapat</Text>}
+                </FocusableItem>
+              </View>
+
+              <Text style={styles.modalAltBaslik}>Sistem ve başlatıcı tercihlerinizi buradan yönetin:</Text>
+
+              <View style={{ marginTop: 8 }}>
+                <FocusableItem
+                  style={styles.ayarKartGenis}
+                  focusedStyle={styles.sonIzlenenOdak}
+                  onPress={varsayilanLauncherAyariniAc}
+                >
+                  {() => (
+                    <View style={styles.ayarKartIcerik}>
+                      <Text style={styles.ayarKartIkon}>⚡</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.ayarKartBaslik}>Varsayılan Başlatıcı Olarak Ayarla</Text>
+                        <Text style={styles.ayarKartAlt}>Mi Box kumandası Home tuşuna basınca bu arayüz açılsın</Text>
+                      </View>
+                      <Text style={styles.ayarOk}>›</Text>
+                    </View>
+                  )}
+                </FocusableItem>
+
+                <FocusableItem
+                  style={styles.ayarKartGenis}
+                  focusedStyle={styles.sonIzlenenOdak}
+                  onPress={orijinalTemayaDon}
+                >
+                  {() => (
+                    <View style={styles.ayarKartIcerik}>
+                      <Text style={styles.ayarKartIkon}>🏠</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.ayarKartBaslik}>Orijinal Mi Box Ekranına Dön</Text>
+                        <Text style={styles.ayarKartAlt}>Fabrika standart Google TV / Xiaomi ana ekranına geç</Text>
+                      </View>
+                      <Text style={styles.ayarOk}>›</Text>
+                    </View>
+                  )}
+                </FocusableItem>
+
+                <FocusableItem
+                  style={styles.ayarKartGenis}
+                  focusedStyle={styles.sonIzlenenOdak}
+                  onPress={() => Linking.sendIntent('android.settings.SETTINGS').catch(() => {})}
+                >
+                  {() => (
+                    <View style={styles.ayarKartIcerik}>
+                      <Text style={styles.ayarKartIkon}>🛠️</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.ayarKartBaslik}>Mi Box Cihaz Ayarları</Text>
+                        <Text style={styles.ayarKartAlt}>Wi-Fi, Bluetooth, Ses ve Ekran ayarları</Text>
+                      </View>
+                      <Text style={styles.ayarOk}>›</Text>
+                    </View>
+                  )}
+                </FocusableItem>
+              </View>
             </View>
           </View>
         </Modal>
@@ -700,11 +854,10 @@ export default function App() {
 
 const styles = StyleSheet.create({
   arkaplan: { flex: 1, backgroundColor: '#0A0C16' },
-  // Görseldeki gibi transparan cam hissiyatı
   camKatman: {
     flex: 1,
     backgroundColor: 'rgba(5, 7, 16, 0.42)',
-    paddingHorizontal: 28,
+    paddingHorizontal: 32,
     paddingTop: 16,
   },
 
@@ -733,8 +886,6 @@ const styles = StyleSheet.create({
     marginRight: 24,
     letterSpacing: 0.3,
   },
-
-  // Arama Kapsülü
   aramaKapsul: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -743,7 +894,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 24,
     paddingHorizontal: 16,
-    width: 290,
+    width: 320,
     height: 36,
   },
   aramaIkon: { fontSize: 13, marginRight: 8, opacity: 0.8 },
@@ -755,66 +906,41 @@ const styles = StyleSheet.create({
   saatTarihKutu: { alignItems: 'flex-end', marginRight: 18 },
   saatYazi: { color: '#FFF', fontSize: 18, fontWeight: '700' },
   tarihYazi: { color: 'rgba(255, 255, 255, 0.65)', fontSize: 10, marginTop: 1 },
-  havaKutu: { flexDirection: 'row', alignItems: 'center' },
+  havaKutu: { flexDirection: 'row', alignItems: 'center', marginRight: 16 },
   havaIkon: { fontSize: 20, marginRight: 6 },
   havaDerece: { color: '#FFF', fontSize: 13, fontWeight: '700' },
   havaSehir: { color: 'rgba(255, 255, 255, 0.6)', fontSize: 9 },
 
-  // ANA GÖVDE
-  anaGovde: { flex: 1, flexDirection: 'row' },
-
-  // SOL MENÜ (TRANSPARAN CAM KAPSÜL)
-  solMenuKapsul: {
-    width: 145,
-    backgroundColor: 'rgba(255, 255, 255, 0.07)',
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.14)',
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    marginRight: 20,
-    justifyContent: 'space-between',
-  },
-  menuSatir: {
-    flexDirection: 'row',
+  // Sağ Üst Ayarlar Butonu
+  ustAyarButon: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 18,
-    marginVertical: 2,
-  },
-  menuSatirAktif: {
-    backgroundColor: 'rgba(124, 58, 237, 0.75)',
     borderWidth: 1,
-    borderColor: 'rgba(196, 181, 253, 0.8)',
-    shadowColor: '#8B5CF6',
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-    elevation: 8,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
-  menuSatirOdak: {
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
-    borderWidth: 2,
+  ustAyarOdak: {
+    backgroundColor: 'rgba(124, 58, 237, 0.8)',
     borderColor: '#FFF',
-    transform: [{ scale: 1.05 }],
+    transform: [{ scale: 1.1 }],
   },
-  menuIkon: { fontSize: 15, marginRight: 9, color: 'rgba(255, 255, 255, 0.75)' },
-  menuMetin: { color: 'rgba(255, 255, 255, 0.75)', fontSize: 12, fontWeight: '500' },
-  menuMetinAktif: { color: '#FFF', fontWeight: '700' },
-  menuMetinParlak: { color: '#FFF', fontWeight: '700' },
+  ustAyarIkon: { fontSize: 18 },
 
-  // SAĞ İÇERİK
-  sagIcerik: { flex: 1 },
+  // ANA AKIŞ (TAM EKRAN)
+  anaKaydirma: { flex: 1 },
 
-  // HERO DUNE BANNER
+  // DUNE HERO BANNER
   heroKapsayici: {
     width: '100%',
-    height: 180,
+    height: 200,
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
-    marginBottom: 16,
+    marginBottom: 18,
   },
   heroResim: { flex: 1, width: '100%', height: '100%' },
   heroResimStil: { borderRadius: 20 },
@@ -827,29 +953,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
   },
   heroSolOk: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   heroSagOk: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   okYazi: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
-  heroIcerik: { position: 'absolute', bottom: 14, left: 100, flexDirection: 'row', alignItems: 'center' },
+  heroIcerik: { position: 'absolute', bottom: 16, left: 140, flexDirection: 'row', alignItems: 'center' },
   simdiIzleButon: {
     backgroundColor: '#FFF',
     borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    marginRight: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    marginRight: 16,
     shadowColor: '#000',
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -862,8 +988,8 @@ const styles = StyleSheet.create({
     borderColor: '#FFF',
   },
   simdiIzleIcerik: { flexDirection: 'row', alignItems: 'center' },
-  oynatUcgen: { fontSize: 10, color: '#000', marginRight: 6 },
-  simdiIzleYazi: { color: '#000', fontSize: 12, fontWeight: '700' },
+  oynatUcgen: { fontSize: 11, color: '#000', marginRight: 6 },
+  simdiIzleYazi: { color: '#000', fontSize: 13, fontWeight: '700' },
   noktalarSatir: { flexDirection: 'row', alignItems: 'center' },
   nokta: {
     width: 6,
@@ -880,21 +1006,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    marginTop: 4,
   },
   bolumBaslikIkonlu: { flexDirection: 'row', alignItems: 'center' },
   saatGecmisIkon: { fontSize: 13, color: '#FFF', marginRight: 6 },
+  seritNokta: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
   bolumBaslik: { color: '#FFF', fontSize: 14, fontWeight: '700', letterSpacing: 0.3 },
   tumunuGorButon: { padding: 4 },
-  tumunuGorYazi: { color: 'rgba(255, 255, 255, 0.65)', fontSize: 11 },
+  tumunuGorYazi: { color: 'rgba(255, 255, 255, 0.7)', fontSize: 11 },
 
-  yatayListe: { marginBottom: 16, overflow: 'visible' },
+  yatayListe: { marginBottom: 18, overflow: 'visible' },
 
-  // FAVORİ UYGULAMA KARTLARI (CAM EFEKTİ & GLOW)
+  // UYGULAMA KARTLARI
   appKarti: {
-    width: 95,
-    height: 64,
+    width: 105,
+    height: 68,
     borderRadius: 14,
-    marginRight: 10,
+    marginRight: 12,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.22)',
     justifyContent: 'center',
@@ -914,13 +1042,13 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   appKartIcerik: { alignItems: 'center', justifyContent: 'center' },
-  appIkonMetin: { color: '#FFF', fontSize: 14, fontWeight: 'bold', marginBottom: 3 },
-  appIsim: { color: 'rgba(255, 255, 255, 0.9)', fontSize: 10, fontWeight: '500' },
+  appIkonMetin: { color: '#FFF', fontSize: 16, fontWeight: 'bold', marginBottom: 3 },
+  appIsim: { color: 'rgba(255, 255, 255, 0.9)', fontSize: 11, fontWeight: '500' },
 
-  // '+' EKLE KARTI
+  // '+' KARTI
   artiKarti: {
-    width: 60,
-    height: 64,
+    width: 65,
+    height: 68,
     borderRadius: 14,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1.5,
@@ -928,7 +1056,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
   artiKartiOdak: {
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
@@ -936,15 +1064,15 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.1 }],
   },
   artiIcerik: { justifyContent: 'center', alignItems: 'center' },
-  artiIkon: { color: '#FFF', fontSize: 24, fontWeight: '300' },
+  artiIkon: { color: '#FFF', fontSize: 26, fontWeight: '300' },
 
-  // SON İZLEDİKLERİM KARTLARI
+  // SON İZLENENLER KARTLARI
   sonIzlenenKarti: {
-    width: 175,
-    height: 98,
+    width: 190,
+    height: 108,
     borderRadius: 14,
     overflow: 'hidden',
-    marginRight: 12,
+    marginRight: 14,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
@@ -961,86 +1089,157 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   sonIzlenenBilgiSatir: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  sonIzlenenBaslik: { color: '#FFF', fontSize: 10, fontWeight: '700', flex: 1 },
+  sonIzlenenBaslik: { color: '#FFF', fontSize: 11, fontWeight: '700', flex: 1 },
   sonIzlenenYuzde: { color: 'rgba(255, 255, 255, 0.7)', fontSize: 9, fontWeight: '600' },
   ilerlemeZemin: { height: 3, backgroundColor: 'rgba(255, 255, 255, 0.25)', borderRadius: 2 },
   ilerlemeDolu: { height: 3, backgroundColor: '#FFF', borderRadius: 2 },
 
-  // DİĞER MENÜLER (Uygulamalar, Filmler, Canlı TV vb.)
-  doluMenuAlani: { paddingVertical: 4 },
-  menuAltAciklama: { color: 'rgba(255, 255, 255, 0.65)', fontSize: 12, marginBottom: 14 },
-  hizliAksiyonButon: {
-    backgroundColor: 'rgba(124, 58, 237, 0.8)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  hizliAksiyonYazi: { color: '#FFF', fontSize: 11, fontWeight: 'bold' },
-  gridKutusu: { flexDirection: 'row', flexWrap: 'wrap' },
-
-  // Uygulama Grid
-  gridAppKarti: {
-    width: 125,
-    height: 85,
-    borderRadius: 14,
-    marginRight: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 6,
-  },
-  gridAppMetin: { color: '#FFF', fontSize: 13, fontWeight: 'bold', marginBottom: 4 },
-  gridAppIsim: { color: 'rgba(255, 255, 255, 0.9)', fontSize: 11, fontWeight: '500', marginBottom: 4 },
-  favoriRozet: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  rozetEkle: { backgroundColor: 'rgba(255, 255, 255, 0.2)' },
-  rozetCikar: { backgroundColor: 'rgba(245, 158, 11, 0.8)' },
-  rozetYazi: { color: '#FFF', fontSize: 9, fontWeight: 'bold' },
-
-  // Film / Dizi Grid
-  filmGridKarti: {
-    width: 190,
-    height: 110,
+  // İÇERİK ŞERİTLERİ (PRIME VIDEO, NETFLIX AKIŞLARI)
+  seritKapsayici: { marginBottom: 6 },
+  seritKarti: {
+    width: 210,
+    height: 118,
     borderRadius: 14,
     overflow: 'hidden',
     marginRight: 14,
-    marginBottom: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
-  filmResim: { flex: 1, justifyContent: 'space-between' },
-  filmPuanRozet: {
+  seritResim: { flex: 1, justifyContent: 'space-between', backgroundColor: '#111322' },
+  seritRozet: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0,0,0,0.65)',
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    margin: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
+    margin: 8,
   },
-  filmPuanYazi: { color: '#FBE122', fontSize: 10, fontWeight: 'bold' },
-  filmAltBilgi: { backgroundColor: 'rgba(0,0,0,0.7)', padding: 6 },
-  filmBaslikYazi: { color: '#FFF', fontSize: 11, fontWeight: 'bold' },
+  seritRozetYazi: { color: '#FFF', fontSize: 9, fontWeight: 'bold' },
+  seritAltBar: { backgroundColor: 'rgba(0,0,0,0.72)', paddingHorizontal: 8, paddingVertical: 5 },
+  seritKartBaslik: { color: '#FFF', fontSize: 11, fontWeight: '600' },
 
-  // Canlı TV Kartları
-  kanalKarti: {
-    width: 135,
-    height: 80,
-    borderRadius: 14,
-    marginRight: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+  // YENİ ŞERİT EKLE ALANI
+  seritEklemeAlani: { paddingVertical: 14, alignItems: 'center', marginBottom: 30 },
+  yeniSeritButon: {
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    borderStyle: 'dashed',
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  yeniSeritOdak: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: '#FBE122',
+    transform: [{ scale: 1.02 }],
+  },
+  yeniSeritIcerik: { flexDirection: 'row', alignItems: 'center' },
+  yeniSeritArti: { fontSize: 14, marginRight: 8 },
+  yeniSeritYazi: { color: 'rgba(255, 255, 255, 0.8)', fontSize: 13, fontWeight: '600' },
+
+  // MODALLAR
+  modalArkaplan: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.82)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 8,
+    padding: 24,
   },
-  kanalKategori: { color: 'rgba(255, 255, 255, 0.65)', fontSize: 9, marginBottom: 2 },
-  kanalIsim: { color: '#FFF', fontSize: 13, fontWeight: 'bold', marginBottom: 4 },
-  canliYayindaRozet: { color: '#EF4444', fontSize: 9, fontWeight: 'bold' },
+  modalPencere: {
+    width: 600,
+    backgroundColor: '#121422',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 20,
+    padding: 20,
+  },
+  modalPencereKucuk: {
+    width: 460,
+    backgroundColor: '#121422',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 20,
+    padding: 20,
+  },
+  modalBaslikSatir: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  modalBaslik: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  modalKapatButon: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  modalKapatYazi: { color: '#FFF', fontSize: 11, fontWeight: 'bold' },
+  modalAltBaslik: { color: '#AAA', fontSize: 12, marginBottom: 12 },
 
-  // Ayarlar Satırları
-  ayarSatirKutusu: { marginTop: 4 },
+  formSatir: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  modalGirdi: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 10,
+    color: '#FFF',
+    fontSize: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginRight: 8,
+  },
+  modalGirdiTam: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 10,
+    color: '#FFF',
+    fontSize: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  formEtiket: { color: '#DDD', fontSize: 11, fontWeight: 'bold', marginTop: 6, marginBottom: 6 },
+  renkSecimSatir: { flexDirection: 'row', marginBottom: 8 },
+  renkKare: { width: 34, height: 34, borderRadius: 8, marginRight: 10 },
+  renkSecili: { borderWidth: 2.5, borderColor: '#FFF' },
+
+  hazirAppKutu: {
+    width: 85,
+    height: 52,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+
+  kaydetButon: {
+    backgroundColor: '#7C3AED',
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  kaydetOdak: {
+    backgroundColor: '#8B5CF6',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  kaydetYazi: { color: '#FFF', fontSize: 13, fontWeight: 'bold' },
+
+  // Şerit Seçim Grid
+  seritSecimGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  seritSecimKarti: {
+    width: '48%',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    padding: 14,
+    marginBottom: 12,
+  },
+  seritSecimDaire: { width: 10, height: 10, borderRadius: 5, marginBottom: 6 },
+  seritSecimYazi: { color: '#FFF', fontSize: 13, fontWeight: 'bold' },
+  seritSecimAlt: { color: '#AAA', fontSize: 10, marginTop: 4 },
+
+  // Ayarlar Kartları
   ayarKartGenis: {
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
@@ -1055,50 +1254,7 @@ const styles = StyleSheet.create({
   ayarKartAlt: { color: 'rgba(255, 255, 255, 0.6)', fontSize: 11 },
   ayarOk: { color: 'rgba(255, 255, 255, 0.5)', fontSize: 18, marginLeft: 10 },
 
-  // MODAL
-  modalArkaplan: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  modalPencere: {
-    width: 580,
-    backgroundColor: '#121422',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 20,
-    padding: 18,
-  },
-  modalBaslikSatir: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  modalBaslik: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
-  modalKapatButon: {
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  modalKapatYazi: { color: '#FFF', fontSize: 11, fontWeight: 'bold' },
-  modalAltBaslik: { color: '#AAA', fontSize: 12, marginBottom: 14 },
-  modalAppKarti: {
-    width: 120,
-    height: 80,
-    borderRadius: 12,
-    marginRight: 10,
-    marginBottom: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-    padding: 6,
-  },
-  modalAppSecili: { borderColor: '#10B981', borderWidth: 2 },
-  durumMetin: { fontSize: 9, fontWeight: 'bold', marginTop: 3 },
-  metinYesil: { color: '#10B981' },
-  metinGri: { color: 'rgba(255, 255, 255, 0.5)' },
-
-  // Varsayılan Odaklanma Efekti (TV D-Pad)
+  // Odaklanma Stili
   defaultFocused: {
     transform: [{ scale: 1.08 }],
     borderColor: '#FFF',
