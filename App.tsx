@@ -76,6 +76,7 @@ export default function App() {
   const [aramaMetni, setAramaMetni] = useState('');
   const [saat, setSaat] = useState('20:15');
   const [tarih, setTarih] = useState('');
+  const [rehberGorunsun, setRehberGorunsun] = useState(true);
 
   useEffect(() => {
     const guncelle = () => {
@@ -87,6 +88,66 @@ export default function App() {
     const timer = setInterval(guncelle, 10000);
     return () => clearInterval(timer);
   }, []);
+
+  // 1. Android Sistem Ayarları / Varsayılan Başlatıcı Ekranını Doğrudan Açma
+  const varsayilanLauncherAyariniAc = async () => {
+    try {
+      if (Platform.OS === 'android') {
+        // Android Home / Default Apps ayar sayfasını doğrudan tetikler
+        await Linking.sendIntent('android.settings.HOME_SETTINGS');
+      } else {
+        Alert.alert('Bilgi', 'Bu özellik yalnızca Android TV cihazlarda çalışır.');
+      }
+    } catch {
+      try {
+        // Alternatif intent: Genel Sistem Ayarları
+        await Linking.sendIntent('android.settings.SETTINGS');
+      } catch {
+        Alert.alert('Ayarlar', 'Cihaz ayarları ekranı açılamadı.');
+      }
+    }
+  };
+
+  // 2. Mi Box / Android TV'nin Orijinal / Standart Ana Ekranına Geri Dönüş
+  const orijinalTemayaDon = async () => {
+    Alert.alert(
+      'Orijinal TV Arayüzü',
+      'Mi Box orijinal ana ekranına dönmek istiyor musunuz?',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Evet, Dön',
+          onPress: async () => {
+            const bilinenOrijinalLauncherlar = [
+              'com.google.android.tvlauncher',       // Standart Android TV Launcher
+              'com.google.android.apps.tv.launcherx', // Google TV Launcher
+              'com.xiaomi.mitv.tvbox.launcher',       // Xiaomi PatchWall / MiTV Launcher
+            ];
+
+            let acildi = false;
+            for (const pkg of bilinenOrijinalLauncherlar) {
+              try {
+                const url = `intent:#Intent;package=${pkg};action=android.intent.action.MAIN;category=android.intent.category.HOME;end`;
+                const destekleniyor = await Linking.canOpenURL(url).catch(() => false);
+                if (destekleniyor) {
+                  await Linking.openURL(url);
+                  acildi = true;
+                  break;
+                }
+              } catch {
+                // Sıradakini dene
+              }
+            }
+
+            if (!acildi) {
+              // Paket bulunamazsa sistem başlatıcı seçicisini aç
+              varsayilanLauncherAyariniAc();
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const uygulamaBaslat = async (app: (typeof GS_FAVORILER)[0]) => {
     try {
@@ -134,9 +195,24 @@ export default function App() {
             </View>
           </View>
 
-          <View style={styles.saatKutu}>
-            <Text style={styles.saatYazi}>{saat}</Text>
-            <Text style={styles.altYazi}>{tarih}</Text>
+          <View style={styles.ustSag}>
+            {/* Orijinal Arayüze Hızlı Dönüş Butonu */}
+            <FocusableItem
+              style={styles.hizliCikisButon}
+              focusedStyle={styles.hizliCikisOdakli}
+              onPress={orijinalTemayaDon}
+            >
+              {(isFocused) => (
+                <Text style={[styles.hizliCikisMetin, isFocused && styles.metinSari]}>
+                  ↩ Orijinal TV
+                </Text>
+              )}
+            </FocusableItem>
+
+            <View style={styles.saatKutu}>
+              <Text style={styles.saatYazi}>{saat}</Text>
+              <Text style={styles.altYazi}>{tarih}</Text>
+            </View>
           </View>
         </View>
 
@@ -175,48 +251,132 @@ export default function App() {
 
           {/* SAĞ İÇERİK */}
           <ScrollView style={styles.sagIcerik} showsVerticalScrollIndicator={false}>
-            <Text style={styles.bolumBaslik}>⭐ Favori Uygulamalar</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
-              {GS_FAVORILER.map((app) => (
-                <FocusableItem
-                  key={app.id}
-                  style={[styles.uygulamaKarti, { backgroundColor: app.color }]}
-                  focusedStyle={styles.kartOdakli}
-                  onPress={() => uygulamaBaslat(app)}
-                >
-                  {() => (
-                    <>
-                      <Text style={styles.uygulamaIkonYazi}>{app.text}</Text>
-                      <Text style={styles.uygulamaIsim} numberOfLines={1}>
-                        {app.name}
-                      </Text>
-                    </>
-                  )}
-                </FocusableItem>
-              ))}
-            </ScrollView>
+            {/* AYARLAR MENÜSÜ SEÇİLİYSE */}
+            {aktifMenu === 'Ayarlar' ? (
+              <View style={styles.ayarlarPaneli}>
+                <Text style={styles.bolumBaslik}>⚙️ Launcher & Sistem Ayarları</Text>
+                <Text style={styles.ayarAciklama}>
+                  Buradan varsayılan başlatıcıyı tek tıkla değiştirebilir veya Mi Box'ın orijinal ekranına geri dönebilirsiniz:
+                </Text>
 
-            <Text style={styles.bolumBaslik}>🎬 Son İzlenenler</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
-              {GS_ONIZLEMELER.map((film) => (
-                <FocusableItem
-                  key={film.id}
-                  style={styles.onizlemeKarti}
-                  focusedStyle={styles.kartOdakli}
-                  onPress={() => Alert.alert('Oynatıcı', `${film.title} seçildi.`)}
-                >
-                  {() => (
-                    <ImageBackground source={{ uri: film.image }} style={styles.onizlemeResim}>
-                      <View style={styles.onizlemeAltKarartma}>
-                        <Text style={styles.onizlemeBaslik} numberOfLines={1}>
-                          {film.title}
-                        </Text>
-                      </View>
-                    </ImageBackground>
-                  )}
-                </FocusableItem>
-              ))}
-            </ScrollView>
+                <View style={styles.ayarKartlariSatir}>
+                  <FocusableItem
+                    style={styles.ayarKarti}
+                    focusedStyle={styles.kartOdakli}
+                    onPress={varsayilanLauncherAyariniAc}
+                  >
+                    {() => (
+                      <>
+                        <Text style={styles.ayarKartiIkon}>⚡</Text>
+                        <Text style={styles.ayarKartiBaslik}>Varsayılan Başlatıcı Yap</Text>
+                        <Text style={styles.ayarKartiAlt}>Kumanda Home tuşuna basınca doğrudan GS Launcher açılsın</Text>
+                      </>
+                    )}
+                  </FocusableItem>
+
+                  <FocusableItem
+                    style={styles.ayarKarti}
+                    focusedStyle={styles.kartOdakli}
+                    onPress={orijinalTemayaDon}
+                  >
+                    {() => (
+                      <>
+                        <Text style={styles.ayarKartiIkon}>🏠</Text>
+                        <Text style={styles.ayarKartiBaslik}>Orijinal Ekrana Dön</Text>
+                        <Text style={styles.ayarKartiAlt}>Mi Box standart ana menüsüne geri geçiş yap</Text>
+                      </>
+                    )}
+                  </FocusableItem>
+
+                  <FocusableItem
+                    style={styles.ayarKarti}
+                    focusedStyle={styles.kartOdakli}
+                    onPress={() => Linking.sendIntent('android.settings.SETTINGS').catch(() => {})}
+                  >
+                    {() => (
+                      <>
+                        <Text style={styles.ayarKartiIkon}>📱</Text>
+                        <Text style={styles.ayarKartiBaslik}>Cihaz Ayarları</Text>
+                        <Text style={styles.ayarKartiAlt}>Wi-Fi, Bluetooth ve TV ses/görüntü ayarlarını aç</Text>
+                      </>
+                    )}
+                  </FocusableItem>
+                </View>
+              </View>
+            ) : (
+              <>
+                {/* İLK AÇILIŞ REHBER KARTI (HERKESİN KOLAYCA KURMASI İÇİN) */}
+                {rehberGorunsun && (
+                  <View style={styles.rehberKutu}>
+                    <View style={styles.rehberMetinKutusu}>
+                      <Text style={styles.rehberBaslik}>💡 Tek Tuşla Kurulum</Text>
+                      <Text style={styles.rehberAciklama}>
+                        Mi Box kumandanızdaki Ana Ekran tuşuna basıldığında doğrudan bu temanın açılması için aşağıdaki butona basın ve "Her Zaman" seçeneğini işaretleyin.
+                      </Text>
+                    </View>
+                    <View style={styles.rehberButonlar}>
+                      <FocusableItem
+                        style={styles.rehberAyarButon}
+                        focusedStyle={styles.kartOdakli}
+                        onPress={varsayilanLauncherAyariniAc}
+                      >
+                        {() => <Text style={styles.rehberAyarButonYazi}>⚡ Varsayılan Yap</Text>}
+                      </FocusableItem>
+                      <FocusableItem
+                        style={styles.rehberKapatButon}
+                        focusedStyle={styles.kartOdakli}
+                        onPress={() => setRehberGorunsun(false)}
+                      >
+                        {() => <Text style={styles.rehberKapatYazi}>Gizle</Text>}
+                      </FocusableItem>
+                    </View>
+                  </View>
+                )}
+
+                <Text style={styles.bolumBaslik}>⭐ Favori Uygulamalar</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
+                  {GS_FAVORILER.map((app) => (
+                    <FocusableItem
+                      key={app.id}
+                      style={[styles.uygulamaKarti, { backgroundColor: app.color }]}
+                      focusedStyle={styles.kartOdakli}
+                      onPress={() => uygulamaBaslat(app)}
+                    >
+                      {() => (
+                        <>
+                          <Text style={styles.uygulamaIkonYazi}>{app.text}</Text>
+                          <Text style={styles.uygulamaIsim} numberOfLines={1}>
+                            {app.name}
+                          </Text>
+                        </>
+                      )}
+                    </FocusableItem>
+                  ))}
+                </ScrollView>
+
+                <Text style={styles.bolumBaslik}>🎬 Son İzlenenler</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
+                  {GS_ONIZLEMELER.map((film) => (
+                    <FocusableItem
+                      key={film.id}
+                      style={styles.onizlemeKarti}
+                      focusedStyle={styles.kartOdakli}
+                      onPress={() => Alert.alert('Oynatıcı', `${film.title} seçildi.`)}
+                    >
+                      {() => (
+                        <ImageBackground source={{ uri: film.image }} style={styles.onizlemeResim}>
+                          <View style={styles.onizlemeAltKarartma}>
+                            <Text style={styles.onizlemeBaslik} numberOfLines={1}>
+                              {film.title}
+                            </Text>
+                          </View>
+                        </ImageBackground>
+                      )}
+                    </FocusableItem>
+                  ))}
+                </ScrollView>
+              </>
+            )}
           </ScrollView>
         </View>
       </SafeAreaView>
@@ -226,9 +386,9 @@ export default function App() {
 
 const styles = StyleSheet.create({
   arkaplan: { flex: 1, backgroundColor: '#0A0C16' },
-  karartmaKatmani: { flex: 1, paddingHorizontal: 32, paddingTop: 20 },
+  karartmaKatmani: { flex: 1, paddingHorizontal: 32, paddingTop: 16 },
 
-  ustBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  ustBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   ustSol: { flexDirection: 'row', alignItems: 'center' },
   gsLogoKutu: { backgroundColor: '#A2191F', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginRight: 12 },
   gsLogoYazi: { color: '#FBE122', fontWeight: 'bold', fontSize: 18 },
@@ -239,9 +399,26 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 24,
     paddingHorizontal: 16,
-    width: 280,
+    width: 260,
   },
   aramaGirdi: { color: '#FFF', fontSize: 13, paddingVertical: 6 },
+
+  ustSag: { flexDirection: 'row', alignItems: 'center' },
+  hizliCikisButon: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginRight: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  hizliCikisOdakli: {
+    backgroundColor: '#A2191F',
+    borderColor: '#FBE122',
+    transform: [{ scale: 1.05 }],
+  },
+  hizliCikisMetin: { color: '#EEE', fontSize: 12, fontWeight: 'bold' },
 
   saatKutu: { alignItems: 'flex-end' },
   saatYazi: { color: '#FFF', fontSize: 22, fontWeight: 'bold' },
@@ -279,8 +456,62 @@ const styles = StyleSheet.create({
 
   sagIcerik: { flex: 1 },
   bolumBaslik: { color: '#FFF', fontSize: 16, fontWeight: 'bold', marginBottom: 12, letterSpacing: 0.5 },
-  yatayListe: { marginBottom: 24, overflow: 'visible' },
+  yatayListe: { marginBottom: 20, overflow: 'visible' },
 
+  // Kolay Kurulum Rehber Bannerı
+  rehberKutu: {
+    backgroundColor: 'rgba(162, 25, 31, 0.25)',
+    borderWidth: 1.5,
+    borderColor: '#FBE122',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  rehberMetinKutusu: { flex: 1, marginRight: 16 },
+  rehberBaslik: { color: '#FBE122', fontSize: 14, fontWeight: 'bold', marginBottom: 4 },
+  rehberAciklama: { color: '#DDD', fontSize: 12, lineHeight: 17 },
+  rehberButonlar: { flexDirection: 'row', alignItems: 'center' },
+  rehberAyarButon: {
+    backgroundColor: '#A2191F',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FBE122',
+    marginRight: 8,
+  },
+  rehberAyarButonYazi: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
+  rehberKapatButon: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  rehberKapatYazi: { color: '#AAA', fontSize: 12 },
+
+  // Ayarlar Paneli
+  ayarlarPaneli: { paddingVertical: 10 },
+  ayarAciklama: { color: '#AAA', fontSize: 13, marginBottom: 16 },
+  ayarKartlariSatir: { flexDirection: 'row', justifyContent: 'space-between' },
+  ayarKarti: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 16,
+    padding: 18,
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ayarKartiIkon: { fontSize: 32, marginBottom: 10 },
+  ayarKartiBaslik: { color: '#FFF', fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 6 },
+  ayarKartiAlt: { color: '#888', fontSize: 11, textAlign: 'center', lineHeight: 15 },
+
+  // Odaklanma stili
   defaultFocused: {
     transform: [{ scale: 1.08 }],
     borderColor: '#FBE122',
