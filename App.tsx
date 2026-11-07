@@ -1862,7 +1862,13 @@ export default function App() {
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.geriBilgiMetin}>(Kumandadan Geri tuşuyla kapatılır)</Text>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setKontrolMerkeziAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
               </View>
 
               {/* Hızlı Eylem Kartları (Tiles) */}
@@ -2316,6 +2322,21 @@ export default function App() {
                   <Text style={styles.tehisDeger}>32 GB Yüksek Hızlı Flash • 18.2 GB Boş</Text>
                 </View>
               </View>
+
+              {/* Kapat ve Ana Ekrana Dön Butonu */}
+              <View style={{ marginTop: 14, alignItems: 'center' }}>
+                <FocusableItem
+                  style={[styles.modalKaydetKapatButon, { backgroundColor: aktifTema.accent, borderColor: aktifTema.border }]}
+                  focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.04 }] }}
+                  onPress={() => setKontrolMerkeziAcik(false)}
+                >
+                  {() => (
+                    <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent }]}>
+                      ✔ Kapat ve Ana Ekrana Dön
+                    </Text>
+                  )}
+                </FocusableItem>
+              </View>
             </View>
           </View>
         </Modal>
@@ -2326,7 +2347,13 @@ export default function App() {
             <View style={[styles.modalPencere, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
                 <Text style={styles.modalBaslik}>🎨 Arayüz Teması & Renk Paleti</Text>
-                <Text style={styles.geriBilgiMetin}>(Geri tuşuyla kapatılır)</Text>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setTemaSeciciAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
               </View>
               <Text style={styles.modalAltBaslik}>
                 Başlatıcınız için ikon şekli ve dinamik cam renk temasını seçin:
@@ -2404,6 +2431,24 @@ export default function App() {
                   );
                 })}
               </ScrollView>
+
+              {/* BÜYÜK 'TEMAYI UYGULA & ANA EKRANA DÖN' BUTONU */}
+              <View style={{ marginTop: 14, alignItems: 'center' }}>
+                <FocusableItem
+                  style={[styles.modalKaydetKapatButon, { backgroundColor: aktifTema.accent, borderColor: aktifTema.border }]}
+                  focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.04 }] }}
+                  onPress={() => {
+                    ayarlariYedekle();
+                    setTemaSeciciAcik(false);
+                  }}
+                >
+                  {() => (
+                    <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent }]}>
+                      ✔ Temayı Kaydet & Ana Ekrana Dön
+                    </Text>
+                  )}
+                </FocusableItem>
+              </View>
             </View>
           </View>
         </Modal>
@@ -2414,7 +2459,13 @@ export default function App() {
             <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
                 <Text style={styles.modalBaslik}>⚡ {seciliAksiyonUygulama?.name}</Text>
-                <Text style={styles.geriBilgiMetin}>(Geri tuşuyla kapatılır)</Text>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setAksiyonMenusuAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
               </View>
 
               <Text style={styles.modalAltBaslik}>Yapmak istediğiniz işlemi seçin:</Text>
@@ -2560,6 +2611,19 @@ export default function App() {
                   >
                     {() => <Text style={[styles.aksiyonButonYazi, { color: '#FCA5A5' }]}>🗑️ Uygulamayı Kaldır (Sil)</Text>}
                   </FocusableItem>
+
+                  {/* Kapat ve Ana Ekrana Dön */}
+                  <FocusableItem
+                    style={[styles.modalKaydetKapatButon, { marginTop: 12, backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }]}
+                    focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+                    onPress={() => setAksiyonMenusuAcik(false)}
+                  >
+                    {() => (
+                      <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>
+                        ✔ Kapat & Ana Ekrana Dön
+                      </Text>
+                    )}
+                  </FocusableItem>
                 </View>
               )}
             </View>
@@ -2572,7 +2636,13 @@ export default function App() {
             <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
                 <Text style={styles.modalBaslik}>✏️ Uygulama Adını Değiştir</Text>
-                <Text style={styles.geriBilgiMetin}>(Geri tuşuyla kapatılır)</Text>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setYenidenAdlandirModalAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
               </View>
 
               <Text style={styles.modalAltBaslik}>
@@ -2616,8 +2686,8 @@ export default function App() {
                 ))}
               </View>
 
-              {/* Kaydet ve Sıfırla Butonları */}
-              <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
+              {/* Kaydet, Sıfırla ve Vazgeç Butonları */}
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
                 <FocusableItem
                   style={[styles.aksiyonButon, { flex: 1, backgroundColor: aktifTema.accent, marginTop: 0 }]}
                   focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
@@ -2647,6 +2717,14 @@ export default function App() {
                 >
                   {() => <Text style={styles.aksiyonButonYazi}>🔄 Orijinale Dön</Text>}
                 </FocusableItem>
+
+                <FocusableItem
+                  style={[styles.aksiyonButon, { flex: 1, marginTop: 0, backgroundColor: 'rgba(255,255,255,0.08)' }]}
+                  focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+                  onPress={() => setYenidenAdlandirModalAcik(false)}
+                >
+                  {() => <Text style={styles.aksiyonButonYazi}>✕ Vazgeç</Text>}
+                </FocusableItem>
               </View>
             </View>
           </View>
@@ -2658,7 +2736,13 @@ export default function App() {
             <View style={[styles.modalPencere, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
                 <Text style={styles.modalBaslik}>📱 Cihazınızda Kurulu Uygulamalar & Yönetim</Text>
-                <Text style={styles.geriBilgiMetin}>(Geri tuşuyla kapatılır)</Text>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setUygulamaSeciciAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
               </View>
               <Text style={styles.modalAltBaslik}>
                 Favorilere eklemek veya istenmeyen sistem uygulamalarını gizlemek için seçin:
@@ -2744,6 +2828,24 @@ export default function App() {
                   </View>
                 </ScrollView>
               )}
+
+              {/* BÜYÜK 'KAYDET VE ANA EKRANA DÖN' BUTONU */}
+              <View style={{ marginTop: 14, alignItems: 'center' }}>
+                <FocusableItem
+                  style={[styles.modalKaydetKapatButon, { backgroundColor: aktifTema.accent, borderColor: aktifTema.border }]}
+                  focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.04 }] }}
+                  onPress={() => {
+                    ayarlariYedekle();
+                    setUygulamaSeciciAcik(false);
+                  }}
+                >
+                  {() => (
+                    <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent }]}>
+                      ✔ Değişiklikleri Kaydet & Ana Ekrana Dön
+                    </Text>
+                  )}
+                </FocusableItem>
+              </View>
             </View>
           </View>
         </Modal>
@@ -2756,13 +2858,19 @@ export default function App() {
             <View style={[styles.modalPencere, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
                 <Text style={styles.modalBaslik}>📺 Uygulama İçerik Şeridi Ekle</Text>
-                <Text style={styles.geriBilgiMetin}>(Geri tuşuyla kapatılır)</Text>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setSeritEkleAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
               </View>
               <Text style={styles.modalAltBaslik}>
                 Ana sayfanızda hangi uygulamanın film/dizi şeridi aksın?
               </Text>
 
-              <ScrollView style={{ maxHeight: 340 }}>
+              <ScrollView style={{ maxHeight: 300 }}>
                 <View style={styles.gridKutusu}>
                   {cihazUygulamalari.map((app) => (
                     <FocusableItem
@@ -2784,6 +2892,21 @@ export default function App() {
                   ))}
                 </View>
               </ScrollView>
+
+              {/* Kapat ve Ana Ekrana Dön Butonu */}
+              <View style={{ marginTop: 14, alignItems: 'center' }}>
+                <FocusableItem
+                  style={[styles.modalKaydetKapatButon, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }]}
+                  focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+                  onPress={() => setSeritEkleAcik(false)}
+                >
+                  {() => (
+                    <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>
+                      ✔ Kapat ve Ana Ekrana Dön
+                    </Text>
+                  )}
+                </FocusableItem>
+              </View>
             </View>
           </View>
         </Modal>
@@ -2794,7 +2917,13 @@ export default function App() {
             <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
                 <Text style={styles.modalBaslik}>🌤️ Canlı Hava Durumu & 3 Günlük Tahmin</Text>
-                <Text style={styles.geriBilgiMetin}>(Geri tuşuyla kapatılır)</Text>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setHavaModalAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
               </View>
               <Text style={styles.modalAltBaslik}>📍 {havaDurumu.sehir} • Gerçek Zamanlı IP Konumu</Text>
 
@@ -2826,6 +2955,21 @@ export default function App() {
                   </View>
                 ))}
               </View>
+
+              {/* Kapat ve Ana Ekrana Dön Butonu */}
+              <View style={{ marginTop: 16, alignItems: 'center' }}>
+                <FocusableItem
+                  style={[styles.modalKaydetKapatButon, { backgroundColor: aktifTema.accent, borderColor: aktifTema.border }]}
+                  focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.04 }] }}
+                  onPress={() => setHavaModalAcik(false)}
+                >
+                  {() => (
+                    <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent }]}>
+                      ✔ Kapat ve Ana Ekrana Dön
+                    </Text>
+                  )}
+                </FocusableItem>
+              </View>
             </View>
           </View>
         </Modal>
@@ -2836,7 +2980,13 @@ export default function App() {
             <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border, alignItems: 'center' }]}>
               <View style={[styles.modalBaslikSatir, { width: '100%' }]}>
                 <Text style={styles.modalBaslik}>🚀 Canlı İnternet Hız & Ping Testi</Text>
-                <Text style={styles.geriBilgiMetin}>(Geri tuşuyla kapatılır)</Text>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setHizTestiAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
               </View>
 
               <View style={[styles.hizDaireGosterge, { borderColor: aktifTema.accent, backgroundColor: aktifTema.surface }]}>
@@ -2867,6 +3017,19 @@ export default function App() {
                 {() => (
                   <Text style={[styles.kaydetYazi, { color: aktifTema.textOnAccent }]}>
                     {hizDurum.calisiyor ? '⏳ Ölçülüyor...' : '🔄 Testi Yeniden Başlat'}
+                  </Text>
+                )}
+              </FocusableItem>
+
+              {/* Kapat ve Ana Ekrana Dön Butonu */}
+              <FocusableItem
+                style={[styles.modalKaydetKapatButon, { width: '100%', marginTop: 10, backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }]}
+                focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+                onPress={() => setHizTestiAcik(false)}
+              >
+                {() => (
+                  <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>
+                    ✔ Kapat ve Ana Ekrana Dön
                   </Text>
                 )}
               </FocusableItem>
@@ -2936,6 +3099,21 @@ export default function App() {
                   </FocusableItem>
                 ))}
               </View>
+              <FocusableItem
+                style={[styles.modalKaydetKapatButon, { width: '100%', marginTop: 12, backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }]}
+                focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+                onPress={() => {
+                  setGirilenPin('');
+                  setPinModalAcik(false);
+                  setHedefKilitliApp(null);
+                }}
+              >
+                {() => (
+                  <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>
+                    ✕ İptal ve Ana Ekrana Dön
+                  </Text>
+                )}
+              </FocusableItem>
               <Text style={styles.geriBilgiMetin}>(Varsayılan PIN: 1234 • Kumandadan Geri tuşuyla çıkılır)</Text>
             </View>
           </View>
@@ -3811,6 +3989,34 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     letterSpacing: 0.3,
+  },
+
+  // MODAL KAPATMA VE KAYDETME BUTONLARI
+  modalKapatUstButon: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  modalKapatUstYazi: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  modalKaydetKapatButon: {
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    minWidth: 260,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalKaydetKapatYazi: {
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 
   defaultFocused: {
