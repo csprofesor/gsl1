@@ -133,4 +133,60 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             promise.reject("ERROR_INSTALL", e.message, e)
         }
     }
+
+    @ReactMethod
+    fun openSettings(promise: Promise) {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ERROR_SETTINGS", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun openWifiSettings(promise: Promise) {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_WIFI_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ERROR_WIFI", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun openAppDetails(packageName: String, promise: Promise) {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ERROR_APP_DETAILS", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun getDeviceInfo(promise: Promise) {
+        try {
+            val map = Arguments.createMap()
+            map.putString("manufacturer", Build.MANUFACTURER)
+            map.putString("model", Build.MODEL)
+            map.putString("brand", Build.BRAND)
+            map.putString("device", Build.DEVICE)
+            map.putString("androidVersion", Build.VERSION.RELEASE)
+            map.putInt("sdkInt", Build.VERSION.SDK_INT)
+            promise.resolve(map)
+        } catch (e: Exception) {
+            promise.reject("ERROR_DEVICE_INFO", e.message, e)
+        }
+    }
 }
