@@ -26,7 +26,7 @@ const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi
 const CURRENT_VERSION = '1.8.0';
-const LATEST_RELEASE_APK = 'https://expo.dev/artifacts/eas/rTQ4C9ZrB78-TFEi0B-I7RFo7fYGWUORoGcYvcR07zc.apk';
+const LATEST_RELEASE_APK = 'https://expo.dev/artifacts/eas/SCBk0L_AZCfjjKbOgt8O7LrtYHBa5wa56Wv8kjFd4fU.apk';
 
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
 export interface MonetTheme {
