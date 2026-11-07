@@ -49,7 +49,7 @@ export interface MonetTheme {
 const MONET_TEMALARI: MonetTheme[] = [
   {
     id: 'amber',
-    name: 'Gündoğumu (Monet Kehribar)',
+    name: 'Gündoğumu (Altın Kehribar)',
     accent: '#F59E0B',
     glow: 'rgba(245, 158, 11, 0.45)',
     surface: 'rgba(245, 158, 11, 0.12)',
@@ -60,7 +60,7 @@ const MONET_TEMALARI: MonetTheme[] = [
   },
   {
     id: 'violet',
-    name: 'Kozmik Menekşe (Monet Mor)',
+    name: 'Kozmik Gece (Neon Menekşe)',
     accent: '#A855F7',
     glow: 'rgba(168, 85, 247, 0.45)',
     surface: 'rgba(168, 85, 247, 0.14)',
@@ -71,7 +71,7 @@ const MONET_TEMALARI: MonetTheme[] = [
   },
   {
     id: 'cyan',
-    name: 'Buz Okyanusu (Monet Turkuaz)',
+    name: 'Buz Okyanusu (Turkuaz)',
     accent: '#06B6D4',
     glow: 'rgba(6, 182, 212, 0.45)',
     surface: 'rgba(6, 182, 212, 0.12)',
@@ -82,7 +82,7 @@ const MONET_TEMALARI: MonetTheme[] = [
   },
   {
     id: 'emerald',
-    name: 'Zümrüt Doğa (Monet Yeşil)',
+    name: 'Zümrüt Vadi (Doğal Yeşil)',
     accent: '#10B981',
     glow: 'rgba(16, 185, 129, 0.45)',
     surface: 'rgba(16, 185, 129, 0.12)',
@@ -93,7 +93,7 @@ const MONET_TEMALARI: MonetTheme[] = [
   },
   {
     id: 'ruby',
-    name: 'Kızıl Akşam (Monet Mercan)',
+    name: 'Kızıl Akşam (Sıcak Mercan)',
     accent: '#F43F5E',
     glow: 'rgba(244, 63, 94, 0.45)',
     surface: 'rgba(244, 63, 94, 0.12)',
@@ -104,7 +104,7 @@ const MONET_TEMALARI: MonetTheme[] = [
   },
   {
     id: 'oled',
-    name: 'Saf OLED (Monet Siyah/Gümüş)',
+    name: 'Saf OLED (Karanlık Mod)',
     accent: '#E2E8F0',
     glow: 'rgba(255, 255, 255, 0.40)',
     surface: 'rgba(255, 255, 255, 0.08)',
@@ -637,7 +637,7 @@ export default function App() {
             <Image source={GS_ICON} style={styles.gsLogoResim} resizeMode="cover" />
             <View>
               <Text style={styles.gsBaslik}>GS LAUNCHER</Text>
-              <Text style={styles.gsSurum}>Monet & LeTa Edition</Text>
+              <Text style={styles.gsSurum}>Pro TV Edition</Text>
             </View>
 
             <View style={[styles.aramaKapsul, { borderColor: aktifTema.surface }]}>
@@ -972,7 +972,7 @@ export default function App() {
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Image source={GS_ICON} style={styles.kontrolLogoResim} resizeMode="cover" />
                   <View>
-                    <Text style={styles.kontrolMerkeziBaslik}>⚡ GS Kontrol Merkezi (LeTa & Monet)</Text>
+                    <Text style={styles.kontrolMerkeziBaslik}>⚡ GS Hızlı Kontrol Merkezi</Text>
                     <Text style={styles.cihazBilgiYazi}>
                       {cihazBilgisi.manufacturer} {cihazBilgisi.model} • {cihazBilgisi.android} • Mi Box
                     </Text>
@@ -983,7 +983,7 @@ export default function App() {
 
               {/* Hızlı Eylem Kartları (Tiles) */}
               <View style={styles.kontrolGrid}>
-                {/* 1. Monet Tema & Duvar Kağıdı Değiştirici */}
+                {/* 1. Görsel Tema & Renk Değiştirici */}
                 <FocusableItem
                   style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
                   focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
@@ -995,7 +995,7 @@ export default function App() {
                   {() => (
                     <>
                       <Text style={styles.tileIkon}>🎨</Text>
-                      <Text style={styles.tileBaslik}>Monet Teması</Text>
+                      <Text style={styles.tileBaslik}>Arayüz Teması</Text>
                       <Text style={[styles.tileAlt, { color: aktifTema.border }]}>{aktifTema.name}</Text>
                     </>
                   )}
@@ -1140,11 +1140,11 @@ export default function App() {
           <View style={styles.modalArkaplan}>
             <View style={[styles.modalPencere, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
-                <Text style={styles.modalBaslik}>🎨 Monet Teması & Görsel Stil</Text>
+                <Text style={styles.modalBaslik}>🎨 Arayüz Teması & Renk Paleti</Text>
                 <Text style={styles.geriBilgiMetin}>(Geri tuşuyla kapatılır)</Text>
               </View>
               <Text style={styles.modalAltBaslik}>
-                Android 14 Material You dinamik renk motorundan beğendiğiniz temayı seçin:
+                Başlatıcınız için cam efektli dinamik renk temasını seçin:
               </Text>
 
               <ScrollView style={{ maxHeight: 380 }}>
