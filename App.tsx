@@ -103,6 +103,72 @@ const MONET_TEMALARI: MonetTheme[] = [
     bgGradientColor: 'rgba(28, 5, 12, 0.60)',
   },
   {
+    id: 'cyber',
+    name: 'Siber Fütüristik (Fuşya & Neon)',
+    accent: '#D946EF',
+    glow: 'rgba(217, 70, 239, 0.45)',
+    surface: 'rgba(217, 70, 239, 0.14)',
+    border: '#F0ABFC',
+    textOnAccent: '#FFFFFF',
+    wallpaperKey: 'cyber',
+    bgGradientColor: 'rgba(26, 4, 30, 0.65)',
+  },
+  {
+    id: 'galaxy',
+    name: 'Derin Galaksi (Safir Kozmos)',
+    accent: '#3B82F6',
+    glow: 'rgba(59, 130, 246, 0.45)',
+    surface: 'rgba(59, 130, 246, 0.13)',
+    border: '#93C5FD',
+    textOnAccent: '#FFFFFF',
+    wallpaperKey: 'cosmic',
+    bgGradientColor: 'rgba(6, 14, 38, 0.65)',
+  },
+  {
+    id: 'lava',
+    name: 'Volkanik Magma (Lava Ateşi)',
+    accent: '#F97316',
+    glow: 'rgba(249, 115, 22, 0.45)',
+    surface: 'rgba(249, 115, 22, 0.13)',
+    border: '#FDBA74',
+    textOnAccent: '#1F0B02',
+    wallpaperKey: 'lake',
+    bgGradientColor: 'rgba(32, 10, 3, 0.65)',
+  },
+  {
+    id: 'gold',
+    name: 'Asil Şampanya (Kraliyet Sarayı)',
+    accent: '#EAB308',
+    glow: 'rgba(234, 179, 8, 0.45)',
+    surface: 'rgba(234, 179, 8, 0.12)',
+    border: '#FDE047',
+    textOnAccent: '#231802',
+    wallpaperKey: 'lake',
+    bgGradientColor: 'rgba(24, 18, 4, 0.60)',
+  },
+  {
+    id: 'teal',
+    name: 'İskandinav Sis (Kuzey Çamı)',
+    accent: '#0D9488',
+    glow: 'rgba(13, 148, 136, 0.45)',
+    surface: 'rgba(13, 148, 136, 0.12)',
+    border: '#5EEAD4',
+    textOnAccent: '#021B18',
+    wallpaperKey: 'forest',
+    bgGradientColor: 'rgba(3, 22, 20, 0.65)',
+  },
+  {
+    id: 'sakura',
+    name: 'Kiraz Çiçeği (Tokyo Sakura)',
+    accent: '#EC4899',
+    glow: 'rgba(236, 72, 153, 0.45)',
+    surface: 'rgba(236, 72, 153, 0.13)',
+    border: '#F9A8D4',
+    textOnAccent: '#FFFFFF',
+    wallpaperKey: 'cosmic',
+    bgGradientColor: 'rgba(28, 6, 20, 0.65)',
+  },
+  {
     id: 'oled',
     name: 'Saf OLED (Karanlık Mod)',
     accent: '#E2E8F0',
@@ -114,6 +180,44 @@ const MONET_TEMALARI: MonetTheme[] = [
     bgGradientColor: 'rgba(0, 0, 0, 0.85)',
   },
 ];
+
+// Akıllı Çeşitli İkon & Renk Atayıcısı
+const getAppIconAndColor = (name: string, pkg: string): { icon: string; color: string } => {
+  const n = name.toLowerCase();
+  const p = pkg.toLowerCase();
+
+  if (n.includes('netflix') || p.includes('netflix')) return { icon: '🎬', color: '#831010' };
+  if (n.includes('prime') || p.includes('amazonvideo')) return { icon: '🍿', color: '#00486D' };
+  if (n.includes('youtube') || n.includes('smarttube') || p.includes('youtube')) return { icon: '📺', color: '#8C1515' };
+  if (n.includes('disney')) return { icon: '✨', color: '#11235A' };
+  if (n.includes('kodi')) return { icon: '❄️', color: '#134B70' };
+  if (n.includes('cloudstream')) return { icon: '☁️', color: '#1B3B6F' };
+  if (n.includes('nuvio')) return { icon: '💜', color: '#3A1448' };
+  if (n.includes('stremio')) return { icon: '🟣', color: '#2B1B4D' };
+  if (n.includes('spotify') || n.includes('music') || n.includes('müzik') || p.includes('spotify')) return { icon: '🎵', color: '#155E38' };
+  if (n.includes('vlc') || n.includes('mx player') || p.includes('videolan')) return { icon: '🎞️', color: '#9A3412' };
+  if (n.includes('plex') || n.includes('jellyfin')) return { icon: '📽️', color: '#78350F' };
+  if (n.includes('trt') || n.includes('canlı') || n.includes('tv') || n.includes('iptv') || n.includes('tivimate')) return { icon: '📡', color: '#065F46' };
+  if (n.includes('exxen') || n.includes('tivibu') || n.includes('bein') || n.includes('sport') || n.includes('maç')) return { icon: '⚽', color: '#1E3A8A' };
+  if (n.includes('game') || n.includes('oyun') || n.includes('retro') || n.includes('play')) return { icon: '🎮', color: '#4C1D95' };
+  if (n.includes('download') || n.includes('indir')) return { icon: '⬇️', color: '#0F766E' };
+  if (n.includes('chrome') || n.includes('browser') || n.includes('tarayıcı') || n.includes('web')) return { icon: '🌐', color: '#1D4ED8' };
+  if (n.includes('file') || n.includes('dosya') || n.includes('explorer')) return { icon: '📁', color: '#374151' };
+  if (n.includes('ayar') || n.includes('setting')) return { icon: '⚙️', color: '#334155' };
+  if (n.includes('temiz') || n.includes('clean') || n.includes('boost')) return { icon: '🧹', color: '#047857' };
+  if (n.includes('galeri') || n.includes('foto') || n.includes('photo')) return { icon: '🖼️', color: '#701A75' };
+  if (n.includes('ses') || n.includes('mic') || n.includes('voice')) return { icon: '🎙️', color: '#0369A1' };
+  if (n.includes('mağaza') || n.includes('store') || n.includes('market')) return { icon: '🛍️', color: '#059669' };
+
+  // Farklı farklı dinamik ikonlar
+  const fallbackIcons = ['📱', '⚡', '🌟', '🚀', '🔮', '💎', '🔥', '🎯', '💫', '🎨'];
+  const fallbackColors = ['#1E293B', '#1B355A', '#2D1B4E', '#164E63', '#14532D', '#701A75', '#7C2D12'];
+  const sum = (name + pkg).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return {
+    icon: fallbackIcons[sum % fallbackIcons.length],
+    color: fallbackColors[sum % fallbackColors.length],
+  };
+};
 
 // LeTa Launcher Uygulama Kategorileri
 export type AppCategory = 'all' | 'media' | 'tv' | 'games' | 'tools';
@@ -194,10 +298,13 @@ interface IcerikSeridi {
 }
 
 export default function App() {
-  // 1. Monet Teması
+  // 1. Arayüz Teması
   const [aktifTema, setAktifTema] = useState<MonetTheme>(MONET_TEMALARI[0]);
 
-  // 2. LeTa Kategori Filtresi
+  // İkon Şekli & Stili
+  const [ikonStili, setIkonStili] = useState<'squircle' | 'round' | 'capsule'>('squircle');
+
+  // 2. Kategori Filtresi
   const [seciliKategori, setSeciliKategori] = useState<AppCategory>('all');
 
   // 3. Cihazdaki GERÇEK Kurulu Uygulamalar
@@ -331,12 +438,13 @@ export default function App() {
               cat = 'games';
             }
 
+            const meta = getAppIconAndColor(a.name, a.packageName);
             return {
               id: a.packageName,
               name: a.name,
               packageName: a.packageName,
-              color: renkPaleti[idx % renkPaleti.length],
-              icon: '▶',
+              color: meta.color,
+              icon: meta.icon,
               category: cat,
               isFavorite: idx < 7, // İlk 7'si varsayılan favori
             };
@@ -795,30 +903,47 @@ export default function App() {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
-            {goruntulenenUygulamalar.map((app) => (
-              <FocusableItem
-                key={app.id}
-                style={[styles.appKarti, { backgroundColor: app.color }]}
-                focusedStyle={[styles.appKartiOdak, { borderColor: aktifTema.border, shadowColor: aktifTema.accent }]}
-                onPress={() => uygulamaBaslat(app.packageName, app.name)}
-                onLongPress={() => appAksiyonAc(app)}
-              >
-                {() => (
-                  <View style={styles.appKartIcerik}>
-                    <Text style={styles.appIkonMetin}>{app.icon}</Text>
-                    <Text style={styles.appIsim} numberOfLines={1}>
-                      {app.name}
-                    </Text>
-                    {app.isFavorite && <Text style={styles.favoriYildiz}>⭐</Text>}
-                  </View>
-                )}
-              </FocusableItem>
-            ))}
+            {goruntulenenUygulamalar.map((app) => {
+              const borderRad = ikonStili === 'round' ? 36 : ikonStili === 'capsule' ? 22 : 16;
+              const cardWidth = ikonStili === 'capsule' ? 134 : 124;
+              return (
+                <FocusableItem
+                  key={app.id}
+                  style={[styles.appKarti, { backgroundColor: app.color, borderRadius: borderRad, width: cardWidth }]}
+                  focusedStyle={[styles.appKartiOdak, { borderColor: aktifTema.border, shadowColor: aktifTema.accent, borderRadius: borderRad }]}
+                  onPress={() => uygulamaBaslat(app.packageName, app.name)}
+                  onLongPress={() => appAksiyonAc(app)}
+                >
+                  {() => (
+                    <View style={styles.appKartIcerik}>
+                      <Text style={styles.appIkonMetin}>{app.icon}</Text>
+                      <Text style={styles.appIsim} numberOfLines={1}>
+                        {app.name}
+                      </Text>
+                      {app.isFavorite && <Text style={styles.favoriYildiz}>⭐</Text>}
+                    </View>
+                  )}
+                </FocusableItem>
+              );
+            })}
 
             {/* '+' BUTONU */}
             <FocusableItem
-              style={[styles.artiKarti, { borderColor: aktifTema.border }]}
-              focusedStyle={[styles.artiKartiOdak, { borderColor: aktifTema.accent, shadowColor: aktifTema.accent }]}
+              style={[
+                styles.artiKarti,
+                {
+                  borderColor: aktifTema.border,
+                  borderRadius: ikonStili === 'round' ? 36 : ikonStili === 'capsule' ? 22 : 16,
+                },
+              ]}
+              focusedStyle={[
+                styles.artiKartiOdak,
+                {
+                  borderColor: aktifTema.accent,
+                  shadowColor: aktifTema.accent,
+                  borderRadius: ikonStili === 'round' ? 36 : ikonStili === 'capsule' ? 22 : 16,
+                },
+              ]}
               onPress={() => {
                 yukluUygulamalariGetir();
                 setUygulamaSeciciAcik(true);
@@ -1144,10 +1269,49 @@ export default function App() {
                 <Text style={styles.geriBilgiMetin}>(Geri tuşuyla kapatılır)</Text>
               </View>
               <Text style={styles.modalAltBaslik}>
-                Başlatıcınız için cam efektli dinamik renk temasını seçin:
+                Başlatıcınız için ikon şekli ve dinamik cam renk temasını seçin:
               </Text>
 
-              <ScrollView style={{ maxHeight: 380 }}>
+              {/* İkon Şekli Seçimi */}
+              <View style={{ marginBottom: 14 }}>
+                <Text style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 11, fontWeight: '700', marginBottom: 8 }}>
+                  Kart & İkon Şekli:
+                </Text>
+                <View style={{ flexDirection: 'row' }}>
+                  {[
+                    { id: 'squircle', label: '🔲 Modern Squircle' },
+                    { id: 'round', label: '⭕ Dairesel Neon' },
+                    { id: 'capsule', label: '💎 Geniş Kapsül' },
+                  ].map((st) => (
+                    <FocusableItem
+                      key={st.id}
+                      style={[
+                        styles.kategoriSecimPill,
+                        ikonStili === st.id && { backgroundColor: aktifTema.accent, borderColor: aktifTema.border },
+                      ]}
+                      focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                      onPress={() => setIkonStili(st.id as any)}
+                    >
+                      {() => (
+                        <Text
+                          style={[
+                            styles.kategoriSecimPillYazi,
+                            ikonStili === st.id && { color: aktifTema.textOnAccent, fontWeight: '900' },
+                          ]}
+                        >
+                          {st.label}
+                        </Text>
+                      )}
+                    </FocusableItem>
+                  ))}
+                </View>
+              </View>
+
+              <Text style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 11, fontWeight: '700', marginBottom: 8 }}>
+                Dinamik Renk Paleti ({MONET_TEMALARI.length} Farklı Tema):
+              </Text>
+
+              <ScrollView style={{ maxHeight: 330 }}>
                 {MONET_TEMALARI.map((t) => {
                   const secili = aktifTema.id === t.id;
                   return (
@@ -1284,6 +1448,7 @@ export default function App() {
                       const zatenEkli = uygulamalar.some(
                         (u) => u.packageName === app.packageName && u.isFavorite
                       );
+                      const meta = getAppIconAndColor(app.name, app.packageName);
                       return (
                         <FocusableItem
                           key={app.packageName}
@@ -1293,7 +1458,7 @@ export default function App() {
                         >
                           {() => (
                             <>
-                              <Text style={styles.kuruluAppIkon}>▶</Text>
+                              <Text style={styles.kuruluAppIkon}>{meta.icon}</Text>
                               <Text style={styles.kuruluAppBaslik} numberOfLines={1}>
                                 {app.name}
                               </Text>
