@@ -342,6 +342,52 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun openSoundSettings(promise: Promise) {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_SOUND_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            if (intent.resolveActivity(reactContext.packageManager) != null) {
+                reactContext.startActivity(intent)
+                promise.resolve(true)
+                return
+            }
+        } catch (_: Exception) {}
+
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (err: Exception) {
+            promise.reject("ERROR_SOUND", err.message, err)
+        }
+    }
+
+    @ReactMethod
+    fun saveSetting(key: String, value: String, promise: Promise) {
+        try {
+            val prefs = reactContext.getSharedPreferences("GS_LAUNCHER_PREFS", Context.MODE_PRIVATE)
+            prefs.edit().putString(key, value).apply()
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ERROR_SAVE", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun getSetting(key: String, defaultValue: String, promise: Promise) {
+        try {
+            val prefs = reactContext.getSharedPreferences("GS_LAUNCHER_PREFS", Context.MODE_PRIVATE)
+            val res = prefs.getString(key, defaultValue) ?: defaultValue
+            promise.resolve(res)
+        } catch (e: Exception) {
+            promise.resolve(defaultValue)
+        }
+    }
+
+    @ReactMethod
     fun getDeviceInfo(promise: Promise) {
         try {
             val map = Arguments.createMap()

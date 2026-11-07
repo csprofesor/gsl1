@@ -25,7 +25,7 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi
-const CURRENT_VERSION = '1.8.0';
+const CURRENT_VERSION = '1.9.0';
 const LATEST_RELEASE_APK = 'https://expo.dev/artifacts/eas/SCBk0L_AZCfjjKbOgt8O7LrtYHBa5wa56Wv8kjFd4fU.apk';
 
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
@@ -258,6 +258,7 @@ const FocusableItem: React.FC<FocusableItemProps> = ({
 interface UygulamaItem {
   id: string;
   name: string;
+  customName?: string;
   packageName: string;
   color: string;
   icon: string;
@@ -336,8 +337,15 @@ export default function App() {
   const [havaModalAcik, setHavaModalAcik] = useState(false);
   const [seciliAksiyonUygulama, setSeciliAksiyonUygulama] = useState<UygulamaItem | null>(null);
 
+  // Pro TV & Projectivy Parite Özellikleri
+  const [kartBoyutu, setKartBoyutu] = useState<'compact' | 'standard' | 'large'>('standard');
+  const [acilisModu, setAcilisModu] = useState<'launcher' | 'satellite' | 'last_app'>('launcher');
+  const [customAppNames, setCustomAppNames] = useState<Record<string, string>>({});
+  const [yenidenAdlandirModalAcik, setYenidenAdlandirModalAcik] = useState(false);
+  const [duzenlenenAd, setDuzenlenenAd] = useState('');
+
   // Uygulama Sıralama & Gizleme
-  const [siralamaModu, setSiralamaModu] = useState<'favoriler' | 'alfabetik'>('favoriler');
+  const [siralamaModu, setSiralamaModu] = useState<'ozel' | 'favoriler' | 'alfabetik'>('ozel');
   const [gizlenenPaketler, setGizlenenPaketler] = useState<string[]>([]);
 
   // Durum Bildirimi (RAM temizleme, Güncelleme vb.)
@@ -425,12 +433,16 @@ export default function App() {
       setAksiyonMenusuAcik(false);
       return true;
     }
+    if (yenidenAdlandirModalAcik) {
+      setYenidenAdlandirModalAcik(false);
+      return true;
+    }
     if (seritEkleAcik) {
       setSeritEkleAcik(false);
       return true;
     }
     return false;
-  }, [ekranKoruyucuAcik, pinModalAcik, hizTestiAcik, havaModalAcik, kontrolMerkeziAcik, temaSeciciAcik, uygulamaSeciciAcik, aksiyonMenusuAcik, seritEkleAcik]);
+  }, [ekranKoruyucuAcik, pinModalAcik, hizTestiAcik, havaModalAcik, kontrolMerkeziAcik, temaSeciciAcik, uygulamaSeciciAcik, aksiyonMenusuAcik, yenidenAdlandirModalAcik, seritEkleAcik]);
 
   useEffect(() => {
     const backSub = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
@@ -445,8 +457,34 @@ export default function App() {
         if (Array.isArray(apps)) {
           setCihazUygulamalari(apps);
 
+          // Tercihleri Native SharedPreferences'tan Oku
+          let storedNames: Record<string, string> = {};
+          let storedOrder: string[] = [];
+          if (TVAppManager.getSetting) {
+            try {
+              const rawNames = await TVAppManager.getSetting('customAppNames', '{}');
+              storedNames = JSON.parse(rawNames);
+              setCustomAppNames(storedNames);
+            } catch {}
+            try {
+              const rawOrder = await TVAppManager.getSetting('customAppOrder', '[]');
+              storedOrder = JSON.parse(rawOrder);
+            } catch {}
+            try {
+              const rawSize = await TVAppManager.getSetting('kartBoyutu', 'standard');
+              if (rawSize === 'compact' || rawSize === 'standard' || rawSize === 'large') {
+                setKartBoyutu(rawSize);
+              }
+            } catch {}
+            try {
+              const rawBoot = await TVAppManager.getSetting('acilisModu', 'launcher');
+              if (rawBoot === 'launcher' || rawBoot === 'satellite' || rawBoot === 'last_app') {
+                setAcilisModu(rawBoot);
+              }
+            } catch {}
+          }
+
           // Otomatik akıllı kategori ataması
-          const renkPaleti = ['#3A1448', '#1B355A', '#15324D', '#5A1616', '#123D24', '#B45309', '#0A2544'];
           const yeniUygulamalar: UygulamaItem[] = apps.map((a, idx) => {
             const lowerName = a.name.toLowerCase();
             const lowerPkg = a.packageName.toLowerCase();
@@ -489,9 +527,11 @@ export default function App() {
             }
 
             const meta = getAppIconAndColor(a.name, a.packageName);
+            const ozelAd = storedNames[a.packageName];
             return {
               id: a.packageName,
-              name: a.name,
+              name: ozelAd || a.name,
+              customName: ozelAd,
               packageName: a.packageName,
               color: meta.color,
               icon: meta.icon,
@@ -499,6 +539,18 @@ export default function App() {
               isFavorite: idx < 7, // İlk 7'si varsayılan favori
             };
           });
+
+          // Kayıtlı özel sıralama varsa uygula
+          if (storedOrder.length > 0) {
+            yeniUygulamalar.sort((a, b) => {
+              const idxA = storedOrder.indexOf(a.packageName);
+              const idxB = storedOrder.indexOf(b.packageName);
+              if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+              if (idxA !== -1) return -1;
+              if (idxB !== -1) return 1;
+              return 0;
+            });
+          }
 
           setUygulamalar(yeniUygulamalar);
         }
@@ -534,6 +586,31 @@ export default function App() {
         .catch(() => {});
     }
   }, [yukluUygulamalariGetir]);
+
+  // Açılış Tercihine Göre Otomatik Başlatma (Projectivy Parite)
+  useEffect(() => {
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.getSetting) {
+      TVAppManager.getSetting('acilisModu', 'launcher')
+        .then((mode: string) => {
+          if (mode === 'satellite') {
+            setTimeout(() => {
+              if (TVAppManager.openLiveChannels) {
+                TVAppManager.openLiveChannels().catch(() => {});
+              }
+            }, 1200);
+          } else if (mode === 'last_app') {
+            TVAppManager.getSetting('sonAcilanPkg', '').then((lastPkg: string) => {
+              if (lastPkg && TVAppManager.launchApp) {
+                setTimeout(() => {
+                  TVAppManager.launchApp(lastPkg).catch(() => {});
+                }, 1200);
+              }
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   // Canlı Saat & Tarih
   useEffect(() => {
@@ -645,6 +722,10 @@ export default function App() {
         zaman: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setSonBaslatilanlar((prev) => [yeniSon, ...prev.filter((i) => i.packageName !== pkg)].slice(0, 10));
+
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+        TVAppManager.saveSetting('sonAcilanPkg', pkg).catch(() => {});
+      }
 
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.launchApp) {
         const basari = await TVAppManager.launchApp(pkg);
@@ -809,6 +890,178 @@ export default function App() {
     });
   };
 
+  // Pro Parite: Uygulamayı Sola / Sağa Kaydırarak Sıralama
+  const uygulamayiKaydir = (pkg: string, yon: 'sol' | 'sag') => {
+    setUygulamalar((prev) => {
+      const idx = prev.findIndex((a) => a.packageName === pkg);
+      if (idx === -1) return prev;
+      const targetIdx = yon === 'sol' ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
+      const yeni = [...prev];
+      const temp = yeni[idx];
+      yeni[idx] = yeni[targetIdx];
+      yeni[targetIdx] = temp;
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+        const order = yeni.map((a) => a.packageName);
+        TVAppManager.saveSetting('customAppOrder', JSON.stringify(order)).catch(() => {});
+      }
+      return yeni;
+    });
+    setSiralamaModu('ozel');
+    setBildirimMetni(yon === 'sol' ? '⬅️ Uygulama sola taşındı' : '➡️ Uygulama sağa taşındı');
+    setTimeout(() => setBildirimMetni(''), 2000);
+  };
+
+  // Pro Parite: Uygulamayı Kumandayla Yeniden Adlandırma
+  const uygulamaAdiniKaydet = (pkg: string, yeniAd: string) => {
+    const guncel = { ...customAppNames, [pkg]: yeniAd };
+    setCustomAppNames(guncel);
+    setUygulamalar((prev) =>
+      prev.map((app) => (app.packageName === pkg ? { ...app, name: yeniAd, customName: yeniAd } : app))
+    );
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('customAppNames', JSON.stringify(guncel)).catch(() => {});
+    }
+    setBildirimMetni(`✏️ "${yeniAd}" olarak güncellendi.`);
+    setTimeout(() => setBildirimMetni(''), 2500);
+  };
+
+  const uygulamaAdiniSifirla = (pkg: string) => {
+    const guncel = { ...customAppNames };
+    delete guncel[pkg];
+    setCustomAppNames(guncel);
+    const pmApp = cihazUygulamalari.find((c) => c.packageName === pkg);
+    const origName = pmApp?.name || pkg;
+    setUygulamalar((prev) =>
+      prev.map((app) => {
+        if (app.packageName === pkg) {
+          const { customName, ...rest } = app;
+          return { ...rest, name: origName };
+        }
+        return app;
+      })
+    );
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('customAppNames', JSON.stringify(guncel)).catch(() => {});
+    }
+    setBildirimMetni('🔄 Orijinal uygulama adı geri yüklendi.');
+    setTimeout(() => setBildirimMetni(''), 2500);
+  };
+
+  // Pro Parite: Kart Boyutu Değiştirici (Projectivy Grid Density)
+  const kartBoyutuDegistir = () => {
+    const boyutlar: ('compact' | 'standard' | 'large')[] = ['standard', 'large', 'compact'];
+    const suanki = boyutlar.indexOf(kartBoyutu);
+    const yeni = boyutlar[(suanki + 1) % boyutlar.length];
+    setKartBoyutu(yeni);
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('kartBoyutu', yeni).catch(() => {});
+    }
+    const etiket =
+      yeni === 'compact'
+        ? '▫️ Kompakt (Yoğun)'
+        : yeni === 'large'
+        ? '🎬 Büyük (Sinematik)'
+        : '▪️ Standart (Dengeli)';
+    setBildirimMetni(`📐 Kart Boyutu: ${etiket}`);
+    setTimeout(() => setBildirimMetni(''), 2500);
+  };
+
+  // Pro Parite: Açılış Tercihi Değiştirici (Boot Action)
+  const acilisModuDegistir = () => {
+    const modlar: ('launcher' | 'satellite' | 'last_app')[] = ['launcher', 'satellite', 'last_app'];
+    const suanki = modlar.indexOf(acilisModu);
+    const yeni = modlar[(suanki + 1) % modlar.length];
+    setAcilisModu(yeni);
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('acilisModu', yeni).catch(() => {});
+    }
+    const etiket =
+      yeni === 'launcher'
+        ? '🚀 GS Launcher (Varsayılan)'
+        : yeni === 'satellite'
+        ? '📡 Canlı TV / Uydu Tunerı'
+        : '⏱️ En Son Açılan Uygulama';
+    setBildirimMetni(`⚡ Açılış Tercihi: ${etiket}`);
+    setTimeout(() => setBildirimMetni(''), 3000);
+  };
+
+  // Ayarları Yedekle & Sıfırla
+  const ayarlariYedekle = () => {
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('kartBoyutu', kartBoyutu).catch(() => {});
+      TVAppManager.saveSetting('acilisModu', acilisModu).catch(() => {});
+      TVAppManager.saveSetting('customAppNames', JSON.stringify(customAppNames)).catch(() => {});
+      const order = uygulamalar.map((a) => a.packageName);
+      TVAppManager.saveSetting('customAppOrder', JSON.stringify(order)).catch(() => {});
+    }
+    setBildirimMetni('💾 Tüm tercihleriniz TV belleğine başarıyla yedeklendi.');
+    setTimeout(() => setBildirimMetni(''), 3000);
+  };
+
+  const ayarlariSifirla = () => {
+    Alert.alert(
+      '🔄 Fabrika Ayarlarına Sıfırla',
+      'Tüm kişiselleştirmeler (kart boyutları, özel uygulama adları, sıralama tercihi) sıfırlansın mı?',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Sıfırla',
+          style: 'destructive',
+          onPress: () => {
+            setKartBoyutu('standard');
+            setAcilisModu('launcher');
+            setCustomAppNames({});
+            setSiralamaModu('favoriler');
+            setIkonStili('squircle');
+            setAktifTema(MONET_TEMALARI[0]);
+            if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+              TVAppManager.saveSetting('customAppNames', '{}').catch(() => {});
+              TVAppManager.saveSetting('customAppOrder', '[]').catch(() => {});
+              TVAppManager.saveSetting('kartBoyutu', 'standard').catch(() => {});
+              TVAppManager.saveSetting('acilisModu', 'launcher').catch(() => {});
+            }
+            yukluUygulamalariGetir();
+            setBildirimMetni('✔ Tüm ayarlar başarıyla sıfırlandı.');
+            setTimeout(() => setBildirimMetni(''), 3000);
+          },
+        },
+      ]
+    );
+  };
+
+  // Dinamik Kart Boyutu Hesaplama (Grid Density)
+  const cardDim = useMemo(() => {
+    if (kartBoyutu === 'compact') {
+      return {
+        width: ikonStili === 'capsule' ? 116 : 106,
+        height: 58,
+        iconSize: 22,
+        fontSize: 11,
+        badgeSize: 11,
+        padding: 6,
+      };
+    }
+    if (kartBoyutu === 'large') {
+      return {
+        width: ikonStili === 'capsule' ? 172 : 158,
+        height: 92,
+        iconSize: 38,
+        fontSize: 14,
+        badgeSize: 16,
+        padding: 12,
+      };
+    }
+    return {
+      width: ikonStili === 'capsule' ? 134 : 124,
+      height: 72,
+      iconSize: 30,
+      fontSize: 12,
+      badgeSize: 14,
+      padding: 8,
+    };
+  }, [kartBoyutu, ikonStili]);
+
   // Filtrelenmiş Uygulamalar (Kategoriye, Aramaya, Sıralamaya ve Gizliliğe Göre)
   const goruntulenenUygulamalar = useMemo(() => {
     let liste = uygulamalar.filter((u) => !gizlenenPaketler.includes(u.packageName));
@@ -821,6 +1074,9 @@ export default function App() {
 
     if (siralamaModu === 'alfabetik') {
       return [...liste].sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+    }
+    if (siralamaModu === 'ozel') {
+      return liste;
     }
     // Varsayılan: Favoriler en başta
     return [...liste].sort((a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0));
@@ -1214,23 +1470,40 @@ export default function App() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
             {goruntulenenUygulamalar.map((app) => {
               const borderRad = ikonStili === 'round' ? 36 : ikonStili === 'capsule' ? 22 : 16;
-              const cardWidth = ikonStili === 'capsule' ? 134 : 124;
               return (
                 <FocusableItem
                   key={app.id}
-                  style={[styles.appKarti, { backgroundColor: app.color, borderRadius: borderRad, width: cardWidth }]}
-                  focusedStyle={[styles.appKartiOdak, { borderColor: aktifTema.border, shadowColor: aktifTema.accent, borderRadius: borderRad }]}
-                  onPress={() => uygulamaBaslat(app.packageName, app.name)}
+                  style={[
+                    styles.appKarti,
+                    {
+                      backgroundColor: app.color,
+                      borderRadius: borderRad,
+                      width: cardDim.width,
+                      height: cardDim.height,
+                      padding: cardDim.padding,
+                    },
+                  ]}
+                  focusedStyle={[
+                    styles.appKartiOdak,
+                    {
+                      borderColor: aktifTema.border,
+                      shadowColor: aktifTema.accent,
+                      borderRadius: borderRad,
+                    },
+                  ]}
+                  onPress={() => uygulamaBaslat(app.packageName, app.customName || app.name)}
                   onLongPress={() => appAksiyonAc(app)}
                 >
                   {() => (
                     <View style={styles.appKartIcerik}>
-                      <Text style={styles.appIkonMetin}>{app.icon}</Text>
-                      <Text style={styles.appIsim} numberOfLines={1}>
-                        {app.name}
+                      <Text style={[styles.appIkonMetin, { fontSize: cardDim.iconSize }]}>{app.icon}</Text>
+                      <Text style={[styles.appIsim, { fontSize: cardDim.fontSize }]} numberOfLines={1}>
+                        {app.customName || app.name}
                       </Text>
-                      {app.isFavorite && <Text style={styles.favoriYildiz}>⭐</Text>}
-                      {kilitliPaketler.includes(app.packageName) && <Text style={styles.kilitRozet}>🔒</Text>}
+                      {app.isFavorite && <Text style={[styles.favoriYildiz, { fontSize: cardDim.badgeSize }]}>⭐</Text>}
+                      {kilitliPaketler.includes(app.packageName) && (
+                        <Text style={[styles.kilitRozet, { fontSize: cardDim.badgeSize }]}>🔒</Text>
+                      )}
                     </View>
                   )}
                 </FocusableItem>
@@ -1244,6 +1517,8 @@ export default function App() {
                 {
                   borderColor: aktifTema.border,
                   borderRadius: ikonStili === 'round' ? 36 : ikonStili === 'capsule' ? 22 : 16,
+                  width: cardDim.width,
+                  height: cardDim.height,
                 },
               ]}
               focusedStyle={[
@@ -1697,6 +1972,95 @@ export default function App() {
                     </>
                   )}
                 </FocusableItem>
+
+                {/* 9. Kart Boyutu & Izgara Yoğunluğu (Projectivy Parite) */}
+                <FocusableItem
+                  style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                  focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                  onPress={kartBoyutuDegistir}
+                >
+                  {() => (
+                    <>
+                      <Text style={styles.tileIkon}>📐</Text>
+                      <Text style={styles.tileBaslik}>Kart Boyutu</Text>
+                      <Text style={[styles.tileAlt, { color: aktifTema.border }]}>
+                        {kartBoyutu === 'compact' ? '▫️ Kompakt' : kartBoyutu === 'large' ? '🎬 Büyük' : '▪️ Standart'}
+                      </Text>
+                    </>
+                  )}
+                </FocusableItem>
+
+                {/* 10. Açılış Tercihi (Doğrudan TV / Launcher / Son App) */}
+                <FocusableItem
+                  style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                  focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                  onPress={acilisModuDegistir}
+                >
+                  {() => (
+                    <>
+                      <Text style={styles.tileIkon}>⚡</Text>
+                      <Text style={styles.tileBaslik}>Açılış Tercihi</Text>
+                      <Text style={[styles.tileAlt, { color: aktifTema.border }]}>
+                        {acilisModu === 'satellite'
+                          ? '📡 Canlı TV'
+                          : acilisModu === 'last_app'
+                          ? '⏱️ Son Uygulama'
+                          : '🚀 GS Launcher'}
+                      </Text>
+                    </>
+                  )}
+                </FocusableItem>
+
+                {/* 11. Ses & Çıkış Ayarları */}
+                <FocusableItem
+                  style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                  focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                  onPress={() => {
+                    if (Platform.OS === 'android' && TVAppManager && TVAppManager.openSoundSettings) {
+                      TVAppManager.openSoundSettings().catch(() => {});
+                    } else if (Platform.OS === 'android') {
+                      Linking.sendIntent('android.settings.SOUND_SETTINGS').catch(() => {});
+                    }
+                  }}
+                >
+                  {() => (
+                    <>
+                      <Text style={styles.tileIkon}>🔊</Text>
+                      <Text style={styles.tileBaslik}>Ses & Çıkış</Text>
+                      <Text style={styles.tileAlt}>Hoparlör / HDMI ARC</Text>
+                    </>
+                  )}
+                </FocusableItem>
+
+                {/* 12. Ayarları TV'ye Yedekle */}
+                <FocusableItem
+                  style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                  focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                  onPress={ayarlariYedekle}
+                >
+                  {() => (
+                    <>
+                      <Text style={styles.tileIkon}>💾</Text>
+                      <Text style={styles.tileBaslik}>Ayarları Yedekle</Text>
+                      <Text style={styles.tileAlt}>TV Belleğine Kaydet</Text>
+                    </>
+                  )}
+                </FocusableItem>
+
+                {/* 13. Ayarları Sıfırla */}
+                <FocusableItem
+                  style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                  focusedStyle={[styles.kontrolTileOdak, { borderColor: '#EF4444' }]}
+                  onPress={ayarlariSifirla}
+                >
+                  {() => (
+                    <>
+                      <Text style={styles.tileIkon}>🔄</Text>
+                      <Text style={styles.tileBaslik}>Ayarları Sıfırla</Text>
+                      <Text style={[styles.tileAlt, { color: '#EF4444' }]}>Varsayılana Dön</Text>
+                    </>
+                  )}
+                </FocusableItem>
               </View>
 
               {/* DONANIM VE SİSTEM TEŞHİS BİLGİ KUTUSU */}
@@ -1823,9 +2187,45 @@ export default function App() {
 
               {seciliAksiyonUygulama && (
                 <View style={{ marginTop: 8 }}>
-                  {/* Favori Aç / Kapa */}
+                  {/* Sola ve Sağa Taşı (Sıralama) */}
+                  <Text style={styles.aksiyonKategoriBaslik}>Sıralama (Pozisyon):</Text>
+                  <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
+                    <FocusableItem
+                      style={[styles.aksiyonButon, { flex: 1, marginTop: 0 }]}
+                      focusedStyle={{ borderColor: aktifTema.border }}
+                      onPress={() => uygulamayiKaydir(seciliAksiyonUygulama.packageName, 'sol')}
+                    >
+                      {() => <Text style={styles.aksiyonButonYazi}>⬅️ Sola Taşı</Text>}
+                    </FocusableItem>
+                    <FocusableItem
+                      style={[styles.aksiyonButon, { flex: 1, marginTop: 0 }]}
+                      focusedStyle={{ borderColor: aktifTema.border }}
+                      onPress={() => uygulamayiKaydir(seciliAksiyonUygulama.packageName, 'sag')}
+                    >
+                      {() => <Text style={styles.aksiyonButonYazi}>➡️ Sağa Taşı</Text>}
+                    </FocusableItem>
+                  </View>
+
+                  {/* Uygulamayı Yeniden Adlandırma */}
                   <FocusableItem
                     style={styles.aksiyonButon}
+                    focusedStyle={{ borderColor: aktifTema.border }}
+                    onPress={() => {
+                      setDuzenlenenAd(seciliAksiyonUygulama.customName || seciliAksiyonUygulama.name);
+                      setAksiyonMenusuAcik(false);
+                      setYenidenAdlandirModalAcik(true);
+                    }}
+                  >
+                    {() => (
+                      <Text style={styles.aksiyonButonYazi}>
+                        ✏️ Adını Değiştir {seciliAksiyonUygulama.customName ? `("${seciliAksiyonUygulama.customName}")` : ''}
+                      </Text>
+                    )}
+                  </FocusableItem>
+
+                  {/* Favori Aç / Kapa */}
+                  <FocusableItem
+                    style={[styles.aksiyonButon, { marginTop: 8 }]}
                     focusedStyle={{ borderColor: aktifTema.border }}
                     onPress={() => favoriDurumDegistir(seciliAksiyonUygulama.packageName)}
                   >
@@ -1902,6 +2302,92 @@ export default function App() {
           </View>
         </Modal>
 
+        {/* ================= MODAL: UYGULAMA YENİDEN ADLANDIRMA (RENAME) ================= */}
+        <Modal visible={yenidenAdlandirModalAcik} transparent animationType="fade">
+          <View style={styles.modalArkaplan}>
+            <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border }]}>
+              <View style={styles.modalBaslikSatir}>
+                <Text style={styles.modalBaslik}>✏️ Uygulama Adını Değiştir</Text>
+                <Text style={styles.geriBilgiMetin}>(Geri tuşuyla kapatılır)</Text>
+              </View>
+
+              <Text style={styles.modalAltBaslik}>
+                Orijinal Adı: {seciliAksiyonUygulama?.name}
+              </Text>
+
+              {/* Metin Giriş Kutusu */}
+              <TextInput
+                style={[
+                  styles.yenidenAdlandirInput,
+                  { borderColor: aktifTema.border, backgroundColor: aktifTema.surface },
+                ]}
+                value={duzenlenenAd}
+                onChangeText={setDuzenlenenAd}
+                placeholder="Özel uygulama adı yazın..."
+                placeholderTextColor="#888888"
+                autoFocus
+              />
+
+              {/* Hazır İsim Önerileri */}
+              <Text style={[styles.aksiyonKategoriBaslik, { marginTop: 12 }]}>Hızlı Hazır İsimler:</Text>
+              <View style={styles.hazirIsimGrid}>
+                {[
+                  '🎬 Sinema & Dizi',
+                  '📡 Canlı TV',
+                  '📺 IPTV Player',
+                  '🎮 Oyunlar',
+                  '🎵 Müzik',
+                  '🌐 İnternet Web',
+                  '📁 Dosya Gezgini',
+                  '⚡ Hızlı Araç',
+                ].map((etiket) => (
+                  <FocusableItem
+                    key={etiket}
+                    style={[styles.hazirIsimPill, { borderColor: aktifTema.surface }]}
+                    focusedStyle={{ borderColor: aktifTema.border, backgroundColor: aktifTema.accent }}
+                    onPress={() => setDuzenlenenAd(etiket)}
+                  >
+                    {() => <Text style={styles.hazirIsimPillYazi}>{etiket}</Text>}
+                  </FocusableItem>
+                ))}
+              </View>
+
+              {/* Kaydet ve Sıfırla Butonları */}
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
+                <FocusableItem
+                  style={[styles.aksiyonButon, { flex: 1, backgroundColor: aktifTema.accent, marginTop: 0 }]}
+                  focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                  onPress={() => {
+                    if (seciliAksiyonUygulama && duzenlenenAd.trim()) {
+                      uygulamaAdiniKaydet(seciliAksiyonUygulama.packageName, duzenlenenAd.trim());
+                    }
+                    setYenidenAdlandirModalAcik(false);
+                  }}
+                >
+                  {() => (
+                    <Text style={[styles.aksiyonButonYazi, { color: aktifTema.textOnAccent, fontWeight: '900' }]}>
+                      💾 Kaydet
+                    </Text>
+                  )}
+                </FocusableItem>
+
+                <FocusableItem
+                  style={[styles.aksiyonButon, { flex: 1, marginTop: 0 }]}
+                  focusedStyle={{ borderColor: aktifTema.border }}
+                  onPress={() => {
+                    if (seciliAksiyonUygulama) {
+                      uygulamaAdiniSifirla(seciliAksiyonUygulama.packageName);
+                    }
+                    setYenidenAdlandirModalAcik(false);
+                  }}
+                >
+                  {() => <Text style={styles.aksiyonButonYazi}>🔄 Orijinale Dön</Text>}
+                </FocusableItem>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         {/* ================= MODAL: CİHAZDAKİ KURULU UYGULAMALARI SEÇME ================= */}
         <Modal visible={uygulamaSeciciAcik} transparent animationType="fade">
           <View style={styles.modalArkaplan}>
@@ -1917,6 +2403,7 @@ export default function App() {
               {/* Hızlı Sıralama Seçenekleri */}
               <View style={{ flexDirection: 'row', marginBottom: 12 }}>
                 {[
+                  { id: 'ozel', label: '📌 Özel Sıralama' },
                   { id: 'favoriler', label: '⭐ Favoriler En Başa' },
                   { id: 'alfabetik', label: '🔤 A-Z Alfabetik Sırala' },
                 ].map((s) => (
@@ -3001,6 +3488,36 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(35, 18, 0, 0.28)',
     zIndex: 9999,
+  },
+
+  // YENİDEN ADLANDIRMA MODALI
+  yenidenAdlandirInput: {
+    height: 48,
+    borderWidth: 1.5,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 8,
+  },
+  hazirIsimGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  hazirIsimPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 16,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  hazirIsimPillYazi: {
+    color: '#EEEEEE',
+    fontSize: 12,
+    fontWeight: '600',
   },
 
   defaultFocused: {
