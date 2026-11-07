@@ -33,7 +33,7 @@ const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi
 const CURRENT_VERSION = '2.4.0';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/2cnj457l';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/242ebrje';
 
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
 export interface MonetTheme {
