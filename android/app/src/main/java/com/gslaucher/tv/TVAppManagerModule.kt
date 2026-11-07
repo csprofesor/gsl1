@@ -129,6 +129,212 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun launchMediaContent(
+        packageName: String?,
+        query: String?,
+        uriString: String?,
+        promise: Promise
+    ) {
+        try {
+            val pm = reactContext.packageManager
+
+            // 1. Derin Link (URI) Doğrudan Oynatma / Arama
+            if (!uriString.isNullOrEmpty()) {
+                try {
+                    val uriIntent = Intent(Intent.ACTION_VIEW, Uri.parse(uriString)).apply {
+                        if (!packageName.isNullOrEmpty()) {
+                            setPackage(packageName)
+                        }
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    if (uriIntent.resolveActivity(pm) != null) {
+                        reactContext.startActivity(uriIntent)
+                        promise.resolve(true)
+                        return
+                    }
+                } catch (_: Exception) {}
+
+                // Belirtilen paketle açılamadıysa sistemdeki herhangi bir oynatıcı ile dene
+                try {
+                    val genericUriIntent = Intent(Intent.ACTION_VIEW, Uri.parse(uriString)).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    if (genericUriIntent.resolveActivity(pm) != null) {
+                        reactContext.startActivity(genericUriIntent)
+                        promise.resolve(true)
+                        return
+                    }
+                } catch (_: Exception) {}
+            }
+
+            // 2. Uygulama İçi Doğrudan Arama ve Film Başlatma Intent'leri
+            if (!query.isNullOrEmpty()) {
+                val pkg = packageName?.lowercase() ?: ""
+
+                // Cloudstream için özel arama deep-link
+                if (pkg.contains("cloudstream")) {
+                    try {
+                        val csIntent = Intent(Intent.ACTION_VIEW, Uri.parse("cloudstream3://search?query=" + Uri.encode(query))).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        reactContext.startActivity(csIntent)
+                        promise.resolve(true)
+                        return
+                    } catch (_: Exception) {}
+                }
+
+                // Stremio için özel arama deep-link
+                if (pkg.contains("stremio")) {
+                    try {
+                        val strmIntent = Intent(Intent.ACTION_VIEW, Uri.parse("stremio:///search?query=" + Uri.encode(query))).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        reactContext.startActivity(strmIntent)
+                        promise.resolve(true)
+                        return
+                    } catch (_: Exception) {}
+                }
+
+                // Netflix için özel arama deep-link
+                if (pkg.contains("netflix")) {
+                    try {
+                        val nflxIntent = Intent(Intent.ACTION_VIEW, Uri.parse("nflx://www.netflix.com/search?q=" + Uri.encode(query))).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        reactContext.startActivity(nflxIntent)
+                        promise.resolve(true)
+                        return
+                    } catch (_: Exception) {}
+                }
+
+                // Standart Android TV Media / Search Intent
+                if (!packageName.isNullOrEmpty()) {
+                    val searchIntent = Intent(Intent.ACTION_SEARCH).apply {
+                        setPackage(packageName)
+                        putExtra("query", query)
+                        putExtra(android.app.SearchManager.QUERY, query)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    if (searchIntent.resolveActivity(pm) != null) {
+                        reactContext.startActivity(searchIntent)
+                        promise.resolve(true)
+                        return
+                    }
+                }
+            }
+
+            // 3. Fallback: Hedef Uygulamayı Aç (query argümanı ile)
+            if (!packageName.isNullOrEmpty()) {
+                val launchIntent = pm.getLeanbackLaunchIntentForPackage(packageName)
+                    ?: pm.getLaunchIntentForPackage(packageName)
+                if (launchIntent != null) {
+                    if (!query.isNullOrEmpty()) {
+                        launchIntent.putExtra("query", query)
+                        launchIntent.putExtra(android.app.SearchManager.QUERY, query)
+                    }
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    reactContext.startActivity(launchIntent)
+                    promise.resolve(true)
+                    return
+                }
+            }
+
+            // 4. Son Çare: YouTube veya Web Üzerinde Filmi Aç
+            if (!query.isNullOrEmpty()) {
+                val ytUrl = "https://www.youtube.com/results?search_query=" + Uri.encode(query + " film izle")
+                val ytIntent = Intent(Intent.ACTION_VIEW, Uri.parse(ytUrl)).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                reactContext.startActivity(ytIntent)
+                promise.resolve(true)
+                return
+            }
+
+            promise.resolve(false)
+        } catch (e: Exception) {
+            promise.reject("ERROR_MEDIA_LAUNCH", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun openStockLauncher(promise: Promise) {
+        try {
+            val pm = reactContext.packageManager
+            val myPackage = reactContext.packageName
+
+            // Bilinen orijinal Android TV / Mi Box / Google TV / Fire TV başlatıcıları
+            val stockPackages = listOf(
+                "com.google.android.tvlauncher",
+                "com.google.android.apps.tv.launcherx",
+                "com.mitv.tvhome",
+                "com.xiaomi.mitv.tvbox.launcher",
+                "com.amazon.firehomelauncher",
+                "com.android.launcher3",
+                "com.android.launcher"
+            )
+
+            for (pkg in stockPackages) {
+                if (pkg != myPackage) {
+                    val launchIntent = pm.getLeanbackLaunchIntentForPackage(pkg)
+                        ?: pm.getLaunchIntentForPackage(pkg)
+                    if (launchIntent != null) {
+                        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        reactContext.startActivity(launchIntent)
+                        promise.resolve(true)
+                        return
+                    }
+                }
+            }
+
+            // Sistemdeki diğer HOME intent sahiplerini sorgula
+            val homeIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+            val homeActivities = pm.queryIntentActivities(homeIntent, 0)
+            for (resolveInfo in homeActivities) {
+                val pkg = resolveInfo.activityInfo.packageName
+                if (pkg != myPackage) {
+                    val intent = Intent(Intent.ACTION_MAIN).apply {
+                        addCategory(Intent.CATEGORY_HOME)
+                        setClassName(pkg, resolveInfo.activityInfo.name)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    reactContext.startActivity(intent)
+                    promise.resolve(true)
+                    return
+                }
+            }
+
+            // Bulunamazsa doğrudan başlatıcı ayarlarını aç
+            openHomeSettings(promise)
+        } catch (e: Exception) {
+            promise.reject("ERROR_STOCK_LAUNCHER", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun openHomeSettings(promise: Promise) {
+        try {
+            val intents = listOf(
+                Intent(android.provider.Settings.ACTION_HOME_SETTINGS),
+                Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS),
+                Intent(android.provider.Settings.ACTION_SETTINGS)
+            )
+
+            val pm = reactContext.packageManager
+            for (intent in intents) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                if (intent.resolveActivity(pm) != null) {
+                    reactContext.startActivity(intent)
+                    promise.resolve(true)
+                    return
+                }
+            }
+            promise.reject("ERROR_HOME_SETTINGS", "Varsayılan uygulama ayarları açılamadı.")
+        } catch (e: Exception) {
+            promise.reject("ERROR_HOME_SETTINGS", e.message, e)
+        }
+    }
+
+    @ReactMethod
     fun installUpdate(downloadUrl: String, promise: Promise) {
         Thread {
             try {
