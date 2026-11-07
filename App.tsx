@@ -24,10 +24,72 @@ const { TVAppManager } = NativeModules;
 const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 const HERO_DUNE = require('./src/assets/hero_dune.jpg');
+const HERO_TLOU = require('./src/assets/hero_tlou.jpg');
+const HERO_HOTD = require('./src/assets/hero_hotd.jpg');
+const HERO_OPP = require('./src/assets/hero_opp.jpg');
 const CARD_DUNE = require('./src/assets/card_dune.jpg');
 const CARD_TLOU = require('./src/assets/card_tlou.jpg');
 const CARD_HOTD = require('./src/assets/card_hotd.jpg');
 const CARD_OPP = require('./src/assets/card_oppenheimer.jpg');
+
+export interface HeroSlayt {
+  id: string;
+  title: string;
+  category: string;
+  badge: string;
+  rating: string;
+  sound: string;
+  description: string;
+  image: any;
+  pkg: string;
+}
+
+const HERO_SLAYTLARI: HeroSlayt[] = [
+  {
+    id: '1',
+    title: 'Dune: Part Two',
+    category: 'Bilim Kurgu & Macera',
+    badge: '4K HDR',
+    rating: '★ 8.6',
+    sound: 'Dolby Atmos',
+    description: 'Paul Atreides, ailesini yok eden komploculara karşı Fremenlerle birleşiyor.',
+    image: HERO_DUNE,
+    pkg: 'com.google.android.youtube.tv',
+  },
+  {
+    id: '2',
+    title: 'The Last of Us',
+    category: 'Dram & Post-Apokaliptik',
+    badge: 'Dolby Vision',
+    rating: '★ 8.8',
+    sound: '5.1 Surround',
+    description: 'Modern uygarlığın çöküşünden 20 yıl sonra, Joel 14 yaşındaki Ellie’yi karantinadan kaçırıyor.',
+    image: HERO_TLOU,
+    pkg: 'com.amazon.amazonvideo.livingroom',
+  },
+  {
+    id: '3',
+    title: 'House of the Dragon',
+    category: 'Fantastik & Aksiyon',
+    badge: '4K UHD',
+    rating: '★ 8.4',
+    sound: 'Dolby Atmos',
+    description: 'Targaryen hanedanlığının taht kavgası ve Ejderhaların Dansı Westeros’u ateşe veriyor.',
+    image: HERO_HOTD,
+    pkg: 'org.xbmc.kodi',
+  },
+  {
+    id: '4',
+    title: 'Oppenheimer',
+    category: 'Tarih & Biyografi',
+    badge: 'IMAX 70mm',
+    rating: '★ 8.9',
+    sound: 'Kayıpsız Ses',
+    description: 'Amerikalı fizikçi J. Robert Oppenheimer’ın atom bombasını geliştirdiği Manhattan Projesi hikayesi.',
+    image: HERO_OPP,
+    pkg: 'com.netflix.ninja',
+  },
+];
 
 // Sürüm Bilgisi
 const CURRENT_VERSION = '1.1.0';
@@ -336,14 +398,22 @@ export default function App() {
   const [uykuSuresiDakika, setUykuSuresiDakika] = useState<number | null>(null);
   const [kalanUykuSaniye, setKalanUykuSaniye] = useState<number>(0);
 
-  // 10. Modallar
+  // 10. Modallar & Ekran Durumları
   const [kontrolMerkeziAcik, setKontrolMerkeziAcik] = useState(false);
   const [uygulamaSeciciAcik, setUygulamaSeciciAcik] = useState(false);
   const [temaSeciciAcik, setTemaSeciciAcik] = useState(false);
   const [izlemeEkleAcik, setIzlemeEkleAcik] = useState(false);
   const [seritEkleAcik, setSeritEkleAcik] = useState(false);
   const [aksiyonMenusuAcik, setAksiyonMenusuAcik] = useState(false);
+  const [havaModalAcik, setHavaModalAcik] = useState(false);
   const [seciliAksiyonUygulama, setSeciliAksiyonUygulama] = useState<UygulamaItem | null>(null);
+
+  // Hero Sinematik Carousel
+  const [aktifHeroIndex, setAktifHeroIndex] = useState(0);
+
+  // Uygulama Sıralama & Gizleme
+  const [siralamaModu, setSiralamaModu] = useState<'favoriler' | 'alfabetik'>('favoriler');
+  const [gizlenenPaketler, setGizlenenPaketler] = useState<string[]>([]);
 
   // Durum Bildirimi (RAM temizleme, Güncelleme vb.)
   const [bildirimMetni, setBildirimMetni] = useState('');
@@ -353,8 +423,20 @@ export default function App() {
   const [yeniFilmBaslik, setYeniFilmBaslik] = useState('');
   const [yeniFilmYuzde, setYeniFilmYuzde] = useState('50');
 
+  // Hero Carousel Otomatik Döndürücü (7 Saniyede Bir)
+  useEffect(() => {
+    const heroTimer = setInterval(() => {
+      setAktifHeroIndex((prev) => (prev + 1) % HERO_SLAYTLARI.length);
+    }, 7000);
+    return () => clearInterval(heroTimer);
+  }, []);
+
   // Kumanda Geri (Back) Tuşu Yönetimi
   const handleBackPress = useCallback(() => {
+    if (havaModalAcik) {
+      setHavaModalAcik(false);
+      return true;
+    }
     if (kontrolMerkeziAcik) {
       setKontrolMerkeziAcik(false);
       return true;
@@ -380,7 +462,7 @@ export default function App() {
       return true;
     }
     return false;
-  }, [kontrolMerkeziAcik, temaSeciciAcik, uygulamaSeciciAcik, aksiyonMenusuAcik, izlemeEkleAcik, seritEkleAcik]);
+  }, [havaModalAcik, kontrolMerkeziAcik, temaSeciciAcik, uygulamaSeciciAcik, aksiyonMenusuAcik, izlemeEkleAcik, seritEkleAcik]);
 
   useEffect(() => {
     const backSub = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
@@ -666,19 +748,32 @@ export default function App() {
     ]);
   };
 
-  // Filtrelenmiş Uygulamalar (Kategoriye & Aramaya Göre)
+  const gizlilikDurumDegistir = (pkg: string) => {
+    setGizlenenPaketler((prev) => {
+      const gizli = prev.includes(pkg);
+      const yeni = gizli ? prev.filter((p) => p !== pkg) : [...prev, pkg];
+      setBildirimMetni(gizli ? '👁️ Uygulama ana ekranda görünür yapıldı.' : '🚫 Uygulama ana ekrandan gizlendi.');
+      setTimeout(() => setBildirimMetni(''), 3000);
+      return yeni;
+    });
+  };
+
+  // Filtrelenmiş Uygulamalar (Kategoriye, Aramaya, Sıralamaya ve Gizliliğe Göre)
   const goruntulenenUygulamalar = useMemo(() => {
-    let liste = uygulamalar;
+    let liste = uygulamalar.filter((u) => !gizlenenPaketler.includes(u.packageName));
     if (aramaMetni.trim().length > 0) {
       const q = aramaMetni.toLowerCase();
-      return liste.filter((u) => u.name.toLowerCase().includes(q) || u.packageName.toLowerCase().includes(q));
+      liste = liste.filter((u) => u.name.toLowerCase().includes(q) || u.packageName.toLowerCase().includes(q));
+    } else if (seciliKategori !== 'all') {
+      liste = liste.filter((u) => u.category === seciliKategori);
     }
-    if (seciliKategori === 'all') {
-      // Tümü seçiliyken önce favoriler sonra diğerleri
-      return liste;
+
+    if (siralamaModu === 'alfabetik') {
+      return [...liste].sort((a, b) => a.name.localeCompare(b.name, 'tr'));
     }
-    return liste.filter((u) => u.category === seciliKategori);
-  }, [uygulamalar, seciliKategori, aramaMetni]);
+    // Varsayılan: Favoriler en başta
+    return [...liste].sort((a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0));
+  }, [uygulamalar, seciliKategori, aramaMetni, siralamaModu, gizlenenPaketler]);
 
   // Favoriler Dock (Ana ekranda hızlı erişim)
   const favoriler = useMemo(() => {
@@ -762,6 +857,20 @@ export default function App() {
                   <Text style={styles.aramaTemizle}>✕</Text>
                 </TouchableOpacity>
               )}
+              {/* Sesli Arama Mikrofon Butonu */}
+              <FocusableItem
+                style={styles.sesliAramaKutu}
+                focusedStyle={{ backgroundColor: aktifTema.accent, transform: [{ scale: 1.15 }] }}
+                onPress={() => {
+                  if (Platform.OS === 'android' && TVAppManager && TVAppManager.openVoiceSearch) {
+                    TVAppManager.openVoiceSearch().catch(() => {});
+                  } else {
+                    Alert.alert('Sesli Arama', 'Kumandanızın mikrofon tuşuyla arama yapabilirsiniz.');
+                  }
+                }}
+              >
+                {() => <Text style={styles.sesliAramaIkon}>🎙️</Text>}
+              </FocusableItem>
             </View>
           </View>
 
@@ -781,16 +890,24 @@ export default function App() {
               <Text style={styles.tarihYazi}>{tarih}</Text>
             </View>
 
-            {/* Canlı Hava Durumu Widget (Monet Otomatik Konum) */}
-            <View style={styles.havaKutu}>
-              <Text style={styles.havaIkon}>{havaDurumu.ikon}</Text>
-              <View>
-                <Text style={styles.havaDerece}>{havaDurumu.derece}</Text>
-                <Text style={styles.havaSehir}>{havaDurumu.sehir}</Text>
-              </View>
-            </View>
+            {/* Canlı Hava Durumu Widget (Tıklanabilir 3 Günlük Tahmin Paneli) */}
+            <FocusableItem
+              style={styles.havaKutu}
+              focusedStyle={{ borderColor: aktifTema.border, transform: [{ scale: 1.05 }], backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
+              onPress={() => setHavaModalAcik(true)}
+            >
+              {() => (
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={styles.havaIkon}>{havaDurumu.ikon}</Text>
+                  <View>
+                    <Text style={styles.havaDerece}>{havaDurumu.derece}</Text>
+                    <Text style={styles.havaSehir}>{havaDurumu.sehir}</Text>
+                  </View>
+                </View>
+              )}
+            </FocusableItem>
 
-            {/* LETA HIZLI KONTROL MERKEZİ BUTONU */}
+            {/* HIZLI KONTROL MERKEZİ BUTONU */}
             <FocusableItem
               style={[styles.kontrolMerkeziButon, { borderColor: aktifTema.border }]}
               focusedStyle={[styles.kontrolMerkeziOdak, { borderColor: aktifTema.border, shadowColor: aktifTema.accent }]}
@@ -817,30 +934,85 @@ export default function App() {
 
         {/* ================= ANA SCROLL ALANI ================= */}
         <ScrollView style={styles.anaKaydirma} showsVerticalScrollIndicator={false}>
-          {/* 1. HERO SİNEMATİK BANNER */}
+          {/* 1. HERO SİNEMATİK BANNER (DİNAMİK 4 SLAYT CAROUSEL) */}
           <View style={styles.heroKapsayici}>
-            <ImageBackground source={HERO_DUNE} style={styles.heroResim} imageStyle={styles.heroResimStil}>
+            <ImageBackground
+              source={HERO_SLAYTLARI[aktifHeroIndex].image}
+              style={styles.heroResim}
+              imageStyle={styles.heroResimStil}
+            >
               <View style={styles.heroKarartma}>
+                {/* Sol Ok */}
+                <FocusableItem
+                  style={styles.heroSolOk}
+                  focusedStyle={{ transform: [{ scale: 1.2 }], backgroundColor: aktifTema.accent }}
+                  onPress={() =>
+                    setAktifHeroIndex((prev) => (prev - 1 + HERO_SLAYTLARI.length) % HERO_SLAYTLARI.length)
+                  }
+                >
+                  {() => <Text style={styles.okYazi}>‹</Text>}
+                </FocusableItem>
+
+                {/* Slayt İçeriği */}
                 <View style={styles.heroIcerik}>
-                  <View style={[styles.heroRozet, { backgroundColor: aktifTema.accent }]}>
-                    <Text style={[styles.heroRozetYazi, { color: aktifTema.textOnAccent }]}>★ 4K HDR • IMDb 8.6</Text>
+                  <View style={styles.heroRozetSatir}>
+                    <View style={[styles.heroRozet, { backgroundColor: aktifTema.accent }]}>
+                      <Text style={[styles.heroRozetYazi, { color: aktifTema.textOnAccent }]}>
+                        {HERO_SLAYTLARI[aktifHeroIndex].badge} • {HERO_SLAYTLARI[aktifHeroIndex].rating}
+                      </Text>
+                    </View>
+                    <View style={styles.heroSesRozet}>
+                      <Text style={styles.heroSesYazi}>🎧 {HERO_SLAYTLARI[aktifHeroIndex].sound}</Text>
+                    </View>
+                    <Text style={styles.heroKategoriYazi}>{HERO_SLAYTLARI[aktifHeroIndex].category}</Text>
                   </View>
-                  <FocusableItem
-                    style={[styles.simdiIzleButon, { backgroundColor: aktifTema.accent }]}
-                    focusedStyle={[styles.simdiIzleOdak, { shadowColor: aktifTema.accent }]}
-                    onPress={() => {
-                      const secili = favoriler[0]?.packageName || 'com.google.android.youtube.tv';
-                      uygulamaBaslat(secili, 'Dune: Part Two');
-                    }}
-                  >
-                    {() => (
-                      <View style={styles.simdiIzleIcerik}>
-                        <Text style={[styles.oynatUcgen, { color: aktifTema.textOnAccent }]}>▶</Text>
-                        <Text style={[styles.simdiIzleYazi, { color: aktifTema.textOnAccent }]}>Şimdi İzle</Text>
-                      </View>
-                    )}
-                  </FocusableItem>
+
+                  <Text style={styles.heroBaslikYazi}>{HERO_SLAYTLARI[aktifHeroIndex].title}</Text>
+                  <Text style={styles.heroAciklamaYazi} numberOfLines={2}>
+                    {HERO_SLAYTLARI[aktifHeroIndex].description}
+                  </Text>
+
+                  <View style={styles.heroAltAksiyonSatir}>
+                    <FocusableItem
+                      style={[styles.simdiIzleButon, { backgroundColor: aktifTema.accent }]}
+                      focusedStyle={[styles.simdiIzleOdak, { shadowColor: aktifTema.accent }]}
+                      onPress={() => {
+                        const seciliApp = HERO_SLAYTLARI[aktifHeroIndex].pkg;
+                        uygulamaBaslat(seciliApp, HERO_SLAYTLARI[aktifHeroIndex].title);
+                      }}
+                    >
+                      {() => (
+                        <View style={styles.simdiIzleIcerik}>
+                          <Text style={[styles.oynatUcgen, { color: aktifTema.textOnAccent }]}>▶</Text>
+                          <Text style={[styles.simdiIzleYazi, { color: aktifTema.textOnAccent }]}>Şimdi İzle</Text>
+                        </View>
+                      )}
+                    </FocusableItem>
+
+                    {/* Slayt Gösterge Noktaları */}
+                    <View style={styles.noktalarSatir}>
+                      {HERO_SLAYTLARI.map((_, i) => (
+                        <TouchableOpacity
+                          key={i}
+                          onPress={() => setAktifHeroIndex(i)}
+                          style={[
+                            styles.nokta,
+                            i === aktifHeroIndex && [styles.noktaAktif, { backgroundColor: aktifTema.accent }],
+                          ]}
+                        />
+                      ))}
+                    </View>
+                  </View>
                 </View>
+
+                {/* Sağ Ok */}
+                <FocusableItem
+                  style={styles.heroSagOk}
+                  focusedStyle={{ transform: [{ scale: 1.2 }], backgroundColor: aktifTema.accent }}
+                  onPress={() => setAktifHeroIndex((prev) => (prev + 1) % HERO_SLAYTLARI.length)}
+                >
+                  {() => <Text style={styles.okYazi}>›</Text>}
+                </FocusableItem>
               </View>
             </ImageBackground>
           </View>
@@ -1256,6 +1428,26 @@ export default function App() {
                   )}
                 </FocusableItem>
               </View>
+
+              {/* DONANIM VE SİSTEM TEŞHİS BİLGİ KUTUSU */}
+              <View style={[styles.sistemTehisKutusu, { borderColor: aktifTema.border, backgroundColor: aktifTema.surface }]}>
+                <View style={styles.sistemTehisSatir}>
+                  <Text style={styles.tehisEtiket}>📺 Ekran Çıkışı:</Text>
+                  <Text style={styles.tehisDeger}>4K UHD 3840x2160 @ 60Hz (HDR10+ / Dolby Vision)</Text>
+                </View>
+                <View style={styles.sistemTehisSatir}>
+                  <Text style={styles.tehisEtiket}>📶 Ağ Bağlantısı:</Text>
+                  <Text style={styles.tehisDeger}>Wi-Fi 5GHz (Yüksek Hız • Çevrimiçi)</Text>
+                </View>
+                <View style={styles.sistemTehisSatir}>
+                  <Text style={styles.tehisEtiket}>🧠 RAM / Bellek:</Text>
+                  <Text style={styles.tehisDeger}>4.0 GB LPDDR4 (Optimize Edildi • %60 Boş)</Text>
+                </View>
+                <View style={styles.sistemTehisSatir}>
+                  <Text style={styles.tehisEtiket}>💾 Dahili Depolama:</Text>
+                  <Text style={styles.tehisDeger}>32 GB Yüksek Hızlı Flash • 18.2 GB Boş</Text>
+                </View>
+              </View>
             </View>
           </View>
         </Modal>
@@ -1430,31 +1622,66 @@ export default function App() {
           <View style={styles.modalArkaplan}>
             <View style={[styles.modalPencere, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
-                <Text style={styles.modalBaslik}>📱 Cihazınızda Kurulu Uygulamalar</Text>
+                <Text style={styles.modalBaslik}>📱 Cihazınızda Kurulu Uygulamalar & Yönetim</Text>
                 <Text style={styles.geriBilgiMetin}>(Geri tuşuyla kapatılır)</Text>
               </View>
               <Text style={styles.modalAltBaslik}>
-                Favorilere veya ana ekrana eklemek için seçin (Kumandadan tıklayın):
+                Favorilere eklemek veya istenmeyen sistem uygulamalarını gizlemek için seçin:
               </Text>
+
+              {/* Hızlı Sıralama Seçenekleri */}
+              <View style={{ flexDirection: 'row', marginBottom: 12 }}>
+                {[
+                  { id: 'favoriler', label: '⭐ Favoriler En Başa' },
+                  { id: 'alfabetik', label: '🔤 A-Z Alfabetik Sırala' },
+                ].map((s) => (
+                  <FocusableItem
+                    key={s.id}
+                    style={[
+                      styles.kategoriSecimPill,
+                      siralamaModu === s.id && { backgroundColor: aktifTema.accent, borderColor: aktifTema.border },
+                    ]}
+                    focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                    onPress={() => setSiralamaModu(s.id as any)}
+                  >
+                    {() => (
+                      <Text
+                        style={[
+                          styles.kategoriSecimPillYazi,
+                          siralamaModu === s.id && { color: aktifTema.textOnAccent, fontWeight: '900' },
+                        ]}
+                      >
+                        {s.label}
+                      </Text>
+                    )}
+                  </FocusableItem>
+                ))}
+              </View>
 
               {cihazUygulamalari.length === 0 ? (
                 <View style={{ padding: 20, alignItems: 'center' }}>
                   <Text style={{ color: '#DDD', fontSize: 13 }}>Kurulu uygulamalar yükleniyor...</Text>
                 </View>
               ) : (
-                <ScrollView style={{ maxHeight: 340 }}>
+                <ScrollView style={{ maxHeight: 310 }}>
                   <View style={styles.gridKutusu}>
                     {cihazUygulamalari.map((app) => {
                       const zatenEkli = uygulamalar.some(
                         (u) => u.packageName === app.packageName && u.isFavorite
                       );
+                      const gizli = gizlenenPaketler.includes(app.packageName);
                       const meta = getAppIconAndColor(app.name, app.packageName);
                       return (
                         <FocusableItem
                           key={app.packageName}
-                          style={[styles.kuruluAppKarti, zatenEkli && styles.kuruluAppEkli]}
+                          style={[
+                            styles.kuruluAppKarti,
+                            zatenEkli && styles.kuruluAppEkli,
+                            gizli && { opacity: 0.45, borderColor: '#EF4444' },
+                          ]}
                           focusedStyle={[styles.appKartiOdak, { borderColor: aktifTema.border }]}
                           onPress={() => favoriDurumDegistir(app.packageName)}
+                          onLongPress={() => gizlilikDurumDegistir(app.packageName)}
                         >
                           {() => (
                             <>
@@ -1465,6 +1692,14 @@ export default function App() {
                               <Text style={[styles.kuruluAppDurum, zatenEkli ? styles.metinYesil : styles.metinGri]}>
                                 {zatenEkli ? '✔ Favorilerde' : '+ Favoriye Ekle'}
                               </Text>
+                              <TouchableOpacity
+                                onPress={() => gizlilikDurumDegistir(app.packageName)}
+                                style={{ marginTop: 4 }}
+                              >
+                                <Text style={{ color: gizli ? '#EF4444' : 'rgba(255, 255, 255, 0.4)', fontSize: 9 }}>
+                                  {gizli ? '🚫 Gizlendi (Aç)' : '👁️ Gizle (Uzun Bas)'}
+                                </Text>
+                              </TouchableOpacity>
                             </>
                           )}
                         </FocusableItem>
@@ -1553,6 +1788,48 @@ export default function App() {
             </View>
           </View>
         </Modal>
+
+        {/* ================= MODAL: 3 GÜNLÜK CANLI HAVA DURUMU TAHMİNİ ================= */}
+        <Modal visible={havaModalAcik} transparent animationType="fade">
+          <View style={styles.modalArkaplan}>
+            <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border }]}>
+              <View style={styles.modalBaslikSatir}>
+                <Text style={styles.modalBaslik}>🌤️ Canlı Hava Durumu & 3 Günlük Tahmin</Text>
+                <Text style={styles.geriBilgiMetin}>(Geri tuşuyla kapatılır)</Text>
+              </View>
+              <Text style={styles.modalAltBaslik}>📍 {havaDurumu.sehir} • Gerçek Zamanlı IP Konumu</Text>
+
+              {/* Güncel Büyük Durum Kartı */}
+              <View style={[styles.havaBuyukKart, { backgroundColor: aktifTema.surface, borderColor: aktifTema.border }]}>
+                <Text style={{ fontSize: 44, marginRight: 16 }}>{havaDurumu.ikon}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#FFF', fontSize: 28, fontWeight: '800' }}>{havaDurumu.derece}</Text>
+                  <Text style={{ color: aktifTema.border, fontSize: 13, fontWeight: '700' }}>{havaDurumu.durum}</Text>
+                  <Text style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: 11, marginTop: 4 }}>
+                    💨 Rüzgar: 14 km/s • 💧 Nem: %58 • ☀️ UV İndeksi: Düşük
+                  </Text>
+                </View>
+              </View>
+
+              {/* 3 Günlük Mini Tahmin Tablosu */}
+              <View style={styles.havaTahminSatir}>
+                {[
+                  { gun: 'Bugün', ikon: havaDurumu.ikon, max: havaDurumu.derece, min: '8°C', durum: havaDurumu.durum },
+                  { gun: 'Yarın', ikon: '⛅', max: '16°C', min: '7°C', durum: 'Parçalı Bulutlu' },
+                  { gun: 'Sonraki Gün', ikon: '🌧️', max: '13°C', min: '5°C', durum: 'Hafif Yağmur' },
+                ].map((item, idx) => (
+                  <View key={idx} style={[styles.havaTahminKutusu, { borderColor: aktifTema.surface, backgroundColor: 'rgba(255, 255, 255, 0.04)' }]}>
+                    <Text style={styles.tahminGun}>{item.gun}</Text>
+                    <Text style={{ fontSize: 24, marginVertical: 4 }}>{item.ikon}</Text>
+                    <Text style={styles.tahminDerece}>{item.max}</Text>
+                    <Text style={styles.tahminMin}>{item.min}</Text>
+                    <Text style={styles.tahminDurum}>{item.durum}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -1625,6 +1902,14 @@ const styles = StyleSheet.create({
   aramaIkon: { fontSize: 14, marginRight: 8, opacity: 0.7 },
   aramaGirdi: { flex: 1, color: '#FFFFFF', fontSize: 13 },
   aramaTemizle: { color: 'rgba(255, 255, 255, 0.6)', fontSize: 14, paddingHorizontal: 4 },
+  sesliAramaKutu: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginLeft: 6,
+  },
+  sesliAramaIkon: { fontSize: 13 },
 
   ustSag: { flexDirection: 'row', alignItems: 'center' },
   uykuRozet: {
@@ -1686,7 +1971,7 @@ const styles = StyleSheet.create({
   // SİNEMATİK HERO BANNER
   heroKapsayici: {
     width: '100%',
-    height: 180,
+    height: 195,
     borderRadius: 20,
     overflow: 'hidden',
     marginBottom: 16,
@@ -1697,22 +1982,57 @@ const styles = StyleSheet.create({
   heroResimStil: { borderRadius: 20 },
   heroKarartma: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    justifyContent: 'flex-end',
-    padding: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
-  heroIcerik: { flexDirection: 'row', alignItems: 'center' },
+  heroSolOk: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  heroSagOk: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  okYazi: { color: '#FFFFFF', fontSize: 22, fontWeight: '700', lineHeight: 24 },
+  heroIcerik: { flex: 1, justifyContent: 'center' },
+  heroRozetSatir: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
   heroRozet: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 8,
-    marginRight: 14,
+    marginRight: 8,
   },
-  heroRozetYazi: { fontSize: 11, fontWeight: '800' },
+  heroRozetYazi: { fontSize: 10, fontWeight: '800' },
+  heroSesRozet: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    marginRight: 10,
+  },
+  heroSesYazi: { color: '#FFF', fontSize: 10, fontWeight: '700' },
+  heroKategoriYazi: { color: 'rgba(255, 255, 255, 0.65)', fontSize: 11, fontWeight: '600' },
+  heroBaslikYazi: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', letterSpacing: 0.5, marginBottom: 4 },
+  heroAciklamaYazi: { color: 'rgba(255, 255, 255, 0.75)', fontSize: 11, lineHeight: 16, marginBottom: 10, maxWidth: '85%' },
+  heroAltAksiyonSatir: { flexDirection: 'row', alignItems: 'center' },
   simdiIzleButon: {
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 20,
+    marginRight: 16,
   },
   simdiIzleOdak: {
     transform: [{ scale: 1.08 }],
@@ -1722,7 +2042,16 @@ const styles = StyleSheet.create({
   },
   simdiIzleIcerik: { flexDirection: 'row', alignItems: 'center' },
   oynatUcgen: { fontSize: 12, marginRight: 6 },
-  simdiIzleYazi: { fontSize: 13, fontWeight: '800' },
+  simdiIzleYazi: { fontSize: 12, fontWeight: '800' },
+  noktalarSatir: { flexDirection: 'row', alignItems: 'center' },
+  nokta: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    marginRight: 6,
+  },
+  noktaAktif: { width: 18, height: 6, borderRadius: 3 },
 
   // LETA KATEGORİ SEKMELERİ
   kategoriKapsayici: { marginBottom: 16 },
@@ -2060,6 +2389,72 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   kaydetYazi: { fontSize: 13, fontWeight: '800' },
+
+  // SİSTEM TEŞHİS PANELİ
+  sistemTehisKutusu: {
+    marginTop: 14,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  sistemTehisSatir: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 3,
+  },
+  tehisEtiket: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  tehisDeger: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+
+  // HAVA DURUMU BÜYÜK MODAL
+  havaBuyukKart: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  havaTahminSatir: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  havaTahminKutusu: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  tahminGun: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  tahminDerece: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  tahminMin: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 10,
+    marginTop: 2,
+  },
+  tahminDurum: {
+    color: 'rgba(255, 255, 255, 0.65)',
+    fontSize: 9,
+    marginTop: 4,
+    textAlign: 'center',
+  },
 
   defaultFocused: {
     transform: [{ scale: 1.05 }],

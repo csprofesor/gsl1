@@ -175,6 +175,28 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun openVoiceSearch(promise: Promise) {
+        try {
+            val intent = Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            try {
+                val searchIntent = Intent(Intent.ACTION_WEB_SEARCH).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                reactContext.startActivity(searchIntent)
+                promise.resolve(true)
+            } catch (err: Exception) {
+                promise.reject("ERROR_VOICE", err.message, err)
+            }
+        }
+    }
+
+    @ReactMethod
     fun getDeviceInfo(promise: Promise) {
         try {
             val map = Arguments.createMap()
