@@ -31,7 +31,7 @@ const CARD_OPP = require('./src/assets/card_oppenheimer.jpg');
 
 // Sürüm Bilgisi
 const CURRENT_VERSION = '1.1.0';
-const LATEST_RELEASE_APK = 'https://expo.dev/artifacts/eas/mKHANxBc6XsxW48veW-BPzlutoqQvbtS5qndcpt8tzo.apk';
+const LATEST_RELEASE_APK = 'https://expo.dev/artifacts/eas/eA04MGfLS0yh4odR9DwzMKoPmZhnP-BGs4g66m39UPw.apk';
 
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
 export interface MonetTheme {
