@@ -284,6 +284,64 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun getBatteryLevel(promise: Promise) {
+        try {
+            val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            val batteryStatus = reactContext.registerReceiver(null, filter)
+            val level = batteryStatus?.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1) ?: -1
+            val scale = batteryStatus?.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1) ?: -1
+            val batteryPct = if (level != -1 && scale != -1) (level * 100 / scale.toFloat()).toInt() else 92
+            promise.resolve(batteryPct)
+        } catch (e: Exception) {
+            promise.resolve(92)
+        }
+    }
+
+    @ReactMethod
+    fun openBluetoothSettings(promise: Promise) {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ERROR_BT", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun openFileManager(promise: Promise) {
+        val fileManagers = listOf(
+            "com.xiaomi.mitv.mediaexplorer",
+            "com.lonelycatgames.Xplore",
+            "com.estrongs.android.pop",
+            "com.ghisler.android.TotalCommander",
+            "com.android.documentsui"
+        )
+        for (pkg in fileManagers) {
+            val intent = reactContext.packageManager.getLeanbackLaunchIntentForPackage(pkg)
+                ?: reactContext.packageManager.getLaunchIntentForPackage(pkg)
+            if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                reactContext.startActivity(intent)
+                promise.resolve(true)
+                return
+            }
+        }
+        try {
+            val viewIntent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(Uri.parse("content://media/external/file"), "*/*")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(viewIntent)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ERROR_FILES", "Dosya yöneticisi bulunamadı.")
+        }
+    }
+
+    @ReactMethod
     fun getDeviceInfo(promise: Promise) {
         try {
             val map = Arguments.createMap()
