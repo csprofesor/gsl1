@@ -15,11 +15,13 @@ import {
   Modal,
   NativeModules,
   BackHandler,
+  Image,
 } from 'react-native';
 
 const { TVAppManager } = NativeModules;
 
 // Varlık Dosyaları
+const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 const HERO_DUNE = require('./src/assets/hero_dune.jpg');
 const CARD_DUNE = require('./src/assets/card_dune.jpg');
@@ -632,9 +634,7 @@ export default function App() {
         <View style={styles.ustBar}>
           {/* Sol: GS Logosu & Dinamik Arama */}
           <View style={styles.ustSol}>
-            <View style={[styles.gsLogoKare, { backgroundColor: aktifTema.accent }]}>
-              <Text style={[styles.gsLogoYazi, { color: aktifTema.textOnAccent }]}>GS</Text>
-            </View>
+            <Image source={GS_ICON} style={styles.gsLogoResim} resizeMode="cover" />
             <View>
               <Text style={styles.gsBaslik}>GS LAUNCHER</Text>
               <Text style={styles.gsSurum}>Monet & LeTa Edition</Text>
@@ -969,11 +969,14 @@ export default function App() {
             <View style={[styles.kontrolMerkeziPencere, { borderColor: aktifTema.border }]}>
               {/* Başlık & Sistem Bilgisi */}
               <View style={styles.kontrolBaslikSatir}>
-                <View>
-                  <Text style={styles.kontrolMerkeziBaslik}>⚡ Hızlı Kontrol Merkezi (LeTa & Monet)</Text>
-                  <Text style={styles.cihazBilgiYazi}>
-                    {cihazBilgisi.manufacturer} {cihazBilgisi.model} • {cihazBilgisi.android} • Mi Box
-                  </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Image source={GS_ICON} style={styles.kontrolLogoResim} resizeMode="cover" />
+                  <View>
+                    <Text style={styles.kontrolMerkeziBaslik}>⚡ GS Kontrol Merkezi (LeTa & Monet)</Text>
+                    <Text style={styles.cihazBilgiYazi}>
+                      {cihazBilgisi.manufacturer} {cihazBilgisi.model} • {cihazBilgisi.android} • Mi Box
+                    </Text>
+                  </View>
                 </View>
                 <Text style={styles.geriBilgiMetin}>(Kumandadan Geri tuşuyla kapatılır)</Text>
               </View>
@@ -1406,6 +1409,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   ustSol: { flexDirection: 'row', alignItems: 'center' },
+  gsLogoResim: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  kontrolLogoResim: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
   gsLogoKare: {
     width: 34,
     height: 34,
