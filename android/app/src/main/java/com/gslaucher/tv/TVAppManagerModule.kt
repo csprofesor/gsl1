@@ -197,6 +197,93 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun openLiveChannels(promise: Promise) {
+        try {
+            // 1. Android TvContract Intent (Dahili Uydu Tuner & Canlı TV Kanalları)
+            val tvIntent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("content://android.media.tv/channel")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            if (tvIntent.resolveActivity(reactContext.packageManager) != null) {
+                reactContext.startActivity(tvIntent)
+                promise.resolve(true)
+                return
+            }
+        } catch (e: Exception) {}
+
+        // 2. Android TV / Xiaomi TV / Google TV Canlı TV Paketleri
+        val liveTvPackages = listOf(
+            "com.google.android.tv",               // Google Live Channels
+            "com.android.tv",                      // AOSP Live TV / Tuner
+            "com.mitv.tvhome",                     // Xiaomi Mi TV Canlı TV
+            "com.xiaomi.mitv.tvbox.launcher",
+            "com.xiaomi.mitv.mediaexplorer",
+            "ar.tvplayer.tv",                      // TiviMate
+            "com.tivimate.player"
+        )
+
+        for (pkg in liveTvPackages) {
+            try {
+                val launchIntent = reactContext.packageManager.getLeanbackLaunchIntentForPackage(pkg)
+                    ?: reactContext.packageManager.getLaunchIntentForPackage(pkg)
+                if (launchIntent != null) {
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    reactContext.startActivity(launchIntent)
+                    promise.resolve(true)
+                    return
+                }
+            } catch (ignored: Exception) {}
+        }
+
+        // 3. TV Girişleri (TV Input Switcher - Uydu / HDMI Girişi)
+        try {
+            val inputIntent = Intent("android.media.tv.action.VIEW_INPUTS").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            if (inputIntent.resolveActivity(reactContext.packageManager) != null) {
+                reactContext.startActivity(inputIntent)
+                promise.resolve(true)
+                return
+            }
+        } catch (e: Exception) {}
+
+        // 4. Standart TV Ayarları
+        try {
+            val settings = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(settings)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ERROR_LIVE_TV", "Canlı TV alıcısı açılamadı: " + e.message)
+        }
+    }
+
+    @ReactMethod
+    fun openTVInputs(promise: Promise) {
+        try {
+            val inputIntent = Intent("android.media.tv.action.VIEW_INPUTS").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            if (inputIntent.resolveActivity(reactContext.packageManager) != null) {
+                reactContext.startActivity(inputIntent)
+                promise.resolve(true)
+                return
+            }
+        } catch (e: Exception) {}
+
+        try {
+            val settings = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(settings)
+            promise.resolve(true)
+        } catch (err: Exception) {
+            promise.reject("ERROR_INPUTS", err.message, err)
+        }
+    }
+
+    @ReactMethod
     fun getDeviceInfo(promise: Promise) {
         try {
             val map = Arguments.createMap()

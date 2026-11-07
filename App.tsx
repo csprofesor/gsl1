@@ -25,7 +25,7 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi
-const CURRENT_VERSION = '1.6.0';
+const CURRENT_VERSION = '1.7.0';
 const LATEST_RELEASE_APK = 'https://expo.dev/artifacts/eas/dLX1GgPE6kuHhubdqHpZIQTa9l5W1JbF2AnaWeDQJPE.apk';
 
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
@@ -755,6 +755,50 @@ export default function App() {
     }
   };
 
+  // Doğrudan Canlı Uyduya / TV Kanallarına Geçiş
+  const canliUyduyaGec = () => {
+    const canliTvUygulamalari = uygulamalar.filter((u) => u.category === 'tv');
+
+    Alert.alert(
+      '📡 Canlı TV & Uydu Kanalları',
+      'Hangi yayına geçiş yapmak istiyorsunuz?',
+      [
+        {
+          text: '📺 Dahili Uydu Tunerına Geç (Gerçek Uydu)',
+          onPress: async () => {
+            if (Platform.OS === 'android' && TVAppManager && TVAppManager.openLiveChannels) {
+              try {
+                await TVAppManager.openLiveChannels();
+              } catch {
+                Alert.alert('Bilgi', 'Dahili uydu tunerına ulaşılamadı. TV girişlerini kontrol edin.');
+              }
+            } else {
+              Alert.alert('Canlı Uydu', 'Dahili uydu alıcısı başlatılıyor...');
+            }
+          },
+        },
+        ...(canliTvUygulamalari.length > 0
+          ? [
+              {
+                text: `📱 Canlı TV Uygulaması (${canliTvUygulamalari[0].name})`,
+                onPress: () =>
+                  uygulamaBaslat(canliTvUygulamalari[0].packageName, canliTvUygulamalari[0].name),
+              },
+            ]
+          : []),
+        {
+          text: '🔌 TV Girişleri (HDMI / Uydu Kaynağı)',
+          onPress: () => {
+            if (Platform.OS === 'android' && TVAppManager && TVAppManager.openTVInputs) {
+              TVAppManager.openTVInputs().catch(() => {});
+            }
+          },
+        },
+        { text: 'Vazgeç', style: 'cancel' },
+      ]
+    );
+  };
+
   // Arka plan rengi veya duvar kağıdı
   const arkaplanStili = [
     styles.arkaplan,
@@ -839,6 +883,22 @@ export default function App() {
                     <Text style={styles.havaDerece}>{havaDurumu.derece}</Text>
                     <Text style={styles.havaSehir}>{havaDurumu.sehir}</Text>
                   </View>
+                </View>
+              )}
+            </FocusableItem>
+
+            {/* CANLI UYDU & TV KANALLARI BUTONU */}
+            <FocusableItem
+              style={[styles.canliTvButon, { borderColor: aktifTema.accent, backgroundColor: 'rgba(255, 255, 255, 0.08)' }]}
+              focusedStyle={[styles.kontrolMerkeziOdak, { borderColor: aktifTema.border, shadowColor: aktifTema.accent }]}
+              onPress={canliUyduyaGec}
+            >
+              {(isFocused) => (
+                <View style={styles.kontrolButonIcerik}>
+                  <Text style={styles.kontrolIkon}>📡</Text>
+                  <Text style={[styles.kontrolYazi, isFocused && { color: aktifTema.accent }]}>
+                    Canlı Uydu / TV
+                  </Text>
                 </View>
               )}
             </FocusableItem>
@@ -1348,7 +1408,25 @@ export default function App() {
                   )}
                 </FocusableItem>
 
-                {/* 6. Sessiz OTA Güncelleme Denetle */}
+                {/* 6. Doğrudan Canlı Uyduya / TV Girişine Geç */}
+                <FocusableItem
+                  style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                  focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                  onPress={() => {
+                    setKontrolMerkeziAcik(false);
+                    canliUyduyaGec();
+                  }}
+                >
+                  {() => (
+                    <>
+                      <Text style={styles.tileIkon}>📡</Text>
+                      <Text style={styles.tileBaslik}>Canlı Uydu / TV</Text>
+                      <Text style={[styles.tileAlt, { color: aktifTema.border }]}>Dahili Tuner / IPTV</Text>
+                    </>
+                  )}
+                </FocusableItem>
+
+                {/* 7. Sessiz OTA Güncelleme Denetle */}
                 <FocusableItem
                   style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
                   focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
@@ -1871,6 +1949,16 @@ const styles = StyleSheet.create({
   havaDerece: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   havaSehir: { color: 'rgba(255, 255, 255, 0.55)', fontSize: 9 },
 
+  canliTvButon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 14,
+    marginRight: 10,
+  },
   kontrolMerkeziButon: {
     flexDirection: 'row',
     alignItems: 'center',
