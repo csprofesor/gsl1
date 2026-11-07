@@ -214,7 +214,7 @@ const getAppIconAndColor = (name: string, pkg: string): { icon: string; color: s
   };
 };
 
-// LeTa Launcher Uygulama Kategorileri
+// GS TV Launcher Uygulama Kategorileri
 export type AppCategory = 'all' | 'media' | 'tv' | 'games' | 'tools';
 
 interface FocusableItemProps {
@@ -465,8 +465,12 @@ export default function App() {
       setSeritEkleAcik(false);
       return true;
     }
-    return false;
-  }, [ekranKoruyucuAcik, pinModalAcik, hizTestiAcik, havaModalAcik, kontrolMerkeziAcik, temaSeciciAcik, uygulamaSeciciAcik, aksiyonMenusuAcik, yenidenAdlandirModalAcik, seritEkleAcik]);
+    if (aramaMetni.length > 0) {
+      setAramaMetni('');
+      return true;
+    }
+    return true; // Ana ekranda başlatıcıyı sabit ve kararlı tutar (Yanlışlıkla kapanmayı önler)
+  }, [ekranKoruyucuAcik, pinModalAcik, hizTestiAcik, havaModalAcik, kontrolMerkeziAcik, temaSeciciAcik, uygulamaSeciciAcik, aksiyonMenusuAcik, yenidenAdlandirModalAcik, seritEkleAcik, aramaMetni]);
 
   useEffect(() => {
     const backSub = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
@@ -620,13 +624,21 @@ export default function App() {
         .catch(() => {});
     }
 
+    let batInterval: any;
     if (Platform.OS === 'android' && TVAppManager && TVAppManager.getBatteryLevel) {
-      TVAppManager.getBatteryLevel()
-        .then((lvl: number) => {
-          if (typeof lvl === 'number' && lvl > 0) setPilSeviyesi(lvl);
-        })
-        .catch(() => {});
+      const updateBat = () => {
+        TVAppManager.getBatteryLevel()
+          .then((lvl: number) => {
+            if (typeof lvl === 'number' && lvl > 0) setPilSeviyesi(lvl);
+          })
+          .catch(() => {});
+      };
+      updateBat();
+      batInterval = setInterval(updateBat, 60000);
     }
+    return () => {
+      if (batInterval) clearInterval(batInterval);
+    };
   }, [yukluUygulamalariGetir]);
 
   // Açılış Tercihine Göre Otomatik Başlatma (Projectivy Parite)
@@ -699,7 +711,7 @@ export default function App() {
     havaDurumuGetir();
   }, []);
 
-  // LeTa Uyku Zamanlayıcısı (Sleep Timer) Geri Sayımı
+  // GS TV Uyku Zamanlayıcısı (Sleep Timer) Geri Sayımı
   useEffect(() => {
     if (uykuSuresiDakika === null || kalanUykuSaniye <= 0) return;
 
@@ -1317,7 +1329,7 @@ export default function App() {
         style={[styles.camKatman, { backgroundColor: aktifTema.bgGradientColor }]}
         onTouchStart={etkilesimSifirla}
       >
-        {/* ================= ÜST BAR: MONET + LETA KONTROL PANELİ ================= */}
+        {/* ================= ÜST BAR: MONET + GS TV KONTROL PANELİ ================= */}
         <View style={styles.ustBar}>
           {/* Sol: GS Logosu & Dinamik Arama */}
           <View style={styles.ustSol}>
@@ -1554,7 +1566,7 @@ export default function App() {
             </View>
           ) : null}
 
-          {/* 2. LETA KATEGORİ SEKMELERİ (FİLTRE ÇUBUĞU) */}
+          {/* 2. GS TV KATEGORİ SEKMELERİ (FİLTRE ÇUBUĞU) */}
           <View style={styles.kategoriKapsayici}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {[
@@ -1835,7 +1847,7 @@ export default function App() {
           </View>
         </ScrollView>
 
-        {/* ================= MODAL: LETA HIZLI KONTROL MERKEZİ (CONTROL CENTER) ================= */}
+        {/* ================= MODAL: GS TV HIZLI KONTROL MERKEZİ (CONTROL CENTER) ================= */}
         <Modal visible={kontrolMerkeziAcik} transparent animationType="fade">
           <View style={styles.modalArkaplan}>
             <View style={[styles.kontrolMerkeziPencere, { borderColor: aktifTema.border }]}>
@@ -1873,7 +1885,7 @@ export default function App() {
                   )}
                 </FocusableItem>
 
-                {/* 2. LeTa Uyku Zamanlayıcısı (Sleep Timer) */}
+                {/* 2. GS TV Uyku Zamanlayıcısı (Sleep Timer) */}
                 <FocusableItem
                   style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
                   focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
@@ -3226,7 +3238,7 @@ const styles = StyleSheet.create({
   },
   noktaAktif: { width: 18, height: 6, borderRadius: 3 },
 
-  // LETA KATEGORİ SEKMELERİ
+  // GS TV KATEGORİ SEKMELERİ
   kategoriKapsayici: { marginBottom: 16 },
   kategoriPill: {
     paddingHorizontal: 14,
@@ -3419,7 +3431,7 @@ const styles = StyleSheet.create({
   modalAltBaslik: { color: 'rgba(255, 255, 255, 0.6)', fontSize: 12, marginBottom: 14 },
   geriBilgiMetin: { color: 'rgba(255, 255, 255, 0.45)', fontSize: 10 },
 
-  // KONTROL MERKEZİ (LETA)
+  // KONTROL MERKEZİ (GS TV)
   kontrolMerkeziPencere: {
     width: 720,
     backgroundColor: 'rgba(15, 20, 32, 0.96)',
