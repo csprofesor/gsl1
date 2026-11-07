@@ -5,51 +5,109 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import androidx.core.content.FileProvider
 import com.facebook.react.bridge.*
 import java.io.File
+import java.io.FileOutputStream
 
 class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
     override fun getName(): String = "TVAppManager"
 
+    private fun drawableToBitmap(drawable: Drawable): Bitmap {
+        if (drawable is BitmapDrawable && drawable.bitmap != null) {
+            return drawable.bitmap
+        }
+        val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 128
+        val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else 128
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+        return bitmap
+    }
+
     @ReactMethod
     fun getInstalledApps(promise: Promise) {
-        try {
-            val pm = reactContext.packageManager
-            val myPackage = reactContext.packageName
-            val appList = Arguments.createArray()
+        Thread {
+            try {
+                val pm = reactContext.packageManager
+                val myPackage = reactContext.packageName
+                val appList = Arguments.createArray()
 
-            val tvIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
-            val tvApps = pm.queryIntentActivities(tvIntent, 0)
+                val tvIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
+                val tvApps = pm.queryIntentActivities(tvIntent, 0)
 
-            val standardIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-            val standardApps = pm.queryIntentActivities(standardIntent, 0)
+                val standardIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+                val standardApps = pm.queryIntentActivities(standardIntent, 0)
 
-            val seenPackages = mutableSetOf<String>()
-            seenPackages.add(myPackage)
+                val seenPackages = mutableSetOf<String>()
+                seenPackages.add(myPackage)
 
-            val allActivities = tvApps + standardApps
-            for (resolveInfo in allActivities) {
-                val pkgName = resolveInfo.activityInfo.packageName
-                if (pkgName !in seenPackages) {
-                    seenPackages.add(pkgName)
-                    val label = resolveInfo.loadLabel(pm).toString()
-                    val item = Arguments.createMap()
-                    item.putString("name", label)
-                    item.putString("packageName", pkgName)
-                    appList.pushMap(item)
+                val iconsDir = File(reactContext.filesDir, "app_icons")
+                if (!iconsDir.exists()) {
+                    iconsDir.mkdirs()
                 }
-            }
 
-            promise.resolve(appList)
-        } catch (e: Exception) {
-            promise.reject("ERROR_GET_APPS", e.message, e)
-        }
+                val allActivities = tvApps + standardApps
+                for (resolveInfo in allActivities) {
+                    val pkgName = resolveInfo.activityInfo.packageName
+                    if (pkgName !in seenPackages) {
+                        seenPackages.add(pkgName)
+                        val label = resolveInfo.loadLabel(pm).toString()
+                        val item = Arguments.createMap()
+                        item.putString("name", label)
+                        item.putString("packageName", pkgName)
+
+                        // Gerçek Uygulama İkonunu Çıkar ve Kaydet
+                        try {
+                            val iconFile = File(iconsDir, "$pkgName.png")
+                            if (!iconFile.exists() || iconFile.length() == 0L) {
+                                val iconDrawable = resolveInfo.loadIcon(pm)
+                                val bmp = drawableToBitmap(iconDrawable)
+                                FileOutputStream(iconFile).use { out ->
+                                    bmp.compress(Bitmap.CompressFormat.PNG, 90, out)
+                                }
+                            }
+                            if (iconFile.exists() && iconFile.length() > 0) {
+                                item.putString("iconUri", "file://${iconFile.absolutePath}")
+                            }
+                        } catch (_: Exception) {}
+
+                        // Android TV Banner'ı varsa onu da al
+                        try {
+                            val bannerDrawable = resolveInfo.activityInfo.loadBanner(pm)
+                            if (bannerDrawable != null) {
+                                val bannerFile = File(iconsDir, "${pkgName}_banner.png")
+                                if (!bannerFile.exists() || bannerFile.length() == 0L) {
+                                    val bmp = drawableToBitmap(bannerDrawable)
+                                    FileOutputStream(bannerFile).use { out ->
+                                        bmp.compress(Bitmap.CompressFormat.PNG, 90, out)
+                                    }
+                                }
+                                if (bannerFile.exists() && bannerFile.length() > 0) {
+                                    item.putString("bannerUri", "file://${bannerFile.absolutePath}")
+                                }
+                            }
+                        } catch (_: Exception) {}
+
+                        appList.pushMap(item)
+                    }
+                }
+
+                promise.resolve(appList)
+            } catch (e: Exception) {
+                promise.reject("ERROR_GET_APPS", e.message, e)
+            }
+        }.start()
     }
 
     @ReactMethod
@@ -72,66 +130,71 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun installUpdate(downloadUrl: String, promise: Promise) {
-        try {
-            val destination = File(
-                reactContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                "update.apk"
-            )
-            if (destination.exists()) {
-                destination.delete()
-            }
+        Thread {
+            try {
+                val destination = File(
+                    reactContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                    "update.apk"
+                )
+                if (destination.exists()) {
+                    destination.delete()
+                }
 
-            val request = DownloadManager.Request(Uri.parse(downloadUrl))
-                .setTitle("GS Launcher Güncelleniyor")
-                .setDescription("Yeni sürüm indiriliyor...")
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-                .setDestinationUri(Uri.fromFile(destination))
+                var currentUrl = downloadUrl
+                var redirects = 0
+                while (true) {
+                    val url = java.net.URL(currentUrl)
+                    val conn = url.openConnection() as java.net.HttpURLConnection
+                    conn.instanceFollowRedirects = false
+                    conn.connectTimeout = 20000
+                    conn.readTimeout = 40000
+                    conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android TV; Mobile)")
+                    conn.connect()
 
-            val dm = reactContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            val downloadId = dm.enqueue(request)
+                    val status = conn.responseCode
+                    if (status == java.net.HttpURLConnection.HTTP_MOVED_PERM ||
+                        status == java.net.HttpURLConnection.HTTP_MOVED_TEMP ||
+                        status == 307 || status == 308
+                    ) {
+                        currentUrl = conn.getHeaderField("Location")
+                        redirects++
+                        if (redirects > 8) throw Exception("Çok fazla yönlendirme hatası")
+                        continue
+                    }
 
-            val receiver = object : BroadcastReceiver() {
-                override fun onReceive(context: Context?, intent: Intent?) {
-                    val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-                    if (id == downloadId) {
-                        try {
-                            reactContext.unregisterReceiver(this)
-                        } catch (_: Exception) {}
-
-                        if (destination.exists()) {
-                            val apkUri = FileProvider.getUriForFile(
-                                reactContext,
-                                "${reactContext.packageName}.provider",
-                                destination
-                            )
-                            val installIntent = Intent(Intent.ACTION_VIEW).apply {
-                                setDataAndType(apkUri, "application/vnd.android.package-archive")
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    conn.inputStream.use { input ->
+                        FileOutputStream(destination).use { output ->
+                            val buffer = ByteArray(16384)
+                            var bytesRead: Int
+                            while (input.read(buffer).also { bytesRead = it } != -1) {
+                                output.write(buffer, 0, bytesRead)
                             }
-                            reactContext.startActivity(installIntent)
+                            output.flush()
                         }
                     }
+                    break
                 }
-            }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                reactContext.registerReceiver(
-                    receiver,
-                    IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-                    Context.RECEIVER_EXPORTED
-                )
-            } else {
-                reactContext.registerReceiver(
-                    receiver,
-                    IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-                )
+                if (destination.exists() && destination.length() > 0) {
+                    val apkUri = FileProvider.getUriForFile(
+                        reactContext,
+                        "${reactContext.packageName}.provider",
+                        destination
+                    )
+                    val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(apkUri, "application/vnd.android.package-archive")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    reactContext.startActivity(installIntent)
+                    promise.resolve(true)
+                } else {
+                    promise.reject("ERROR_INSTALL", "APK dosyası indirilemedi.")
+                }
+            } catch (e: Exception) {
+                promise.reject("ERROR_INSTALL", e.message, e)
             }
-
-            promise.resolve(true)
-        } catch (e: Exception) {
-            promise.reject("ERROR_INSTALL", e.message, e)
-        }
+        }.start()
     }
 
     @ReactMethod

@@ -25,8 +25,8 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi
-const CURRENT_VERSION = '2.0.0';
-const LATEST_RELEASE_APK = 'https://expo.dev/artifacts/eas/SCBk0L_AZCfjjKbOgt8O7LrtYHBa5wa56Wv8kjFd4fU.apk';
+const CURRENT_VERSION = '2.2.0';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/28an8vfs';
 
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
 export interface MonetTheme {
@@ -273,8 +273,18 @@ interface UygulamaItem {
   packageName: string;
   color: string;
   icon: string;
+  iconUri?: string;
+  bannerUri?: string;
   category: AppCategory;
   isFavorite: boolean;
+}
+
+// Cihaz Uygulama Modeli
+interface CihazUygulamaItem {
+  name: string;
+  packageName: string;
+  iconUri?: string;
+  bannerUri?: string;
 }
 
 // Gerçek Son Başlatılan Uygulama Modeli
@@ -283,9 +293,141 @@ interface SonBaslatilanItem {
   name: string;
   packageName: string;
   icon: string;
+  iconUri?: string;
   color: string;
   zaman: string;
 }
+
+// Film & Dizi Vitrin Modeli (Cloudstream, Nuviola, Netflix, Stremio, Prime Video vb.)
+export interface FilmVitrinItem {
+  id: string;
+  title: string;
+  year: string;
+  rating: string;
+  genre: string;
+  platform: 'Cloudstream' | 'Nuviola' | 'Netflix' | 'Stremio' | 'Prime Video' | 'Disney+' | 'YouTube' | 'Canlı TV';
+  platformIcon: string;
+  backdropUrl: string;
+  posterUrl: string;
+  overview: string;
+  packageCandidates: string[];
+  watchUrl?: string;
+}
+
+export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
+  {
+    id: 'dune2',
+    title: 'Dune: Çöl Gezegeni Bölüm İki',
+    year: '2024',
+    rating: '8.6 ⭐ IMDb',
+    genre: 'Bilim Kurgu • Macera • 4K UHD',
+    platform: 'Cloudstream',
+    platformIcon: '☁️',
+    backdropUrl: 'https://image.tmdb.org/t/p/w1280/xOMo8BRK7PfcJv9JCnx7s520Hgq.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg',
+    overview: 'Paul Atreides, Chani ve Fremenlerle birleşerek ailesini yok eden komploculara karşı destansı bir intikam savaşı başlatır.',
+    packageCandidates: ['com.lagradost.cloudstream3', 'com.nuviola.tv', 'com.stremio.one'],
+    watchUrl: 'https://www.youtube.com/results?search_query=dune+part+two+fragman',
+  },
+  {
+    id: 'house_dragon',
+    title: 'House of the Dragon (Ejderha Hanedanı)',
+    year: '2024',
+    rating: '8.4 ⭐ IMDb',
+    genre: 'Epik Fantastik • Dizi • HDR10+',
+    platform: 'Nuviola',
+    platformIcon: '💜',
+    backdropUrl: 'https://image.tmdb.org/t/p/w1280/etj5CuMuamjhF43Su39jvtVaeh.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/7QMsOTMUswlwxJP0rTTZfmz2tX2.jpg',
+    overview: 'Targaryen hanedanının çöküşünün ve Ejderhaların Dansı olarak bilinen acımasız iç savaşın başlangıç hikayesi.',
+    packageCandidates: ['com.nuviola.tv', 'com.lagradost.cloudstream3', 'com.stremio.one'],
+    watchUrl: 'https://www.youtube.com/results?search_query=house+of+the+dragon+fragman',
+  },
+  {
+    id: 'stranger_things',
+    title: 'Stranger Things (Final Sezonu)',
+    year: '2025',
+    rating: '8.7 ⭐ IMDb',
+    genre: 'Gizem • Bilim Kurgu • 4K Dolby',
+    platform: 'Netflix',
+    platformIcon: '🍿',
+    backdropUrl: 'https://image.tmdb.org/t/p/w1280/56v2KjBlU4XaOv9rVYEQypROD7P.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg',
+    overview: 'Hawkins kasabasında Baş Aşağı Dünya ile son hesaplaşma başlarken kahramanlarımız geçmişin en karanlık sırlarıyla yüzleşir.',
+    packageCandidates: ['com.netflix.ninja', 'com.netflix.mediaclient'],
+    watchUrl: 'https://www.netflix.com',
+  },
+  {
+    id: 'deadpool_wolv',
+    title: 'Deadpool & Wolverine',
+    year: '2024',
+    rating: '8.0 ⭐ IMDb',
+    genre: 'Aksiyon • Komedi • IMAX 4K',
+    platform: 'Stremio',
+    platformIcon: '🟣',
+    backdropUrl: 'https://image.tmdb.org/t/p/w1280/yDHYTfaA95BT5af9zGDOmsy90Ec.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg',
+    overview: 'Zaman Değişimi Otoritesi dünyasını tehdit edince Wade Wilson, isteksiz bir Wolverine ile güçlerini birleştirmek zorunda kalır.',
+    packageCandidates: ['com.stremio.one', 'com.lagradost.cloudstream3', 'com.nuviola.tv'],
+    watchUrl: 'https://www.youtube.com/results?search_query=deadpool+and+wolverine+fragman',
+  },
+  {
+    id: 'gladiator2',
+    title: 'Gladyatör II (Gladiator II)',
+    year: '2024',
+    rating: '7.8 ⭐ IMDb',
+    genre: 'Tarihi Dram • Aksiyon • 4K HDR',
+    platform: 'Cloudstream',
+    platformIcon: '☁️',
+    backdropUrl: 'https://image.tmdb.org/t/p/w1280/euYIwmwkmz95mnEx7vBM0Mqz5r5.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/2cxhvwyEwRlysAmRH4iodkvo0z5.jpg',
+    overview: 'Maximus\'un ölümünden yıllar sonra Lucius, Roma\'nın tiran imparatorlarına karşı Kolezyum\'un kanlı kumlarında mücadeleye girişir.',
+    packageCandidates: ['com.lagradost.cloudstream3', 'com.nuviola.tv'],
+    watchUrl: 'https://www.youtube.com/results?search_query=gladiator+2+fragman',
+  },
+  {
+    id: 'rings_of_power',
+    title: 'Yüzüklerin Efendisi: Güç Yüzükleri',
+    year: '2024',
+    rating: '7.3 ⭐ IMDb',
+    genre: 'Yüksek Fantastik • Macera • 4K',
+    platform: 'Prime Video',
+    platformIcon: '🎬',
+    backdropUrl: 'https://image.tmdb.org/t/p/w1280/7py8k4IlAeJIOioqqv43krSn9x5.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/mYLOqiStMxDK3fYZFirgrMt8z5d.jpg',
+    overview: 'Orta Dünya\'nın İkinci Çağı\'nda büyük güçlerin dövüldüğü, krallıkların ihtişama yükselip yıkıldığı efsanevi dönem.',
+    packageCandidates: ['com.amazon.amazonvideo.livingroom'],
+    watchUrl: 'https://www.primevideo.com',
+  },
+  {
+    id: 'interstellar',
+    title: 'Yıldızlararası (Interstellar)',
+    year: '2014',
+    rating: '8.7 ⭐ IMDb',
+    genre: 'Bilim Kurgu • Uzay Dramı • 4K UHD',
+    platform: 'Nuviola',
+    platformIcon: '💜',
+    backdropUrl: 'https://image.tmdb.org/t/p/w1280/xJHokMbljvjADYdit5fK5VQsXEG.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
+    overview: 'İnsanlığın Dünya\'daki varlığı tükenirken, bir grup kaşif insan ırkının geleceğini kurtarmak için solucan deliğinden geçer.',
+    packageCandidates: ['com.nuviola.tv', 'com.lagradost.cloudstream3', 'com.stremio.one'],
+    watchUrl: 'https://www.youtube.com/results?search_query=interstellar+fragman',
+  },
+  {
+    id: 'breaking_bad',
+    title: 'Breaking Bad',
+    year: '2013',
+    rating: '9.5 ⭐ IMDb',
+    genre: 'Suç • Başyapıt Dram • 4K',
+    platform: 'Netflix',
+    platformIcon: '🍿',
+    backdropUrl: 'https://image.tmdb.org/t/p/w1280/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg',
+    overview: 'Ölümcül akciğer kanseri teşhisi konan bir kimya öğretmeni, ailesinin geleceğini güvence altına almak için metamfetamin üretmeye başlar.',
+    packageCandidates: ['com.netflix.ninja', 'com.stremio.one'],
+    watchUrl: 'https://www.netflix.com',
+  },
+];
 
 // Uygulama İçerik Şeridi Modeli
 interface SeritAksiyon {
@@ -316,13 +458,20 @@ export default function App() {
   const [seciliKategori, setSeciliKategori] = useState<AppCategory>('all');
 
   // 3. Cihazdaki GERÇEK Kurulu Uygulamalar
-  const [cihazUygulamalari, setCihazUygulamalari] = useState<{ name: string; packageName: string }[]>([]);
+  const [cihazUygulamalari, setCihazUygulamalari] = useState<CihazUygulamaItem[]>([]);
 
   // 4. Kullanıcının Uygulama Listesi (Kategorize Edilmiş)
   const [uygulamalar, setUygulamalar] = useState<UygulamaItem[]>([]);
 
   // 5. Gerçek Son Başlatılan Uygulamalar (Sıfır Sahte İçerik)
   const [sonBaslatilanlar, setSonBaslatilanlar] = useState<SonBaslatilanItem[]>([]);
+
+  // 5.b Film & Dizi Vitrin Seçimi & Otomatik Döngü
+  const [seciliFilmIndex, setSeciliFilmIndex] = useState(0);
+
+  // 5.c Uygulama İçi Güncelleme Durumu
+  const [guncellemeModalAcik, setGuncellemeModalAcik] = useState(false);
+  const [guncellemeDurum, setGuncellemeDurum] = useState({ indiriliyor: false, basari: false, hata: '' });
 
   // 6. Dinamik Transparan Uygulama Şeritleri
   const [seritler, setSeritler] = useState<IcerikSeridi[]>([]);
@@ -461,6 +610,10 @@ export default function App() {
       setYenidenAdlandirModalAcik(false);
       return true;
     }
+    if (guncellemeModalAcik) {
+      setGuncellemeModalAcik(false);
+      return true;
+    }
     if (seritEkleAcik) {
       setSeritEkleAcik(false);
       return true;
@@ -470,7 +623,7 @@ export default function App() {
       return true;
     }
     return true; // Ana ekranda başlatıcıyı sabit ve kararlı tutar (Yanlışlıkla kapanmayı önler)
-  }, [ekranKoruyucuAcik, pinModalAcik, hizTestiAcik, havaModalAcik, kontrolMerkeziAcik, temaSeciciAcik, uygulamaSeciciAcik, aksiyonMenusuAcik, yenidenAdlandirModalAcik, seritEkleAcik, aramaMetni]);
+  }, [ekranKoruyucuAcik, pinModalAcik, hizTestiAcik, havaModalAcik, kontrolMerkeziAcik, temaSeciciAcik, uygulamaSeciciAcik, aksiyonMenusuAcik, yenidenAdlandirModalAcik, seritEkleAcik, guncellemeModalAcik, aramaMetni]);
 
   useEffect(() => {
     const backSub = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
@@ -581,6 +734,8 @@ export default function App() {
               packageName: a.packageName,
               color: meta.color,
               icon: meta.icon,
+              iconUri: a.iconUri,
+              bannerUri: a.bannerUri,
               category: cat,
               isFavorite: idx < 7, // İlk 7'si varsayılan favori
             };
@@ -772,6 +927,7 @@ export default function App() {
         name: isim,
         packageName: pkg,
         icon: hedef?.icon || '📺',
+        iconUri: hedef?.iconUri,
         color: hedef?.color || aktifTema.accent,
         zaman: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
@@ -804,6 +960,75 @@ export default function App() {
     } else {
       Alert.alert('Hatalı PIN', 'Girdiğiniz PIN kodu hatalı. Lütfen tekrar deneyin (Varsayılan PIN: 1234).');
       setGirilenPin('');
+    }
+  };
+
+  // Aktif Film & Dizi Afişi (Otomatik veya elle seçilen)
+  const aktifFilm = useMemo(() => {
+    if (FILM_VITRIN_KATALOGU.length === 0) return null;
+    return FILM_VITRIN_KATALOGU[seciliFilmIndex % FILM_VITRIN_KATALOGU.length];
+  }, [seciliFilmIndex]);
+
+  // Film Vitrini Otomatik Döngü (12 saniyede bir yeni film afişi)
+  useEffect(() => {
+    if (!vitrinGorunur) return;
+    const interval = setInterval(() => {
+      setSeciliFilmIndex((prev) => (prev + 1) % FILM_VITRIN_KATALOGU.length);
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [vitrinGorunur]);
+
+  // Film Başlatma (Cloudstream, Nuviola, Netflix, Stremio, Prime Video vb.)
+  const filmBaslat = (film: FilmVitrinItem) => {
+    let hedefApp = uygulamalar.find((u) => {
+      const pkgLower = u.packageName.toLowerCase();
+      const nameLower = u.name.toLowerCase();
+      return (
+        film.packageCandidates.some((c) => pkgLower.includes(c.toLowerCase()) || nameLower.includes(c.toLowerCase())) ||
+        nameLower.includes(film.platform.toLowerCase()) ||
+        pkgLower.includes(film.platform.toLowerCase())
+      );
+    });
+
+    if (hedefApp) {
+      setBildirimMetni(`🎬 "${film.title}" için ${hedefApp.name} başlatılıyor...`);
+      setTimeout(() => setBildirimMetni(''), 3500);
+      uygulamaBaslat(hedefApp.packageName, hedefApp.name);
+    } else {
+      Alert.alert(
+        `🎬 ${film.title}`,
+        `"${film.platform}" uygulaması cihazınızda bulunamadı. Filmin tanıtım ve izleme bağlantısını açmak ister misiniz?`,
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          {
+            text: '🌐 Tanıtımı / Linki Aç',
+            onPress: () => {
+              if (film.watchUrl) {
+                Linking.openURL(film.watchUrl).catch(() => {});
+              }
+            },
+          },
+        ]
+      );
+    }
+  };
+
+  // Uygulama İçi Doğrudan Güncelleme (APK İndir & Kur)
+  const guncellemeBaslat = async () => {
+    setGuncellemeDurum({ indiriliyor: true, basari: false, hata: '' });
+    try {
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.installUpdate) {
+        setBildirimMetni('⏳ Güncelleme paketi indiriliyor...');
+        await TVAppManager.installUpdate('https://tinyurl.com/28an8vfs');
+        setGuncellemeDurum({ indiriliyor: false, basari: true, hata: '' });
+        setBildirimMetni('✔ İndirme tamamlandı! TV kurulum ekranı açıldı.');
+      } else {
+        Alert.alert('Bilgi', 'Uygulama içi güncelleme Android TV üzerinde çalışır.');
+        setGuncellemeDurum({ indiriliyor: false, basari: false, hata: '' });
+      }
+    } catch (err: any) {
+      setGuncellemeDurum({ indiriliyor: false, basari: false, hata: err?.message || 'İndirme hatası oluştu' });
+      setBildirimMetni('❌ Güncelleme indirilemedi.');
     }
   };
 
@@ -1437,6 +1662,22 @@ export default function App() {
               )}
             </FocusableItem>
 
+            {/* UYGULAMA İÇİ GÜNCELLEME BUTONU */}
+            <FocusableItem
+              style={[styles.guncellemeButon, { borderColor: aktifTema.border }]}
+              focusedStyle={[styles.kontrolMerkeziOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
+              onPress={() => setGuncellemeModalAcik(true)}
+            >
+              {(isFocused) => (
+                <View style={styles.kontrolButonIcerik}>
+                  <Text style={styles.kontrolIkon}>🔄</Text>
+                  <Text style={[styles.kontrolYazi, isFocused && { color: aktifTema.textOnAccent }]}>
+                    Güncelle
+                  </Text>
+                </View>
+              )}
+            </FocusableItem>
+
             {/* HIZLI KONTROL MERKEZİ BUTONU */}
             <FocusableItem
               style={[styles.kontrolMerkeziButon, { borderColor: aktifTema.border }]}
@@ -1464,107 +1705,107 @@ export default function App() {
 
         {/* ================= ANA SCROLL ALANI ================= */}
         <ScrollView style={styles.anaKaydirma} showsVerticalScrollIndicator={false}>
-          {/* 1. ÖNE ÇIKAN GERÇEK UYGULAMA VİTRİNİ & HIZLI BAŞLATICI */}
-          {vitrinGorunur && aktifVitrinApp ? (
-            <View style={[styles.vitrinKapsayici, { borderColor: aktifTema.border, backgroundColor: aktifTema.surface }]}>
-              <View style={styles.vitrinSolIcerik}>
-                {/* Büyük Renkli Uygulama İkonu */}
-                <View style={[styles.vitrinIkonKutusu, { backgroundColor: aktifVitrinApp.color, borderColor: aktifTema.border }]}>
-                  <Text style={styles.vitrinIkonYazi}>{aktifVitrinApp.icon}</Text>
+          {/* 1. ÖNE ÇIKAN FİLM & DİZİ VİTRİN AFİŞİ (CLOUDSTREAM, NUVİOLA, NETFLIX, STREMİO VB.) */}
+          {vitrinGorunur && aktifFilm && (
+            <View style={[styles.filmVitrinKapsayici, { borderColor: aktifTema.border }]}>
+              {/* Arka Plan Geniş Sinematik Görsel */}
+              <Image
+                source={{ uri: aktifFilm.backdropUrl }}
+                style={StyleSheet.absoluteFillObject}
+                resizeMode="cover"
+              />
+              {/* Şeffaf Cam Gradyan Katmanı (Arka planı ve metinleri netleştiren şeffaf cam efekt) */}
+              <View style={[styles.filmVitrinGradyan, { backgroundColor: 'rgba(10, 15, 29, 0.72)' }]} />
+
+              <View style={styles.filmVitrinIcerik}>
+                {/* Sol: Dikey Yüksek Çözünürlüklü Film Posteri */}
+                <View style={[styles.filmPosterKutusu, { borderColor: aktifTema.border }]}>
+                  <Image
+                    source={{ uri: aktifFilm.posterUrl }}
+                    style={styles.filmPosterResim}
+                    resizeMode="cover"
+                  />
+                  <View style={[styles.filmPlatformRozet, { backgroundColor: aktifTema.accent }]}>
+                    <Text style={[styles.filmPlatformYazi, { color: aktifTema.textOnAccent }]}>
+                      {aktifFilm.platformIcon} {aktifFilm.platform}
+                    </Text>
+                  </View>
                 </View>
 
-                {/* Uygulama Detayları */}
-                <View style={styles.vitrinBilgi}>
-                  <View style={styles.heroRozetSatir}>
-                    <View style={[styles.heroRozet, { backgroundColor: aktifTema.accent }]}>
-                      <Text style={[styles.heroRozetYazi, { color: aktifTema.textOnAccent }]}>
-                        {aktifVitrinApp.isFavorite ? '⭐ FAVORİ TV UYGULAMASI' : '📺 ANDROID TV'}
-                      </Text>
+                {/* Sağ: Film Detayları & Aksiyon Butonları */}
+                <View style={styles.filmBilgiAlani}>
+                  <View style={styles.filmRozetSatir}>
+                    <View style={styles.filmPuanRozet}>
+                      <Text style={styles.filmPuanYazi}>{aktifFilm.rating}</Text>
                     </View>
-                    <View style={styles.heroSesRozet}>
-                      <Text style={styles.heroSesYazi}>⚡ Hızlı Erişim</Text>
+                    <View style={styles.filmKaliteRozet}>
+                      <Text style={styles.filmKaliteYazi}>4K ULTRA HD</Text>
                     </View>
+                    <View style={styles.filmKaliteRozet}>
+                      <Text style={styles.filmKaliteYazi}>HDR10+</Text>
+                    </View>
+                    <Text style={styles.filmYilYazi}>{aktifFilm.year} • {aktifFilm.genre}</Text>
                   </View>
 
-                  <Text style={styles.vitrinBaslikYazi}>{aktifVitrinApp.name}</Text>
-                  <Text style={styles.vitrinPaketYazi} numberOfLines={1}>
-                    Paket: {aktifVitrinApp.packageName}
+                  <Text style={styles.filmBaslikYazi} numberOfLines={1}>
+                    {aktifFilm.title}
+                  </Text>
+                  <Text style={styles.filmOzetYazi} numberOfLines={2}>
+                    {aktifFilm.overview}
                   </Text>
 
-                  {/* Hızlı Aksiyon Butonları */}
-                  <View style={styles.heroAltAksiyonSatir}>
+                  {/* Aksiyon Butonları */}
+                  <View style={styles.filmAksiyonSatir}>
                     <FocusableItem
-                      style={[styles.simdiIzleButon, { backgroundColor: aktifTema.accent }]}
-                      focusedStyle={[styles.simdiIzleOdak, { shadowColor: aktifTema.accent }]}
-                      onPress={() => uygulamaBaslat(aktifVitrinApp.packageName, aktifVitrinApp.name)}
+                      style={[styles.filmOynatButon, { backgroundColor: aktifTema.accent }]}
+                      focusedStyle={[styles.simdiIzleOdak, { shadowColor: aktifTema.accent, borderColor: '#FFFFFF' }]}
+                      onPress={() => filmBaslat(aktifFilm)}
                     >
                       {() => (
                         <View style={styles.simdiIzleIcerik}>
                           <Text style={[styles.oynatUcgen, { color: aktifTema.textOnAccent }]}>▶</Text>
-                          <Text style={[styles.simdiIzleYazi, { color: aktifTema.textOnAccent }]}>Şimdi Başlat</Text>
+                          <Text style={[styles.simdiIzleYazi, { color: aktifTema.textOnAccent }]}>
+                            Hemen İzle ({aktifFilm.platform})
+                          </Text>
                         </View>
                       )}
                     </FocusableItem>
 
                     <FocusableItem
-                      style={[styles.ikincilAksiyonButon, { borderColor: aktifTema.border }]}
-                      focusedStyle={{ borderColor: aktifTema.accent, backgroundColor: aktifTema.surface }}
+                      style={[styles.filmRastgeleButon, { borderColor: aktifTema.border }]}
+                      focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
                       onPress={() => {
-                        if (Platform.OS === 'android' && TVAppManager && TVAppManager.openAppDetails) {
-                          TVAppManager.openAppDetails(aktifVitrinApp.packageName);
-                        } else {
-                          Alert.alert('Bilgi', aktifVitrinApp.packageName);
-                        }
+                        const randomIdx = Math.floor(Math.random() * FILM_VITRIN_KATALOGU.length);
+                        setSeciliFilmIndex(randomIdx);
                       }}
                     >
-                      {() => <Text style={[styles.ikincilAksiyonYazi, { color: '#FFFFFF' }]}>⚙️ Uygulama Bilgisi</Text>}
+                      {() => <Text style={styles.filmRastgeleYazi}>🎲 Rastgele Film</Text>}
                     </FocusableItem>
 
-                    {/* Slayt Noktaları */}
-                    {vitrinUygulamalari.length > 1 && (
-                      <View style={styles.noktalarSatir}>
-                        {vitrinUygulamalari.map((_, i) => (
-                          <TouchableOpacity
-                            key={i}
-                            onPress={() => setAktifHeroIndex(i)}
-                            style={[
-                              styles.nokta,
-                              i === (aktifHeroIndex % vitrinUygulamalari.length) && [
-                                styles.noktaAktif,
-                                { backgroundColor: aktifTema.accent },
-                              ],
-                            ]}
-                          />
-                        ))}
-                      </View>
-                    )}
+                    {/* Önceki / Sonraki Poster Tuşları */}
+                    <View style={{ flexDirection: 'row', gap: 6, marginLeft: 10 }}>
+                      <FocusableItem
+                        style={styles.vitrinOkButon}
+                        focusedStyle={{ backgroundColor: aktifTema.accent }}
+                        onPress={() =>
+                          setSeciliFilmIndex((prev) => (prev - 1 + FILM_VITRIN_KATALOGU.length) % FILM_VITRIN_KATALOGU.length)
+                        }
+                      >
+                        {() => <Text style={styles.okYazi}>‹</Text>}
+                      </FocusableItem>
+                      <FocusableItem
+                        style={styles.vitrinOkButon}
+                        focusedStyle={{ backgroundColor: aktifTema.accent }}
+                        onPress={() => setSeciliFilmIndex((prev) => (prev + 1) % FILM_VITRIN_KATALOGU.length)}
+                      >
+                        {() => <Text style={styles.okYazi}>›</Text>}
+                      </FocusableItem>
+                    </View>
                   </View>
                 </View>
               </View>
-
-              {/* Ok Butonları (Kumanda Gezinmesi İçin) */}
-              {vitrinUygulamalari.length > 1 && (
-                <View style={styles.vitrinOklar}>
-                  <FocusableItem
-                    style={styles.vitrinOkButon}
-                    focusedStyle={{ backgroundColor: aktifTema.accent }}
-                    onPress={() =>
-                      setAktifHeroIndex((prev) => (prev - 1 + vitrinUygulamalari.length) % vitrinUygulamalari.length)
-                    }
-                  >
-                    {() => <Text style={styles.okYazi}>‹</Text>}
-                  </FocusableItem>
-                  <FocusableItem
-                    style={styles.vitrinOkButon}
-                    focusedStyle={{ backgroundColor: aktifTema.accent }}
-                    onPress={() => setAktifHeroIndex((prev) => (prev + 1) % vitrinUygulamalari.length)}
-                  >
-                    {() => <Text style={styles.okYazi}>›</Text>}
-                  </FocusableItem>
-                </View>
-              )}
             </View>
-          ) : null}
+          )}
 
           {/* 2. GS TV KATEGORİ SEKMELERİ (FİLTRE ÇUBUĞU) */}
           <View style={styles.kategoriKapsayici}>
@@ -1632,7 +1873,8 @@ export default function App() {
                   style={[
                     styles.appKarti,
                     {
-                      backgroundColor: app.color,
+                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      borderColor: 'rgba(255, 255, 255, 0.16)',
                       borderRadius: borderRad,
                       width: cardDim.width,
                       height: cardDim.height,
@@ -1643,6 +1885,7 @@ export default function App() {
                     styles.appKartiOdak,
                     {
                       borderColor: aktifTema.border,
+                      backgroundColor: aktifTema.accent,
                       shadowColor: aktifTema.accent,
                       borderRadius: borderRad,
                     },
@@ -1652,7 +1895,20 @@ export default function App() {
                 >
                   {() => (
                     <View style={styles.appKartIcerik}>
-                      <Text style={[styles.appIkonMetin, { fontSize: cardDim.iconSize }]}>{app.icon}</Text>
+                      {app.iconUri ? (
+                        <Image
+                          source={{ uri: app.iconUri }}
+                          style={{
+                            width: cardDim.iconSize * 1.4,
+                            height: cardDim.iconSize * 1.4,
+                            marginBottom: 4,
+                            borderRadius: ikonStili === 'round' ? (cardDim.iconSize * 1.4) / 2 : 8,
+                          }}
+                          resizeMode="contain"
+                        />
+                      ) : (
+                        <Text style={[styles.appIkonMetin, { fontSize: cardDim.iconSize }]}>{app.icon}</Text>
+                      )}
                       <Text style={[styles.appIsim, { fontSize: cardDim.fontSize }]} numberOfLines={1}>
                         {app.customName || app.name}
                       </Text>
@@ -1752,8 +2008,12 @@ export default function App() {
                     >
                       {() => (
                         <View style={styles.sonBaslatilanIcerik}>
-                          <View style={[styles.sonBaslatilanIkonKutu, { backgroundColor: item.color }]}>
-                            <Text style={styles.sonBaslatilanIkon}>{item.icon}</Text>
+                          <View style={[styles.sonBaslatilanIkonKutu, { backgroundColor: 'rgba(255, 255, 255, 0.08)' }]}>
+                            {item.iconUri ? (
+                              <Image source={{ uri: item.iconUri }} style={{ width: 32, height: 32, borderRadius: 6 }} resizeMode="contain" />
+                            ) : (
+                              <Text style={styles.sonBaslatilanIkon}>{item.icon}</Text>
+                            )}
                           </View>
                           <View style={{ flex: 1, marginLeft: 10 }}>
                             <Text style={styles.sonIzlenenBaslik} numberOfLines={1}>
@@ -1848,7 +2108,12 @@ export default function App() {
         </ScrollView>
 
         {/* ================= MODAL: GS TV HIZLI KONTROL MERKEZİ (CONTROL CENTER) ================= */}
-        <Modal visible={kontrolMerkeziAcik} transparent animationType="fade">
+        <Modal
+          visible={kontrolMerkeziAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setKontrolMerkeziAcik(false)}
+        >
           <View style={styles.modalArkaplan}>
             <View style={[styles.kontrolMerkeziPencere, { borderColor: aktifTema.border }]}>
               {/* Başlık & Sistem Bilgisi */}
@@ -2301,6 +2566,24 @@ export default function App() {
                     </>
                   )}
                 </FocusableItem>
+
+                {/* 18. Launcher'ı Doğrudan Güncelle */}
+                <FocusableItem
+                  style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                  focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                  onPress={() => {
+                    setKontrolMerkeziAcik(false);
+                    setGuncellemeModalAcik(true);
+                  }}
+                >
+                  {() => (
+                    <>
+                      <Text style={styles.tileIkon}>🚀</Text>
+                      <Text style={styles.tileBaslik}>Uygulama Güncelle</Text>
+                      <Text style={[styles.tileAlt, { color: aktifTema.border }]}>v2.2 İndir & Kur</Text>
+                    </>
+                  )}
+                </FocusableItem>
               </View>
 
               {/* DONANIM VE SİSTEM TEŞHİS BİLGİ KUTUSU */}
@@ -2342,7 +2625,12 @@ export default function App() {
         </Modal>
 
         {/* ================= MODAL: MONET TEMA & DUVAR KAĞIDI SEÇİCİ ================= */}
-        <Modal visible={temaSeciciAcik} transparent animationType="fade">
+        <Modal
+          visible={temaSeciciAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setTemaSeciciAcik(false)}
+        >
           <View style={styles.modalArkaplan}>
             <View style={[styles.modalPencere, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
@@ -2454,7 +2742,12 @@ export default function App() {
         </Modal>
 
         {/* ================= MODAL: UYGULAMA SEÇENEKLERİ (UZUN BASMA MENÜSÜ) ================= */}
-        <Modal visible={aksiyonMenusuAcik} transparent animationType="fade">
+        <Modal
+          visible={aksiyonMenusuAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setAksiyonMenusuAcik(false)}
+        >
           <View style={styles.modalArkaplan}>
             <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
@@ -2631,7 +2924,12 @@ export default function App() {
         </Modal>
 
         {/* ================= MODAL: UYGULAMA YENİDEN ADLANDIRMA (RENAME) ================= */}
-        <Modal visible={yenidenAdlandirModalAcik} transparent animationType="fade">
+        <Modal
+          visible={yenidenAdlandirModalAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setYenidenAdlandirModalAcik(false)}
+        >
           <View style={styles.modalArkaplan}>
             <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
@@ -2731,7 +3029,15 @@ export default function App() {
         </Modal>
 
         {/* ================= MODAL: CİHAZDAKİ KURULU UYGULAMALARI SEÇME ================= */}
-        <Modal visible={uygulamaSeciciAcik} transparent animationType="fade">
+        <Modal
+          visible={uygulamaSeciciAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {
+            ayarlariYedekle();
+            setUygulamaSeciciAcik(false);
+          }}
+        >
           <View style={styles.modalArkaplan}>
             <View style={[styles.modalPencere, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
@@ -2805,7 +3111,15 @@ export default function App() {
                         >
                           {() => (
                             <>
-                              <Text style={styles.kuruluAppIkon}>{meta.icon}</Text>
+                              {app.iconUri ? (
+                                <Image
+                                  source={{ uri: app.iconUri }}
+                                  style={{ width: 36, height: 36, marginBottom: 4, borderRadius: 8 }}
+                                  resizeMode="contain"
+                                />
+                              ) : (
+                                <Text style={styles.kuruluAppIkon}>{meta.icon}</Text>
+                              )}
                               <Text style={styles.kuruluAppBaslik} numberOfLines={1}>
                                 {app.name}
                               </Text>
@@ -2853,7 +3167,12 @@ export default function App() {
 
 
         {/* ================= MODAL: İÇERİK ŞERİDİ EKLEME ================= */}
-        <Modal visible={seritEkleAcik} transparent animationType="fade">
+        <Modal
+          visible={seritEkleAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setSeritEkleAcik(false)}
+        >
           <View style={styles.modalArkaplan}>
             <View style={[styles.modalPencere, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
@@ -2881,7 +3200,15 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <View style={[styles.seritSecimDaire, { backgroundColor: aktifTema.accent }]} />
+                          {app.iconUri ? (
+                            <Image
+                              source={{ uri: app.iconUri }}
+                              style={{ width: 28, height: 28, borderRadius: 6, marginBottom: 4 }}
+                              resizeMode="contain"
+                            />
+                          ) : (
+                            <View style={[styles.seritSecimDaire, { backgroundColor: aktifTema.accent }]} />
+                          )}
                           <Text style={styles.seritSecimYazi} numberOfLines={1}>
                             {app.name}
                           </Text>
@@ -2912,7 +3239,12 @@ export default function App() {
         </Modal>
 
         {/* ================= MODAL: 3 GÜNLÜK CANLI HAVA DURUMU TAHMİNİ ================= */}
-        <Modal visible={havaModalAcik} transparent animationType="fade">
+        <Modal
+          visible={havaModalAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setHavaModalAcik(false)}
+        >
           <View style={styles.modalArkaplan}>
             <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border }]}>
               <View style={styles.modalBaslikSatir}>
@@ -2975,7 +3307,12 @@ export default function App() {
         </Modal>
 
         {/* ================= MODAL: İNTERNET HIZ TESTİ ================= */}
-        <Modal visible={hizTestiAcik} transparent animationType="fade">
+        <Modal
+          visible={hizTestiAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setHizTestiAcik(false)}
+        >
           <View style={styles.modalArkaplan}>
             <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border, alignItems: 'center' }]}>
               <View style={[styles.modalBaslikSatir, { width: '100%' }]}>
@@ -3038,7 +3375,16 @@ export default function App() {
         </Modal>
 
         {/* ================= MODAL: 4 HANELİ PIN KİLİDİ ================= */}
-        <Modal visible={pinModalAcik} transparent animationType="fade">
+        <Modal
+          visible={pinModalAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {
+            setGirilenPin('');
+            setPinModalAcik(false);
+            setHedefKilitliApp(null);
+          }}
+        >
           <View style={styles.modalArkaplan}>
             <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border, alignItems: 'center' }]}>
               <Text style={{ fontSize: 38, marginBottom: 6 }}>🔒</Text>
@@ -3120,7 +3466,12 @@ export default function App() {
         </Modal>
 
         {/* ================= MODAL: AMBİYANS EKRAN KORUYUCU ================= */}
-        <Modal visible={ekranKoruyucuAcik} transparent animationType="fade">
+        <Modal
+          visible={ekranKoruyucuAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setEkranKoruyucuAcik(false)}
+        >
           <TouchableOpacity
             activeOpacity={1}
             style={styles.ambiyansArkaplan}
@@ -3138,6 +3489,90 @@ export default function App() {
               <Text style={styles.ambiyansCikisYazi}>Kumandadaki herhangi bir tuşa basarak çıkın</Text>
             </View>
           </TouchableOpacity>
+        </Modal>
+
+        {/* ================= MODAL: UYGULAMA İÇİ DOĞRUDAN GÜNCELLEME ================= */}
+        <Modal
+          visible={guncellemeModalAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setGuncellemeModalAcik(false)}
+        >
+          <View style={styles.modalArkaplan}>
+            <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border }]}>
+              <View style={styles.modalBaslikSatir}>
+                <Text style={styles.modalBaslik}>🚀 GS TV Launcher Güncelleme</Text>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setGuncellemeModalAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
+              </View>
+
+              <Text style={styles.modalAltBaslik}>
+                Mevcut: v{CURRENT_VERSION} • Yeni: v2.2 (Kararlı & Tam Sürüm)
+              </Text>
+
+              <View style={{ marginVertical: 12, backgroundColor: 'rgba(255,255,255,0.06)', padding: 12, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+                <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700', marginBottom: 6 }}>
+                  ✨ Yeni Sürüm Yenilikleri:
+                </Text>
+                <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, lineHeight: 18 }}>
+                  • Gerçek Orijinal Uygulama Simgeleri (Logo dosyaları cihazdan alınır)
+                  {'\n'}• Tam Şeffaf Cam Efekti (Arka plan duvar kağıdı her yerde net)
+                  {'\n'}• Kumanda Geri (Back) Tuşuyla Pencereleri Kolayca Kapatma
+                  {'\n'}• Üstte Sinematik Film & Dizi Afiş Vitrini (Cloudstream, Nuviola, Netflix, Stremio)
+                  {'\n'}• Doğrudan Uygulama İçinden Tek Tıkla APK Güncelleme
+                </Text>
+              </View>
+
+              {guncellemeDurum.indiriliyor ? (
+                <View style={{ alignItems: 'center', paddingVertical: 14 }}>
+                  <Text style={{ color: aktifTema.border, fontSize: 15, fontWeight: '800' }}>
+                    ⏳ Güncelleme paketi indiriliyor...
+                  </Text>
+                  <Text style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: 11, marginTop: 4 }}>
+                    İndirme tamamlandığında TV kurulum penceresi ekrana gelecektir.
+                  </Text>
+                </View>
+              ) : (
+                <FocusableItem
+                  style={[styles.modalKaydetKapatButon, { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }]}
+                  focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                  onPress={guncellemeBaslat}
+                >
+                  {() => (
+                    <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent }]}>
+                      ⬇️ Şimdi Güncelle & Kur (Doğrudan Yükle)
+                    </Text>
+                  )}
+                </FocusableItem>
+              )}
+
+              {!!guncellemeDurum.hata && (
+                <Text style={{ color: '#EF4444', fontSize: 11, marginTop: 8, textAlign: 'center' }}>
+                  Hata: {guncellemeDurum.hata}
+                </Text>
+              )}
+
+              {/* Vazgeç Butonu */}
+              <View style={{ marginTop: 10, alignItems: 'center' }}>
+                <FocusableItem
+                  style={[styles.modalKaydetKapatButon, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }]}
+                  focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+                  onPress={() => setGuncellemeModalAcik(false)}
+                >
+                  {() => (
+                    <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>
+                      ✔ Vazgeç ve Ana Ekrana Dön
+                    </Text>
+                  )}
+                </FocusableItem>
+              </View>
+            </View>
+          </View>
         </Modal>
 
         {/* KUMANDA KISAYOLLARI VE HIZLI YARDIM BİLGİ BANDI */}
@@ -3299,6 +3734,145 @@ const styles = StyleSheet.create({
   bildirimYazi: { fontSize: 12, fontWeight: '700', textAlign: 'center' },
 
   anaKaydirma: { flex: 1 },
+
+  // GÜNCELLEME BUTONU
+  guncellemeButon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 14,
+    marginRight: 10,
+  },
+
+  // FİLM & DİZİ SİNEMATİK VİTRİN AFİŞİ (CLOUDSTREAM, NUVİOLA, NETFLIX, STREMİO)
+  filmVitrinKapsayici: {
+    width: '100%',
+    height: 185,
+    borderRadius: 20,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    overflow: 'hidden',
+    position: 'relative',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(10, 15, 29, 0.4)',
+  },
+  filmVitrinGradyan: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  filmVitrinIcerik: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
+  filmPosterKutusu: {
+    width: 95,
+    height: 145,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    overflow: 'hidden',
+    marginRight: 18,
+    position: 'relative',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  filmPosterResim: {
+    width: '100%',
+    height: '100%',
+  },
+  filmPlatformRozet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingVertical: 3,
+    alignItems: 'center',
+  },
+  filmPlatformYazi: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  filmBilgiAlani: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  filmRozetSatir: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  filmPuanRozet: {
+    backgroundColor: 'rgba(245, 158, 11, 0.25)',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  filmPuanYazi: {
+    color: '#FCD34D',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  filmKaliteRozet: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  filmKaliteYazi: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  filmYilYazi: {
+    color: 'rgba(255, 255, 255, 0.65)',
+    fontSize: 11,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  filmBaslikYazi: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  filmOzetYazi: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 11,
+    lineHeight: 16,
+    marginBottom: 10,
+  },
+  filmAksiyonSatir: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  filmOynatButon: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 18,
+    marginRight: 10,
+  },
+  filmRastgeleButon: {
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  filmRastgeleYazi: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
 
   // GERÇEK UYGULAMA VİTRİNİ & HIZLI BAŞLATICI
   vitrinKapsayici: {
@@ -3578,26 +4152,28 @@ const styles = StyleSheet.create({
   yeniSeritArti: { fontSize: 16, marginRight: 8 },
   yeniSeritYazi: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
 
-  // MODAL TASARIMLARI
+  // MODAL TASARIMLARI (ŞEFFAF CAM / GLASSMORPHISM)
   modalArkaplan: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.78)',
+    backgroundColor: 'rgba(0, 0, 0, 0.58)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalPencere: {
     width: 650,
-    backgroundColor: 'rgba(18, 22, 34, 0.95)',
+    backgroundColor: 'rgba(12, 17, 30, 0.82)',
     borderRadius: 20,
     padding: 24,
-    borderWidth: 1,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
   modalPencereKucuk: {
     width: 480,
-    backgroundColor: 'rgba(18, 22, 34, 0.95)',
+    backgroundColor: 'rgba(12, 17, 30, 0.82)',
     borderRadius: 20,
     padding: 24,
-    borderWidth: 1,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
   modalBaslikSatir: {
     flexDirection: 'row',
@@ -3612,10 +4188,11 @@ const styles = StyleSheet.create({
   // KONTROL MERKEZİ (GS TV)
   kontrolMerkeziPencere: {
     width: 720,
-    backgroundColor: 'rgba(15, 20, 32, 0.96)',
+    backgroundColor: 'rgba(12, 17, 30, 0.85)',
     borderRadius: 22,
     padding: 24,
     borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
   kontrolBaslikSatir: {
     flexDirection: 'row',
