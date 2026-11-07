@@ -1,0 +1,136 @@
+package com.gslaucher.tv
+
+import android.app.DownloadManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import androidx.core.content.FileProvider
+import com.facebook.react.bridge.*
+import java.io.File
+
+class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
+    ReactContextBaseJavaModule(reactContext) {
+
+    override fun getName(): String = "TVAppManager"
+
+    @ReactMethod
+    fun getInstalledApps(promise: Promise) {
+        try {
+            val pm = reactContext.packageManager
+            val myPackage = reactContext.packageName
+            val appList = Arguments.createArray()
+
+            val tvIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
+            val tvApps = pm.queryIntentActivities(tvIntent, 0)
+
+            val standardIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+            val standardApps = pm.queryIntentActivities(standardIntent, 0)
+
+            val seenPackages = mutableSetOf<String>()
+            seenPackages.add(myPackage)
+
+            val allActivities = tvApps + standardApps
+            for (resolveInfo in allActivities) {
+                val pkgName = resolveInfo.activityInfo.packageName
+                if (pkgName !in seenPackages) {
+                    seenPackages.add(pkgName)
+                    val label = resolveInfo.loadLabel(pm).toString()
+                    val item = Arguments.createMap()
+                    item.putString("name", label)
+                    item.putString("packageName", pkgName)
+                    appList.pushMap(item)
+                }
+            }
+
+            promise.resolve(appList)
+        } catch (e: Exception) {
+            promise.reject("ERROR_GET_APPS", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun launchApp(packageName: String, promise: Promise) {
+        try {
+            val pm = reactContext.packageManager
+            val intent = pm.getLeanbackLaunchIntentForPackage(packageName)
+                ?: pm.getLaunchIntentForPackage(packageName)
+            if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                reactContext.startActivity(intent)
+                promise.resolve(true)
+            } else {
+                promise.resolve(false)
+            }
+        } catch (e: Exception) {
+            promise.reject("ERROR_LAUNCH", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun installUpdate(downloadUrl: String, promise: Promise) {
+        try {
+            val destination = File(
+                reactContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                "update.apk"
+            )
+            if (destination.exists()) {
+                destination.delete()
+            }
+
+            val request = DownloadManager.Request(Uri.parse(downloadUrl))
+                .setTitle("GS Launcher Güncelleniyor")
+                .setDescription("Yeni sürüm indiriliyor...")
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+                .setDestinationUri(Uri.fromFile(destination))
+
+            val dm = reactContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val downloadId = dm.enqueue(request)
+
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+                    if (id == downloadId) {
+                        try {
+                            reactContext.unregisterReceiver(this)
+                        } catch (_: Exception) {}
+
+                        if (destination.exists()) {
+                            val apkUri = FileProvider.getUriForFile(
+                                reactContext,
+                                "${reactContext.packageName}.provider",
+                                destination
+                            )
+                            val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(apkUri, "application/vnd.android.package-archive")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            reactContext.startActivity(installIntent)
+                        }
+                    }
+                }
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                reactContext.registerReceiver(
+                    receiver,
+                    IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+                    Context.RECEIVER_EXPORTED
+                )
+            } else {
+                reactContext.registerReceiver(
+                    receiver,
+                    IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+                )
+            }
+
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ERROR_INSTALL", e.message, e)
+        }
+    }
+}
