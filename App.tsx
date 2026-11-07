@@ -92,8 +92,8 @@ const HERO_SLAYTLARI: HeroSlayt[] = [
 ];
 
 // Sürüm Bilgisi
-const CURRENT_VERSION = '1.1.0';
-const LATEST_RELEASE_APK = 'https://expo.dev/artifacts/eas/hlW0N4yO7CKMROtBQNkbwxaIdcJGQO1HLv6hpfBB6Lc.apk';
+const CURRENT_VERSION = '1.5.0';
+const LATEST_RELEASE_APK = 'https://expo.dev/artifacts/eas/d5UdPiSmsUAdwvBIPQoXVbAayKL87KKpu9fpHrcwSnw.apk';
 
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
 export interface MonetTheme {
