@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -25,7 +25,7 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi
-const CURRENT_VERSION = '1.9.0';
+const CURRENT_VERSION = '2.0.0';
 const LATEST_RELEASE_APK = 'https://expo.dev/artifacts/eas/SCBk0L_AZCfjjKbOgt8O7LrtYHBa5wa56Wv8kjFd4fU.apk';
 
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
@@ -224,6 +224,7 @@ interface FocusableItemProps {
   focusedStyle?: any;
   hasPreferredFocus?: boolean;
   children: ((isFocused: boolean) => React.ReactNode) | React.ReactNode;
+  onInteraction?: () => void;
 }
 
 const FocusableItem: React.FC<FocusableItemProps> = ({
@@ -233,6 +234,7 @@ const FocusableItem: React.FC<FocusableItemProps> = ({
   focusedStyle,
   hasPreferredFocus = false,
   children,
+  onInteraction,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -240,10 +242,19 @@ const FocusableItem: React.FC<FocusableItemProps> = ({
     <TouchableOpacity
       activeOpacity={0.88}
       hasTVPreferredFocus={hasPreferredFocus}
-      onFocus={() => setIsFocused(true)}
+      onFocus={() => {
+        setIsFocused(true);
+        if (onInteraction) onInteraction();
+      }}
       onBlur={() => setIsFocused(false)}
-      onPress={onPress}
-      onLongPress={onLongPress}
+      onPress={() => {
+        if (onInteraction) onInteraction();
+        if (onPress) onPress();
+      }}
+      onLongPress={() => {
+        if (onInteraction) onInteraction();
+        if (onLongPress) onLongPress();
+      }}
       style={[
         style,
         isFocused && [styles.defaultFocused, focusedStyle],
@@ -343,6 +354,19 @@ export default function App() {
   const [customAppNames, setCustomAppNames] = useState<Record<string, string>>({});
   const [yenidenAdlandirModalAcik, setYenidenAdlandirModalAcik] = useState(false);
   const [duzenlenenAd, setDuzenlenenAd] = useState('');
+
+  // Duvar Kağıdı Karartma & Satır Görünürlük Kontrolleri
+  const [arkaplanKarartma, setArkaplanKarartma] = useState<number>(0.45);
+  const [vitrinGorunur, setVitrinGorunur] = useState(true);
+  const [sonIzlenenlerGorunur, setSonIzlenenlerGorunur] = useState(true);
+
+  // Otomatik Ambiyans Ekran Koruyucu Zamanlayıcısı (Apple TV Tarzı)
+  const [ekranKoruyucuSuresiDakika, setEkranKoruyucuSuresiDakika] = useState<number>(3);
+  const sonEtkilesimZamani = useRef<number>(Date.now());
+
+  const etkilesimSifirla = useCallback(() => {
+    sonEtkilesimZamani.current = Date.now();
+  }, []);
 
   // Uygulama Sıralama & Gizleme
   const [siralamaModu, setSiralamaModu] = useState<'ozel' | 'favoriler' | 'alfabetik'>('ozel');
@@ -481,6 +505,24 @@ export default function App() {
               if (rawBoot === 'launcher' || rawBoot === 'satellite' || rawBoot === 'last_app') {
                 setAcilisModu(rawBoot);
               }
+            } catch {}
+            try {
+              const rawDim = await TVAppManager.getSetting('arkaplanKarartma', '0.45');
+              const parsedDim = parseFloat(rawDim);
+              if (!isNaN(parsedDim)) setArkaplanKarartma(parsedDim);
+            } catch {}
+            try {
+              const rawSaver = await TVAppManager.getSetting('ekranKoruyucuSuresi', '3');
+              const parsedSaver = parseInt(rawSaver, 10);
+              if (!isNaN(parsedSaver)) setEkranKoruyucuSuresiDakika(parsedSaver);
+            } catch {}
+            try {
+              const rawVitrin = await TVAppManager.getSetting('vitrinGorunur', 'true');
+              setVitrinGorunur(rawVitrin !== 'false');
+            } catch {}
+            try {
+              const rawSon = await TVAppManager.getSetting('sonIzlenenlerGorunur', 'true');
+              setSonIzlenenlerGorunur(rawSon !== 'false');
             } catch {}
           }
 
@@ -986,6 +1028,97 @@ export default function App() {
     setTimeout(() => setBildirimMetni(''), 3000);
   };
 
+  // Pro Parite: Arka Plan Karartma Seviyesi (Wallpaper Dimming)
+  const arkaplanKarartmaDegistir = () => {
+    const seviyeler = [0.2, 0.45, 0.7, 0.88];
+    const suanki = seviyeler.indexOf(arkaplanKarartma);
+    const yeni = seviyeler[(suanki + 1) % seviyeler.length];
+    setArkaplanKarartma(yeni);
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('arkaplanKarartma', String(yeni)).catch(() => {});
+    }
+    const etiket =
+      yeni === 0.2
+        ? 'Açık (%20)'
+        : yeni === 0.45
+        ? 'Standart (%45)'
+        : yeni === 0.7
+        ? 'Sinematik Koyu (%70)'
+        : 'OLED Siyah (%88)';
+    setBildirimMetni(`🌓 Arka Plan Karartma: ${etiket}`);
+    setTimeout(() => setBildirimMetni(''), 2500);
+  };
+
+  // Pro Parite: Otomatik Ekran Koruyucu Süresi
+  const ekranKoruyucuSuresiDegistir = () => {
+    const sureler = [0, 1, 3, 5, 10];
+    const suanki = sureler.indexOf(ekranKoruyucuSuresiDakika);
+    const yeni = sureler[(suanki + 1) % sureler.length];
+    setEkranKoruyucuSuresiDakika(yeni);
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('ekranKoruyucuSuresi', String(yeni)).catch(() => {});
+    }
+    const etiket = yeni === 0 ? 'Kapalı' : `${yeni} Dakika Hareketsizlik`;
+    setBildirimMetni(`🖼️ Otomatik Ekran Koruyucu: ${etiket}`);
+    setTimeout(() => setBildirimMetni(''), 2500);
+  };
+
+  // Pro Parite: Vitrin Banner Görünürlük
+  const vitrinGorunurlukDegistir = () => {
+    const yeni = !vitrinGorunur;
+    setVitrinGorunur(yeni);
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('vitrinGorunur', String(yeni)).catch(() => {});
+    }
+    setBildirimMetni(yeni ? '🖼️ Vitrin Bannerı: Açık' : '🖼️ Vitrin Bannerı: Gizli');
+    setTimeout(() => setBildirimMetni(''), 2500);
+  };
+
+  // Pro Parite: Son Başlatılanlar Görünürlük
+  const sonIzlenenlerGorunurlukDegistir = () => {
+    const yeni = !sonIzlenenlerGorunur;
+    setSonIzlenenlerGorunur(yeni);
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('sonIzlenenlerGorunur', String(yeni)).catch(() => {});
+    }
+    setBildirimMetni(yeni ? '🕒 Son Başlatılanlar: Açık' : '🕒 Son Başlatılanlar: Gizli');
+    setTimeout(() => setBildirimMetni(''), 2500);
+  };
+
+  // Otomatik Hareketsizlik Ekran Koruyucusu (Apple TV Tarzı)
+  useEffect(() => {
+    if (ekranKoruyucuSuresiDakika <= 0) return;
+    const interval = setInterval(() => {
+      const gecen = Date.now() - sonEtkilesimZamani.current;
+      if (
+        gecen >= ekranKoruyucuSuresiDakika * 60 * 1000 &&
+        !ekranKoruyucuAcik &&
+        !pinModalAcik &&
+        !hizTestiAcik &&
+        !havaModalAcik &&
+        !kontrolMerkeziAcik &&
+        !aksiyonMenusuAcik &&
+        !yenidenAdlandirModalAcik &&
+        !uygulamaSeciciAcik &&
+        !temaSeciciAcik
+      ) {
+        setEkranKoruyucuAcik(true);
+      }
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [
+    ekranKoruyucuSuresiDakika,
+    ekranKoruyucuAcik,
+    pinModalAcik,
+    hizTestiAcik,
+    havaModalAcik,
+    kontrolMerkeziAcik,
+    aksiyonMenusuAcik,
+    yenidenAdlandirModalAcik,
+    uygulamaSeciciAcik,
+    temaSeciciAcik,
+  ]);
+
   // Ayarları Yedekle & Sıfırla
   const ayarlariYedekle = () => {
     if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
@@ -1172,7 +1305,18 @@ export default function App() {
       resizeMode="cover"
     >
       <StatusBar hidden={true} />
-      <SafeAreaView style={[styles.camKatman, { backgroundColor: aktifTema.bgGradientColor }]}>
+      {/* Özelleştirilebilir Karartma Katmanı (Wallpaper Dimming) */}
+      <View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFillObject,
+          { backgroundColor: `rgba(0, 0, 0, ${arkaplanKarartma})` },
+        ]}
+      />
+      <SafeAreaView
+        style={[styles.camKatman, { backgroundColor: aktifTema.bgGradientColor }]}
+        onTouchStart={etkilesimSifirla}
+      >
         {/* ================= ÜST BAR: MONET + LETA KONTROL PANELİ ================= */}
         <View style={styles.ustBar}>
           {/* Sol: GS Logosu & Dinamik Arama */}
@@ -1309,7 +1453,7 @@ export default function App() {
         {/* ================= ANA SCROLL ALANI ================= */}
         <ScrollView style={styles.anaKaydirma} showsVerticalScrollIndicator={false}>
           {/* 1. ÖNE ÇIKAN GERÇEK UYGULAMA VİTRİNİ & HIZLI BAŞLATICI */}
-          {aktifVitrinApp ? (
+          {vitrinGorunur && aktifVitrinApp ? (
             <View style={[styles.vitrinKapsayici, { borderColor: aktifTema.border, backgroundColor: aktifTema.surface }]}>
               <View style={styles.vitrinSolIcerik}>
                 {/* Büyük Renkli Uygulama İkonu */}
@@ -1544,70 +1688,74 @@ export default function App() {
           </ScrollView>
 
           {/* 4. GERÇEK SON BAŞLATILAN UYGULAMALAR (SIFIR SAHTE İÇERİK) */}
-          <View style={styles.bolumBaslikSatir}>
-            <View style={styles.bolumBaslikIkonlu}>
-              <Text style={styles.saatGecmisIkon}>🕒</Text>
-              <Text style={styles.bolumBaslik}>Son Başlatılanlar</Text>
-              {sonBaslatilanlar.length > 0 && (
-                <Text style={styles.appSayiRozet}>({sonBaslatilanlar.length})</Text>
-              )}
-            </View>
-            {sonBaslatilanlar.length > 0 && (
-              <FocusableItem
-                onPress={() => {
-                  Alert.alert('Geçmişi Temizle', 'Son başlatılan uygulamalar listesi temizlensin mi?', [
-                    { text: 'Vazgeç', style: 'cancel' },
-                    { text: 'Temizle', onPress: () => setSonBaslatilanlar([]) },
-                  ]);
-                }}
-                style={styles.tumunuGorButon}
-              >
-                {() => <Text style={styles.tumunuGorYazi}>🗑️ Geçmişi Temizle</Text>}
-              </FocusableItem>
-            )}
-          </View>
-
-          {sonBaslatilanlar.length === 0 ? (
-            <View style={[styles.bosIzlemeKutusu, { borderColor: aktifTema.surface }]}>
-              <Text style={styles.bosIzlemeYazi}>
-                Henüz bir uygulama başlatılmadı. Aşağıdaki kurulu uygulamalarınızdan birine tıkladığınızda burada otomatik listelenecektir.
-              </Text>
-            </View>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
-              {sonBaslatilanlar.map((item) => (
-                <FocusableItem
-                  key={item.id}
-                  style={[styles.sonBaslatilanKarti, { borderColor: aktifTema.surface, backgroundColor: 'rgba(255, 255, 255, 0.05)' }]}
-                  focusedStyle={[styles.sonIzlenenOdak, { borderColor: aktifTema.border, shadowColor: aktifTema.accent }]}
-                  onPress={() => uygulamaBaslat(item.packageName, item.name)}
-                  onLongPress={() => {
-                    Alert.alert('Geçmişten Kaldır', `"${item.name}" son başlatılanlardan silinsin mi?`, [
-                      { text: 'Vazgeç', style: 'cancel' },
-                      {
-                        text: 'Sil',
-                        style: 'destructive',
-                        onPress: () => setSonBaslatilanlar(sonBaslatilanlar.filter((s) => s.id !== item.id)),
-                      },
-                    ]);
-                  }}
-                >
-                  {() => (
-                    <View style={styles.sonBaslatilanIcerik}>
-                      <View style={[styles.sonBaslatilanIkonKutu, { backgroundColor: item.color }]}>
-                        <Text style={styles.sonBaslatilanIkon}>{item.icon}</Text>
-                      </View>
-                      <View style={{ flex: 1, marginLeft: 10 }}>
-                        <Text style={styles.sonIzlenenBaslik} numberOfLines={1}>
-                          {item.name}
-                        </Text>
-                        <Text style={[styles.sonIzlenenYuzde, { color: aktifTema.border }]}>🕒 {item.zaman}</Text>
-                      </View>
-                    </View>
+          {sonIzlenenlerGorunur && (
+            <>
+              <View style={styles.bolumBaslikSatir}>
+                <View style={styles.bolumBaslikIkonlu}>
+                  <Text style={styles.saatGecmisIkon}>🕒</Text>
+                  <Text style={styles.bolumBaslik}>Son Başlatılanlar</Text>
+                  {sonBaslatilanlar.length > 0 && (
+                    <Text style={styles.appSayiRozet}>({sonBaslatilanlar.length})</Text>
                   )}
-                </FocusableItem>
-              ))}
-            </ScrollView>
+                </View>
+                {sonBaslatilanlar.length > 0 && (
+                  <FocusableItem
+                    onPress={() => {
+                      Alert.alert('Geçmişi Temizle', 'Son başlatılan uygulamalar listesi temizlensin mi?', [
+                        { text: 'Vazgeç', style: 'cancel' },
+                        { text: 'Temizle', onPress: () => setSonBaslatilanlar([]) },
+                      ]);
+                    }}
+                    style={styles.tumunuGorButon}
+                  >
+                    {() => <Text style={styles.tumunuGorYazi}>🗑️ Geçmişi Temizle</Text>}
+                  </FocusableItem>
+                )}
+              </View>
+
+              {sonBaslatilanlar.length === 0 ? (
+                <View style={[styles.bosIzlemeKutusu, { borderColor: aktifTema.surface }]}>
+                  <Text style={styles.bosIzlemeYazi}>
+                    Henüz bir uygulama başlatılmadı. Aşağıdaki kurulu uygulamalarınızdan birine tıkladığınızda burada otomatik listelenecektir.
+                  </Text>
+                </View>
+              ) : (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
+                  {sonBaslatilanlar.map((item) => (
+                    <FocusableItem
+                      key={item.id}
+                      style={[styles.sonBaslatilanKarti, { borderColor: aktifTema.surface, backgroundColor: 'rgba(255, 255, 255, 0.05)' }]}
+                      focusedStyle={[styles.sonIzlenenOdak, { borderColor: aktifTema.border, shadowColor: aktifTema.accent }]}
+                      onPress={() => uygulamaBaslat(item.packageName, item.name)}
+                      onLongPress={() => {
+                        Alert.alert('Geçmişten Kaldır', `"${item.name}" son başlatılanlardan silinsin mi?`, [
+                          { text: 'Vazgeç', style: 'cancel' },
+                          {
+                            text: 'Sil',
+                            style: 'destructive',
+                            onPress: () => setSonBaslatilanlar(sonBaslatilanlar.filter((s) => s.id !== item.id)),
+                          },
+                        ]);
+                      }}
+                    >
+                      {() => (
+                        <View style={styles.sonBaslatilanIcerik}>
+                          <View style={[styles.sonBaslatilanIkonKutu, { backgroundColor: item.color }]}>
+                            <Text style={styles.sonBaslatilanIkon}>{item.icon}</Text>
+                          </View>
+                          <View style={{ flex: 1, marginLeft: 10 }}>
+                            <Text style={styles.sonIzlenenBaslik} numberOfLines={1}>
+                              {item.name}
+                            </Text>
+                            <Text style={[styles.sonIzlenenYuzde, { color: aktifTema.border }]}>🕒 {item.zaman}</Text>
+                          </View>
+                        </View>
+                      )}
+                    </FocusableItem>
+                  ))}
+                </ScrollView>
+              )}
+            </>
           )}
 
           {/* 5. DİNAMİK TRANSPARAN UYGULAMA İÇERİK ŞERİTLERİ */}
@@ -2061,6 +2209,80 @@ export default function App() {
                     </>
                   )}
                 </FocusableItem>
+
+                {/* 14. Arka Plan Karartma (Wallpaper Dimming) */}
+                <FocusableItem
+                  style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                  focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                  onPress={arkaplanKarartmaDegistir}
+                >
+                  {() => (
+                    <>
+                      <Text style={styles.tileIkon}>🌓</Text>
+                      <Text style={styles.tileBaslik}>Arka Plan Karartma</Text>
+                      <Text style={[styles.tileAlt, { color: aktifTema.border }]}>
+                        {arkaplanKarartma === 0.2
+                          ? '%20 Açık'
+                          : arkaplanKarartma === 0.45
+                          ? '%45 Standart'
+                          : arkaplanKarartma === 0.7
+                          ? '%70 Sinematik'
+                          : '%88 OLED'}
+                      </Text>
+                    </>
+                  )}
+                </FocusableItem>
+
+                {/* 15. Hareketsizlik Ekran Koruyucu */}
+                <FocusableItem
+                  style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                  focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                  onPress={ekranKoruyucuSuresiDegistir}
+                >
+                  {() => (
+                    <>
+                      <Text style={styles.tileIkon}>🖼️</Text>
+                      <Text style={styles.tileBaslik}>Oto Ekran Koruyucu</Text>
+                      <Text style={[styles.tileAlt, { color: aktifTema.border }]}>
+                        {ekranKoruyucuSuresiDakika === 0 ? 'Kapalı' : `${ekranKoruyucuSuresiDakika} Dk Hareketsizlik`}
+                      </Text>
+                    </>
+                  )}
+                </FocusableItem>
+
+                {/* 16. Vitrin Banner Görünürlüğü */}
+                <FocusableItem
+                  style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                  focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                  onPress={vitrinGorunurlukDegistir}
+                >
+                  {() => (
+                    <>
+                      <Text style={styles.tileIkon}>🎬</Text>
+                      <Text style={styles.tileBaslik}>Vitrin Bannerı</Text>
+                      <Text style={[styles.tileAlt, { color: vitrinGorunur ? aktifTema.border : '#EF4444' }]}>
+                        {vitrinGorunur ? 'Açık (Görünür)' : 'Gizli (Kompakt)'}
+                      </Text>
+                    </>
+                  )}
+                </FocusableItem>
+
+                {/* 17. Son Başlatılanlar Satırı Görünürlüğü */}
+                <FocusableItem
+                  style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                  focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                  onPress={sonIzlenenlerGorunurlukDegistir}
+                >
+                  {() => (
+                    <>
+                      <Text style={styles.tileIkon}>🕒</Text>
+                      <Text style={styles.tileBaslik}>Son Başlatılanlar</Text>
+                      <Text style={[styles.tileAlt, { color: sonIzlenenlerGorunur ? aktifTema.border : '#EF4444' }]}>
+                        {sonIzlenenlerGorunur ? 'Açık (Görünür)' : 'Gizli'}
+                      </Text>
+                    </>
+                  )}
+                </FocusableItem>
               </View>
 
               {/* DONANIM VE SİSTEM TEŞHİS BİLGİ KUTUSU */}
@@ -2295,6 +2517,36 @@ export default function App() {
                     }}
                   >
                     {() => <Text style={styles.aksiyonButonYazi}>ℹ️ Uygulama Bilgisi & İzinleri (Ayarlar)</Text>}
+                  </FocusableItem>
+
+                  {/* Uygulamayı Cihazdan Kaldır (Sil) */}
+                  <FocusableItem
+                    style={[styles.aksiyonButon, { marginTop: 8 }]}
+                    focusedStyle={{ borderColor: '#EF4444' }}
+                    onPress={() => {
+                      Alert.alert(
+                        '🗑️ Uygulamayı Kaldır',
+                        `"${seciliAksiyonUygulama.name}" uygulaması cihazınızdan tamamen kaldırılsın mı?`,
+                        [
+                          { text: 'Vazgeç', style: 'cancel' },
+                          {
+                            text: 'Kaldır',
+                            style: 'destructive',
+                            onPress: () => {
+                              if (Platform.OS === 'android' && TVAppManager && TVAppManager.uninstallApp) {
+                                TVAppManager.uninstallApp(seciliAksiyonUygulama.packageName).catch(() => {});
+                              }
+                              setAksiyonMenusuAcik(false);
+                              setTimeout(() => {
+                                yukluUygulamalariGetir();
+                              }, 2000);
+                            },
+                          },
+                        ]
+                      );
+                    }}
+                  >
+                    {() => <Text style={[styles.aksiyonButonYazi, { color: '#FCA5A5' }]}>🗑️ Uygulamayı Kaldır (Sil)</Text>}
                   </FocusableItem>
                 </View>
               )}
@@ -2697,6 +2949,16 @@ export default function App() {
             </View>
           </TouchableOpacity>
         </Modal>
+
+        {/* KUMANDA KISAYOLLARI VE HIZLI YARDIM BİLGİ BANDI */}
+        <View style={styles.kumandaKilavuzBant}>
+          <Text style={styles.kumandaKilavuzYazi}>
+            <Text style={{ color: aktifTema.accent, fontWeight: '900' }}>[OK]</Text> Başlat  •  
+            <Text style={{ color: aktifTema.accent, fontWeight: '900' }}> [Uzun OK]</Text> Taşı / Ad Değiştir / Sil  •  
+            <Text style={{ color: aktifTema.accent, fontWeight: '900' }}> [Geri]</Text> Çıkış  •  
+            <Text style={{ color: aktifTema.accent, fontWeight: '900' }}> [⚡ Üst Menü]</Text> Kontrol Merkezi
+          </Text>
+        </View>
 
         {/* Gece Modu & Göz Koruma Filtresi */}
         {geceModuAktif && <View pointerEvents="none" style={styles.geceModuKatmani} />}
@@ -3518,6 +3780,25 @@ const styles = StyleSheet.create({
     color: '#EEEEEE',
     fontSize: 12,
     fontWeight: '600',
+  },
+
+  // KUMANDA KILAVUZ BANTI
+  kumandaKilavuzBant: {
+    alignSelf: 'center',
+    paddingVertical: 5,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    marginTop: 4,
+    marginBottom: 6,
+  },
+  kumandaKilavuzYazi: {
+    color: 'rgba(255, 255, 255, 0.65)',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
 
   defaultFocused: {

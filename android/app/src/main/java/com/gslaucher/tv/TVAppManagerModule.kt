@@ -388,6 +388,20 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun uninstallApp(packageName: String, promise: Promise) {
+        try {
+            val intent = Intent(Intent.ACTION_DELETE).apply {
+                data = Uri.parse("package:$packageName")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ERROR_UNINSTALL", e.message, e)
+        }
+    }
+
+    @ReactMethod
     fun getDeviceInfo(promise: Promise) {
         try {
             val map = Arguments.createMap()
