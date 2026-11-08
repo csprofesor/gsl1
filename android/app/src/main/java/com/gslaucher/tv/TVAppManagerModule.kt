@@ -2,6 +2,8 @@ package com.gslaucher.tv
 
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -141,6 +143,15 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
         try {
             val pm = reactContext.packageManager
 
+            // 0. Arama sorgusu varsa panoya kopyala (Kullanıcı arama kutusuna anında yapıştırabilsin)
+            if (!query.isNullOrEmpty()) {
+                try {
+                    val clipboard = reactContext.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                    val clip = ClipData.newPlainText("Film Arama", query)
+                    clipboard?.setPrimaryClip(clip)
+                } catch (_: Exception) {}
+            }
+
             // 1. Derin Link (URI) Doğrudan Oynatma / Arama
             if (!uriString.isNullOrEmpty()) {
                 try {
@@ -174,25 +185,34 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             if (!query.isNullOrEmpty()) {
                 val pkg = packageName?.lowercase() ?: ""
 
-                // Cloudstream için özel arama deep-link
-                if (pkg.contains("cloudstream")) {
+                // Stremio için doğrudan IMDb detay veya arama deep-link
+                if (pkg.contains("stremio")) {
                     try {
-                        val csIntent = Intent(Intent.ACTION_VIEW, Uri.parse("cloudstream3://search?query=" + Uri.encode(query))).apply {
+                        val strmUri = if (query.startsWith("tt")) {
+                            Uri.parse("stremio:///detail/movie/$query")
+                        } else {
+                            Uri.parse("stremio:///search?search=" + Uri.encode(query))
+                        }
+                        val strmIntent = Intent(Intent.ACTION_VIEW, strmUri).apply {
+                            setPackage("com.stremio.one")
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
-                        reactContext.startActivity(csIntent)
-                        promise.resolve(true)
-                        return
+                        if (strmIntent.resolveActivity(pm) != null) {
+                            reactContext.startActivity(strmIntent)
+                            promise.resolve(true)
+                            return
+                        }
                     } catch (_: Exception) {}
                 }
 
-                // Stremio için özel arama deep-link
-                if (pkg.contains("stremio")) {
+                // YouTube için özel leanback arama intent
+                if (pkg.contains("youtube")) {
                     try {
-                        val strmIntent = Intent(Intent.ACTION_VIEW, Uri.parse("stremio:///search?query=" + Uri.encode(query))).apply {
+                        val ytUri = Uri.parse("https://www.youtube.com/results?search_query=" + Uri.encode(query))
+                        val ytIntent = Intent(Intent.ACTION_VIEW, ytUri).apply {
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
-                        reactContext.startActivity(strmIntent)
+                        reactContext.startActivity(ytIntent)
                         promise.resolve(true)
                         return
                     } catch (_: Exception) {}
@@ -948,6 +968,20 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                 }
             } catch (e: Exception) {
                 promise.reject("ERROR_KEEP_SCREEN", e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun copyToClipboard(text: String, promise: Promise) {
+        UiThreadUtil.runOnUiThread {
+            try {
+                val clipboard = reactContext.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                val clip = ClipData.newPlainText("Film Arama", text)
+                clipboard?.setPrimaryClip(clip)
+                promise.resolve(true)
+            } catch (e: Exception) {
+                promise.reject("ERROR_CLIPBOARD", e.message, e)
             }
         }
     }
