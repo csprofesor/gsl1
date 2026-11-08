@@ -33,8 +33,8 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '2.7.0';
-const CURRENT_BUILD = 20;
+const CURRENT_VERSION = '2.8.0';
+const CURRENT_BUILD = 21;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://files.catbox.moe/x4ggkz.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/286x9mfv';
@@ -2497,7 +2497,7 @@ export default function App() {
             <Image source={GS_ICON} style={styles.gsLogoResim} resizeMode="cover" />
             <View style={{ marginRight: 12 }}>
               <Text style={styles.gsBaslik}>GS Launcher Mavi Rüya</Text>
-              <Text style={styles.gsSurum}>v2.7 Pro TV</Text>
+              <Text style={styles.gsSurum}>v2.8 Pro TV</Text>
             </View>
 
             <View style={[styles.aramaKapsul, { borderColor: aktifTema.surface, width: 175 }]}>
