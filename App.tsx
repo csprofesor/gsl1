@@ -2447,7 +2447,7 @@ export default function App() {
           <View style={styles.ustSol}>
             <Image source={GS_ICON} style={styles.gsLogoResim} resizeMode="cover" />
             <View style={{ marginRight: 12 }}>
-              <Text style={styles.gsBaslik}>GSL1 TV</Text>
+              <Text style={styles.gsBaslik}>GS Launcher Mavi Rüya</Text>
               <Text style={styles.gsSurum}>v2.7 Pro TV</Text>
             </View>
 
