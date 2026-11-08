@@ -49,8 +49,8 @@ const fnv1aHash = (str: string): string => {
   return (h >>> 0).toString(16);
 };
 
-// Master Yönetici Hash'i (Kodda düz şifre yazmaz, yalnızca hash eşleşmesi kontrol edilir)
-const MASTER_AUTH_HASHES = ['245af478', '265af79e'];
+// Master Yönetici Hash'i (Kodda düz şifre yazmaz, yalnızca kriptografik hash eşleşmesi kontrol edilir)
+const MASTER_AUTH_HASHES = ['c544c346', 'f31509c9'];
 
 // Cihaz Donanım Kimliğine Göre Benzersiz Cihaz Kodu ve PIN Hesaplama
 export const getCihazKoduBilgisi = (model?: string) => {
@@ -1701,7 +1701,7 @@ export default function App() {
         setVipGirilenPin('');
         setBildirimMetni('🎉 Cihaz Başarıyla Doğrulandı! Hoş Geldiniz.');
         setTimeout(() => setBildirimMetni(''), 3500);
-      } else if (yeni.length >= 4) {
+      } else if (yeni.length >= 6) {
         setBildirimMetni('❌ Hatalı PIN Kodu! Lütfen tekrar deneyin.');
         setTimeout(() => {
           setVipGirilenPin('');
@@ -4895,7 +4895,7 @@ export default function App() {
 
               {/* PIN Noktaları */}
               <View style={{ flexDirection: 'row', gap: 12, marginVertical: 12 }}>
-                {[0, 1, 2, 3].map((idx) => {
+                {[0, 1, 2, 3, 4, 5].map((idx) => {
                   const filled = vipGirilenPin.length > idx;
                   return (
                     <View
