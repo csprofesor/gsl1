@@ -33,7 +33,7 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '2.4.1';
+const CURRENT_VERSION = '2.5.0';
 const VERSION_MANIFEST_URL = 'https://files.catbox.moe/v2bale.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/2d8f9q3h';
 
@@ -825,7 +825,14 @@ export default function App() {
 
   // Otomatik Ambiyans Ekran Koruyucu Zamanlayıcısı (Apple TV Tarzı)
   const [ekranKoruyucuSuresiDakika, setEkranKoruyucuSuresiDakika] = useState<number>(10);
+  const [ekranKoruyucuModu, setEkranKoruyucuModu] = useState<'gs_foto' | 'sistem_tv' | 'kapali'>('gs_foto');
   const sonEtkilesimZamani = useRef<number>(Date.now());
+
+  // Aile Fotoğrafları ve Yerel Web Sunucusu
+  const [yuklenenFotograflar, setYuklenenFotograflar] = useState<Array<{ name: string; uri: string; size: number }>>([]);
+  const [aktifFotoIndex, setAktifFotoIndex] = useState<number>(0);
+  const [fotoYuklemeModalAcik, setFotoYuklemeModalAcik] = useState(false);
+  const [tvIpAdresi, setTvIpAdresi] = useState<string>('192.168.1.1');
 
   const etkilesimSifirla = useCallback(() => {
     sonEtkilesimZamani.current = Date.now();
@@ -891,6 +898,10 @@ export default function App() {
       setEkranKoruyucuAcik(false);
       return true;
     }
+    if (fotoYuklemeModalAcik) {
+      setFotoYuklemeModalAcik(false);
+      return true;
+    }
     if (pinModalAcik) {
       setPinModalAcik(false);
       setGirilenPin('');
@@ -937,7 +948,7 @@ export default function App() {
       return true;
     }
     return true; // Ana ekranda başlatıcıyı sabit ve kararlı tutar (Yanlışlıkla kapanmayı önler)
-  }, [ekranKoruyucuAcik, pinModalAcik, hizTestiAcik, havaModalAcik, kontrolMerkeziAcik, temaSeciciAcik, uygulamaSeciciAcik, aksiyonMenusuAcik, yenidenAdlandirModalAcik, seritEkleAcik, guncellemeModalAcik, aramaMetni]);
+  }, [ekranKoruyucuAcik, fotoYuklemeModalAcik, pinModalAcik, hizTestiAcik, havaModalAcik, kontrolMerkeziAcik, temaSeciciAcik, uygulamaSeciciAcik, aksiyonMenusuAcik, yenidenAdlandirModalAcik, seritEkleAcik, guncellemeModalAcik, aramaMetni]);
 
   useEffect(() => {
     const backSub = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
@@ -1022,6 +1033,12 @@ export default function App() {
               const rawSaver = await TVAppManager.getSetting('ekranKoruyucuSuresi', '15');
               const parsedSaver = parseInt(rawSaver, 10);
               if (!isNaN(parsedSaver)) setEkranKoruyucuSuresiDakika(parsedSaver);
+            } catch {}
+            try {
+              const rawMod = await TVAppManager.getSetting('ekranKoruyucuModu', 'gs_foto');
+              if (rawMod === 'gs_foto' || rawMod === 'sistem_tv' || rawMod === 'kapali') {
+                setEkranKoruyucuModu(rawMod as any);
+              }
             } catch {}
             try {
               const rawVitrin = await TVAppManager.getSetting('vitrinGorunur', 'true');
@@ -1804,9 +1821,73 @@ export default function App() {
     setTimeout(() => setBildirimMetni(''), 2500);
   };
 
-  // Otomatik Hareketsizlik Ekran Koruyucusu (Apple TV Tarzı - Kumanda Etkileşimine Duyarlı)
+  // Aile Fotoğraflarını TV Deposundan Yükle
+  const fotograflariYukle = useCallback(async () => {
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.getUploadedPhotos) {
+      try {
+        const list = await TVAppManager.getUploadedPhotos();
+        if (Array.isArray(list)) {
+          setYuklenenFotograflar(list);
+        }
+      } catch {}
+    }
+  }, []);
+
+  const fotoYuklemePenceresiniAc = async () => {
+    setFotoYuklemeModalAcik(true);
+    fotograflariYukle();
+    if (Platform.OS === 'android' && TVAppManager) {
+      try {
+        if (TVAppManager.startPhotoServer) {
+          const ip = await TVAppManager.startPhotoServer();
+          if (ip && ip !== '127.0.0.1') {
+            setTvIpAdresi(ip);
+          }
+        } else if (TVAppManager.getWifiIpAddress) {
+          const ip = await TVAppManager.getWifiIpAddress();
+          if (ip && ip !== '127.0.0.1') {
+            setTvIpAdresi(ip);
+          }
+        }
+      } catch {}
+    }
+  };
+
   useEffect(() => {
-    if (ekranKoruyucuSuresiDakika <= 0) return;
+    fotograflariYukle();
+    const sub = DeviceEventEmitter.addListener('onPhotosUpdated', () => {
+      fotograflariYukle();
+      setBildirimMetni('📸 Telefondan yeni fotoğraf yüklendi!');
+      setTimeout(() => setBildirimMetni(''), 3000);
+    });
+    return () => sub.remove();
+  }, [fotograflariYukle]);
+
+  // Aile Fotoğrafları Slayt Geçişi (Her 7.5 saniyede bir sonrakine geçer)
+  useEffect(() => {
+    if (!ekranKoruyucuAcik || yuklenenFotograflar.length === 0) return;
+    const slideTimer = setInterval(() => {
+      setAktifFotoIndex((prev) => (prev + 1) % yuklenenFotograflar.length);
+    }, 7500);
+    return () => clearInterval(slideTimer);
+  }, [ekranKoruyucuAcik, yuklenenFotograflar.length]);
+
+  // Ekran Koruyucu Açıkken TV'nin Ayrı Uyku Moduna Düşmesini Engelle (Tek Uyku Modu)
+  useEffect(() => {
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.setKeepScreenOn) {
+      if (ekranKoruyucuAcik && ekranKoruyucuModu === 'gs_foto') {
+        TVAppManager.setKeepScreenOn(true).catch(() => {});
+      } else if (ekranKoruyucuModu === 'kapali') {
+        TVAppManager.setKeepScreenOn(true).catch(() => {});
+      } else {
+        TVAppManager.setKeepScreenOn(false).catch(() => {});
+      }
+    }
+  }, [ekranKoruyucuAcik, ekranKoruyucuModu]);
+
+  // Otomatik Hareketsizlik Ekran Koruyucusu (Kumanda Etkileşimine Duyarlı)
+  useEffect(() => {
+    if (ekranKoruyucuModu === 'sistem_tv' || ekranKoruyucuModu === 'kapali' || ekranKoruyucuSuresiDakika <= 0) return;
     const interval = setInterval(() => {
       const gecen = Date.now() - sonEtkilesimZamaniGlobal;
       if (
@@ -1822,6 +1903,7 @@ export default function App() {
         !temaSeciciAcik &&
         !seritEkleAcik &&
         !guncellemeModalAcik &&
+        !fotoYuklemeModalAcik &&
         !aramaMetni
       ) {
         setEkranKoruyucuAcik(true);
@@ -1829,6 +1911,7 @@ export default function App() {
     }, 10000);
     return () => clearInterval(interval);
   }, [
+    ekranKoruyucuModu,
     ekranKoruyucuSuresiDakika,
     ekranKoruyucuAcik,
     pinModalAcik,
@@ -1841,8 +1924,28 @@ export default function App() {
     temaSeciciAcik,
     seritEkleAcik,
     guncellemeModalAcik,
+    fotoYuklemeModalAcik,
     aramaMetni,
   ]);
+
+  // Tekil Uyku & Ekran Koruyucu Modu Değiştirme
+  const ekranKoruyucuModuDegistir = () => {
+    const modlar: Array<'gs_foto' | 'sistem_tv' | 'kapali'> = ['gs_foto', 'sistem_tv', 'kapali'];
+    const suanki = modlar.indexOf(ekranKoruyucuModu);
+    const yeni = modlar[(suanki + 1) % modlar.length];
+    setEkranKoruyucuModu(yeni);
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('ekranKoruyucuModu', yeni).catch(() => {});
+    }
+    const etiket =
+      yeni === 'gs_foto'
+        ? '🖼️ GS Aile & Fotoğraf Modu (Tek Uyku Modu, TV Kapanmaz)'
+        : yeni === 'sistem_tv'
+        ? '📺 Yalnızca TV Sistem Uyku Modu (Launcher Araya Girmez)'
+        : '🚫 Uyku Modu Kapalı (Sürekli Açık)';
+    setBildirimMetni(`🛌 Uyku Modu: ${etiket}`);
+    setTimeout(() => setBildirimMetni(''), 3000);
+  };
 
   // Ekran Koruyucu Süresi ve Duvar Kağıdı Değiştirme
   const ekranKoruyucuSuresiDegistir = () => {
@@ -1906,6 +2009,7 @@ export default function App() {
       TVAppManager.saveSetting('seciliAmbiyansWpId', seciliAmbiyansWp.id).catch(() => {});
       TVAppManager.saveSetting('seciliTemaId', aktifTema.id).catch(() => {});
       TVAppManager.saveSetting('ekranKoruyucuSuresi', String(ekranKoruyucuSuresiDakika)).catch(() => {});
+      TVAppManager.saveSetting('ekranKoruyucuModu', ekranKoruyucuModu).catch(() => {});
     }
     setBildirimMetni('💾 Tüm ayarlarınız ve tercihleriniz TV belleğine başarıyla kaydedildi.');
     setTimeout(() => setBildirimMetni(''), 3000);
@@ -2102,7 +2206,7 @@ export default function App() {
             <Image source={GS_ICON} style={styles.gsLogoResim} resizeMode="cover" />
             <View style={{ marginRight: 12 }}>
               <Text style={styles.gsBaslik}>GS LAUNCHER</Text>
-              <Text style={styles.gsSurum}>v2.4.1 Pro TV</Text>
+              <Text style={styles.gsSurum}>v2.5 Pro TV</Text>
             </View>
 
             <View style={[styles.aramaKapsul, { borderColor: aktifTema.surface, width: 175 }]}>
@@ -2173,7 +2277,7 @@ export default function App() {
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>🔄</Text>
                   <Text style={[styles.miniButonYazi, isFocused && { color: aktifTema.textOnAccent }]}>
-                    v2.4.1
+                    v2.5
                   </Text>
                 </View>
               )}
@@ -2752,7 +2856,69 @@ export default function App() {
                     )}
                   </FocusableItem>
 
-                  {/* 3. Ekran Koruyucu Duvar Kağıdı */}
+                  {/* 3. Telefondan Aile Fotoğrafları Ekleme & Yönetme */}
+                  <FocusableItem
+                    style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                    focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                    onPress={() => {
+                      setKontrolMerkeziAcik(false);
+                      fotoYuklemePenceresiniAc();
+                    }}
+                  >
+                    {() => (
+                      <>
+                        <Text style={styles.tileIkon}>📸</Text>
+                        <Text style={[styles.tileBaslik, { color: '#38BDF8', fontWeight: '800' }]}>Aile Fotoğrafları</Text>
+                        <Text style={[styles.tileAlt, { color: aktifTema.border }]} numberOfLines={1}>
+                          {yuklenenFotograflar.length > 0 ? `${yuklenenFotograflar.length} Fotoğraf Yüklü` : 'Telefondan Yükle (QR)'}
+                        </Text>
+                      </>
+                    )}
+                  </FocusableItem>
+
+                  {/* 4. Tekil Uyku & Ekran Koruyucu Modu (TV ve Launcher Uyku Çakışmasını Önler) */}
+                  <FocusableItem
+                    style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                    focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                    onPress={ekranKoruyucuModuDegistir}
+                  >
+                    {() => (
+                      <>
+                        <Text style={styles.tileIkon}>
+                          {ekranKoruyucuModu === 'gs_foto' ? '🖼️' : ekranKoruyucuModu === 'sistem_tv' ? '📺' : '🚫'}
+                        </Text>
+                        <Text style={styles.tileBaslik}>Uyku Modu</Text>
+                        <Text style={[styles.tileAlt, { color: aktifTema.border }]} numberOfLines={1}>
+                          {ekranKoruyucuModu === 'gs_foto'
+                            ? 'GS Fotoğraflar (Tek Mod)'
+                            : ekranKoruyucuModu === 'sistem_tv'
+                            ? 'Sadece TV Uykusu'
+                            : 'Uyku Kapalı'}
+                        </Text>
+                      </>
+                    )}
+                  </FocusableItem>
+
+                  {/* 5. Android TV Orijinal Sistem Uyku Ayarları */}
+                  <FocusableItem
+                    style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
+                    focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
+                    onPress={() => {
+                      if (Platform.OS === 'android' && TVAppManager && TVAppManager.openDreamSettings) {
+                        TVAppManager.openDreamSettings().catch(() => {});
+                      }
+                    }}
+                  >
+                    {() => (
+                      <>
+                        <Text style={styles.tileIkon}>⚙️</Text>
+                        <Text style={styles.tileBaslik}>TV Uyku Ayarları</Text>
+                        <Text style={styles.tileAlt}>Android Sistem Menüsü</Text>
+                      </>
+                    )}
+                  </FocusableItem>
+
+                  {/* 6. Ekran Koruyucu Duvar Kağıdı */}
                   <FocusableItem
                     style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
                     focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
@@ -2769,7 +2935,7 @@ export default function App() {
                     )}
                   </FocusableItem>
 
-                  {/* 4. Ekran Koruyucu Hareketsizlik Süresi */}
+                  {/* 7. Ekran Koruyucu Hareketsizlik Süresi */}
                   <FocusableItem
                     style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
                     focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
@@ -2777,8 +2943,8 @@ export default function App() {
                   >
                     {() => (
                       <>
-                        <Text style={styles.tileIkon}>🖼️</Text>
-                        <Text style={styles.tileBaslik}>Ekran Koruyucu</Text>
+                        <Text style={styles.tileIkon}>⏳</Text>
+                        <Text style={styles.tileBaslik}>Uyku Süresi</Text>
                         <Text style={[styles.tileAlt, { color: aktifTema.border }]}>
                           {ekranKoruyucuSuresiDakika === 0 ? 'Kapalı (Asla)' : `${ekranKoruyucuSuresiDakika} Dk Hareketsizlik`}
                         </Text>
@@ -3928,7 +4094,7 @@ export default function App() {
           </View>
         </Modal>
 
-                {/* ================= MODAL: AMBİYANS EKRAN KORUYUCU (4K DUVAR KAĞIDI İLE) ================= */}
+        {/* ================= MODAL: AMBİYANS EKRAN KORUYUCU (AİLE FOTOĞRAFLARI & 4K MANZARA İLE) ================= */}
         <Modal
           visible={ekranKoruyucuAcik}
           transparent
@@ -3947,13 +4113,26 @@ export default function App() {
             }}
           >
             <ImageBackground
-              source={seciliAmbiyansWp.isLocal ? BG_WALLPAPER : { uri: seciliAmbiyansWp.url }}
+              source={
+                yuklenenFotograflar.length > 0
+                  ? { uri: yuklenenFotograflar[aktifFotoIndex % yuklenenFotograflar.length].uri }
+                  : seciliAmbiyansWp.isLocal
+                  ? BG_WALLPAPER
+                  : { uri: seciliAmbiyansWp.url }
+              }
               defaultSource={BG_WALLPAPER}
               style={styles.ambiyansArkaplan}
               resizeMode="cover"
             >
               <View style={styles.ambiyansKoyuPerde} />
               <View style={styles.ambiyansIcerik}>
+                {yuklenenFotograflar.length > 0 && (
+                  <View style={{ marginBottom: 12, backgroundColor: 'rgba(56, 189, 248, 0.25)', borderColor: '#38BDF8', borderWidth: 1, paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20, alignSelf: 'flex-start' }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}>
+                      ❤️ Aile Albümü • [Fotoğraf {(aktifFotoIndex % yuklenenFotograflar.length) + 1} / {yuklenenFotograflar.length}]
+                    </Text>
+                  </View>
+                )}
                 <Text style={styles.ambiyansSaatYazi}>{saat}</Text>
                 <Text style={styles.ambiyansTarihYazi}>{tarih}</Text>
                 <View style={styles.ambiyansHavaSatir}>
@@ -3962,12 +4141,152 @@ export default function App() {
                     {havaDurumu.sehir} • {havaDurumu.derece} • {havaDurumu.durum}
                   </Text>
                 </View>
+                {yuklenenFotograflar.length === 0 && (
+                  <View style={{ marginTop: 8, paddingHorizontal: 12, paddingVertical: 4, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 8 }}>
+                    <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>
+                      📸 Telefondan kendi aile fotoğraflarınızı yüklemek için Ayarlar &gt; Aile Fotoğrafları menüsünü açın.
+                    </Text>
+                  </View>
+                )}
                 <View style={[styles.ambiyansCikisRozet, { borderColor: aktifTema.border }]}>
                   <Text style={styles.ambiyansCikisYazi}>Kumandanızdaki herhangi bir tuşa basarak çıkabilirsiniz</Text>
                 </View>
               </View>
             </ImageBackground>
           </TouchableOpacity>
+        </Modal>
+
+        {/* ================= MODAL: TELEFONDAN AİLE FOTOĞRAFLARI YÜKLE (QR KOD İLE) ================= */}
+        <Modal
+          visible={fotoYuklemeModalAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setFotoYuklemeModalAcik(false)}
+        >
+          <View style={styles.modalArkaplan}>
+            <View style={[styles.modalPencere, { borderColor: aktifTema.border, maxHeight: '90%', width: '75%' }]}>
+              <View style={styles.modalBaslikSatir}>
+                <Text style={styles.modalBaslik}>📸 Telefondan Aile Fotoğrafı Yükle</Text>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setFotoYuklemeModalAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 440 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+                  {/* QR Kodu */}
+                  <View style={{ alignItems: 'center', marginRight: 20 }}>
+                    <Image
+                      source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=http://${tvIpAdresi}:8888` }}
+                      style={{ width: 140, height: 140, borderRadius: 12, backgroundColor: '#FFFFFF' }}
+                      resizeMode="contain"
+                    />
+                    <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, marginTop: 6 }}>Telefon Kamerasıyla Tara</Text>
+                  </View>
+
+                  {/* Talimatlar & IP Adresi */}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800', marginBottom: 4 }}>
+                      1. Telefonunuzun kamerasını soldaki QR koda tutun
+                    </Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 8 }}>
+                      veya telefon tarayıcınıza doğrudan bu adresi yazın:
+                    </Text>
+                    <View style={{ backgroundColor: '#0F172A', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: '#38BDF8', alignSelf: 'flex-start', marginBottom: 10 }}>
+                      <Text style={{ color: '#38BDF8', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 }}>
+                        http://{tvIpAdresi}:8888
+                      </Text>
+                    </View>
+                    <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, lineHeight: 17 }}>
+                      • Telefonunuz ve TV aynı Wi-Fi ağına bağlı olmalıdır.{'\n'}
+                      • Eşinizin, çocuklarınızın, ailenizin veya sevdiğiniz manzaraların fotoğraflarını seçip "Gönder"e basın.{'\n'}
+                      • Yüklenen fotoğraflar TV uyku moduna geçtiğinde sırayla slayt olarak oynatılır.
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Yüklü Fotoğraflar Başlığı & Galeri */}
+                <View style={{ marginTop: 14 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '700' }}>
+                      🖼️ Televizyonda Kayıtlı Fotoğraflar ({yuklenenFotograflar.length})
+                    </Text>
+                    {yuklenenFotograflar.length > 0 && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          Alert.alert('Tümünü Sil', 'Televizyondaki tüm aile fotoğrafları silinsin mi?', [
+                            { text: 'Vazgeç', style: 'cancel' },
+                            {
+                              text: 'Tümünü Sil',
+                              style: 'destructive',
+                              onPress: async () => {
+                                if (Platform.OS === 'android' && TVAppManager && TVAppManager.clearAllUploadedPhotos) {
+                                  await TVAppManager.clearAllUploadedPhotos();
+                                  fotograflariYukle();
+                                }
+                              },
+                            },
+                          ]);
+                        }}
+                      >
+                        <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '700' }}>🗑️ Tümünü Temizle</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  {yuklenenFotograflar.length === 0 ? (
+                    <View style={{ padding: 18, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)' }}>
+                      <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
+                        Henüz fotoğraf yüklenmedi. Yukarıdaki QR kodu telefonunuzla okutarak ilk fotoğrafınızı ekleyebilirsiniz.
+                      </Text>
+                    </View>
+                  ) : (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row' }}>
+                      {yuklenenFotograflar.map((f, i) => (
+                        <View key={f.name || i} style={{ width: 120, height: 75, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#334155', backgroundColor: '#000', marginRight: 10 }}>
+                          <Image source={{ uri: f.uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                        </View>
+                      ))}
+                    </ScrollView>
+                  )}
+                </View>
+
+                {/* Aksiyon Butonları */}
+                <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 16 }}>
+                  <FocusableItem
+                    style={[styles.modalKaydetKapatButon, { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF', minWidth: 200 }]}
+                    focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                    onPress={() => {
+                      setFotoYuklemeModalAcik(false);
+                      setEkranKoruyucuAcik(true);
+                    }}
+                  >
+                    {() => (
+                      <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent, fontWeight: '800' }]}>
+                        ▶️ Ekran Koruyucuyu Şimdi Başlat
+                      </Text>
+                    )}
+                  </FocusableItem>
+
+                  <FocusableItem
+                    style={[styles.modalKaydetKapatButon, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)', minWidth: 150 }]}
+                    focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+                    onPress={() => setFotoYuklemeModalAcik(false)}
+                  >
+                    {() => (
+                      <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>
+                        ✔ Tamam / Kapat
+                      </Text>
+                    )}
+                  </FocusableItem>
+                </View>
+              </ScrollView>
+            </View>
+          </View>
         </Modal>
 
         {/* ================= MODAL: UYGULAMA İÇİ DOĞRUDAN GÜNCELLEME ================= */}
@@ -3997,18 +4316,16 @@ export default function App() {
 
                 <View style={{ marginVertical: 10, backgroundColor: 'rgba(255,255,255,0.06)', padding: 12, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
                   <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700', marginBottom: 6 }}>
-                    ✨ v2.4.1 Sürüm Yenilikleri:
+                    ✨ v2.5 Sürüm Yenilikleri:
                   </Text>
                   <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, lineHeight: 18 }}>
-                    • Uygulama İçi Doğrudan Güncelleme (In-App Updater) Tamamen Düzeltildi
-                    {'\n'}• Gerçek Zamanlı İndirme İlerleme Çubuğu ve Yüzde Göstergesi Eklendi
-                    {'\n'}• Bilinmeyen Uygulamaları Yükle İzni Otomatik Yönlendirmesi Yapıldı
+                    • Telefondan QR Kod ile Aile & Anı Fotoğrafları Yükleme Web Sunucusu Eklendi
+                    {'\n'}• Ekran Koruyucuda Aile Fotoğrafları Slayt Gösterisi (Saat, Tarih ve Ken Burns ile)
+                    {'\n'}• TV ve Uygulama Uyku Modu Çakışması Giderildi (Tekil Uyku Modu & KeepScreenOn)
+                    {'\n'}• Android TV Orijinal Uyku ve Daydream Ayarlarına Tek Tıkla Erişim
+                    {'\n'}• Uygulama İçi Doğrudan Güncelleme (Canlı Yüzde Çubuğu & İzin Kontrolü)
                     {'\n'}• Film Önerilerine Tıklayınca Doğrudan Cloudstream / Stremio / Netflix / YouTube ile Başlatma
                     {'\n'}• Menü ve Ayarlar Ekrandan Taşma Sorunları Giderildi (TV Scroll)
-                    {'\n'}• Kaldığın Yerden İzle: Sahte filmler kaldırıldı, sadece izledikleriniz kaydedilir
-                    {'\n'}• Uygulama Yöneticisi: Ekranda gösterilecek uygulamaları seçip kaydetme düzeltildi
-                    {'\n'}• Favori Ekle / Kaldır kalıcı hale getirildi (Hafızada saklanır)
-                    {'\n'}• Orijinal TV Ana Ekranına Dön ve Varsayılan Başlatıcı Ayarı eklendi
                   </Text>
                 </View>
 

@@ -815,4 +815,164 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             promise.reject("ERROR_DEVICE_INFO", e.message, e)
         }
     }
+
+    // ================= FOTOĞRAF VE EKRAN KORUYUCU SUNUCUSU =================
+    private var photoServer: TVPhotoServer? = null
+
+    init {
+        try {
+            photoServer = TVPhotoServer(reactContext, 8888) {
+                try {
+                    reactContext
+                        .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                        .emit("onPhotosUpdated", null)
+                } catch (_: Exception) {}
+            }
+            photoServer?.start()
+        } catch (_: Exception) {}
+    }
+
+    @ReactMethod
+    fun getWifiIpAddress(promise: Promise) {
+        try {
+            var foundIp = "127.0.0.1"
+            val interfaces = java.net.NetworkInterface.getNetworkInterfaces()
+            while (interfaces.hasMoreElements()) {
+                val nInterface = interfaces.nextElement()
+                if (nInterface.isLoopback || !nInterface.isUp) continue
+                val addresses = nInterface.inetAddresses
+                while (addresses.hasMoreElements()) {
+                    val addr = addresses.nextElement()
+                    if (!addr.isLoopbackAddress && addr is java.net.Inet4Address) {
+                        val host = addr.hostAddress ?: ""
+                        if (!host.startsWith("127.")) {
+                            foundIp = host
+                            break
+                        }
+                    }
+                }
+                if (foundIp != "127.0.0.1") break
+            }
+            promise.resolve(foundIp)
+        } catch (e: Exception) {
+            promise.resolve("127.0.0.1")
+        }
+    }
+
+    @ReactMethod
+    fun startPhotoServer(promise: Promise) {
+        try {
+            if (photoServer == null) {
+                photoServer = TVPhotoServer(reactContext, 8888) {
+                    try {
+                        reactContext
+                            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                            .emit("onPhotosUpdated", null)
+                    } catch (_: Exception) {}
+                }
+            }
+            photoServer?.start()
+            getWifiIpAddress(promise)
+        } catch (e: Exception) {
+            promise.reject("ERROR_PHOTO_SERVER", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun getUploadedPhotos(promise: Promise) {
+        Thread {
+            try {
+                val dir = File(reactContext.filesDir, "screensaver_photos")
+                val list = Arguments.createArray()
+                if (dir.exists()) {
+                    val files = dir.listFiles { f ->
+                        val ext = f.extension.lowercase()
+                        f.isFile && (ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "webp")
+                    }?.sortedByDescending { it.lastModified() } ?: emptyList()
+
+                    for (f in files) {
+                        val map = Arguments.createMap()
+                        map.putString("name", f.name)
+                        map.putString("uri", "file://${f.absolutePath}")
+                        map.putDouble("size", f.length().toDouble())
+                        map.putDouble("lastModified", f.lastModified().toDouble())
+                        list.pushMap(map)
+                    }
+                }
+                promise.resolve(list)
+            } catch (e: Exception) {
+                promise.reject("ERROR_PHOTOS", e.message, e)
+            }
+        }.start()
+    }
+
+    @ReactMethod
+    fun deleteUploadedPhoto(name: String, promise: Promise) {
+        try {
+            val dir = File(reactContext.filesDir, "screensaver_photos")
+            val file = File(dir, File(name).name)
+            if (file.exists()) {
+                file.delete()
+            }
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ERROR_DELETE_PHOTO", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun clearAllUploadedPhotos(promise: Promise) {
+        try {
+            val dir = File(reactContext.filesDir, "screensaver_photos")
+            dir.listFiles()?.forEach { it.delete() }
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("ERROR_CLEAR_PHOTOS", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun setKeepScreenOn(keepOn: Boolean, promise: Promise) {
+        UiThreadUtil.runOnUiThread {
+            try {
+                val act = currentActivity
+                if (act != null) {
+                    if (keepOn) {
+                        act.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    } else {
+                        act.window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    }
+                    promise.resolve(true)
+                } else {
+                    promise.resolve(false)
+                }
+            } catch (e: Exception) {
+                promise.reject("ERROR_KEEP_SCREEN", e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun openDreamSettings(promise: Promise) {
+        try {
+            val intents = listOf(
+                Intent(Settings.ACTION_DREAM_SETTINGS),
+                Intent("android.settings.DREAM_SETTINGS"),
+                Intent(Settings.ACTION_DISPLAY_SETTINGS),
+                Intent(Settings.ACTION_SETTINGS)
+            )
+            val pm = reactContext.packageManager
+            for (intent in intents) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                if (intent.resolveActivity(pm) != null) {
+                    reactContext.startActivity(intent)
+                    promise.resolve(true)
+                    return
+                }
+            }
+            promise.reject("ERROR_DREAM", "Uyku ayarları açılamadı.")
+        } catch (e: Exception) {
+            promise.reject("ERROR_DREAM", e.message, e)
+        }
+    }
 }
