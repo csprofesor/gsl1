@@ -33,8 +33,8 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '2.6.0';
-const CURRENT_BUILD = 19;
+const CURRENT_VERSION = '2.7.0';
+const CURRENT_BUILD = 20;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gs-tv-launcher/releases/latest';
 const VERSION_MANIFEST_URL = 'https://files.catbox.moe/x4ggkz.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/286x9mfv';
@@ -769,6 +769,16 @@ export default function App() {
     pkg?: string;
   } | null>(null);
 
+  // 5.e Kullanıcının Seçtiği Film Oynatıcı Uygulamaları (Özelleştirilebilir Liste)
+  const [filmBaslaticiPaketleri, setFilmBaslaticiPaketleri] = useState<string[]>([]);
+  const [oynaticiSeciciModalAcik, setOynaticiSeciciModalAcik] = useState(false);
+
+  // 5.f VIP Master Lisans & Cihaz Kilidi (Yetkisiz Kullanıcıları Engeller)
+  const [lisansAktif, setLisansAktif] = useState(true);
+  const [lisansKilitModalAcik, setLisansKilitModalAcik] = useState(false);
+  const [vipGirilenPin, setVipGirilenPin] = useState('');
+  const [masterPin, setMasterPin] = useState('1905');
+
   // 6. Dinamik Transparan Uygulama Şeritleri (Öneri Film & Dizi Afişleri)
   const [seritler, setSeritler] = useState<IcerikSeridi[]>([
     {
@@ -959,6 +969,14 @@ export default function App() {
       setFilmDetayModalAcik(false);
       return true;
     }
+    if (oynaticiSeciciModalAcik) {
+      setOynaticiSeciciModalAcik(false);
+      return true;
+    }
+    if (lisansKilitModalAcik && lisansAktif) {
+      setLisansKilitModalAcik(false);
+      return true;
+    }
     if (guncellemeModalAcik) {
       setGuncellemeModalAcik(false);
       return true;
@@ -1087,6 +1105,19 @@ export default function App() {
               if (rawSehir) {
                 setSeciliSehir(rawSehir);
               }
+            } catch {}
+            try {
+              const rawFilmApps = await TVAppManager.getSetting('filmBaslaticiPaketleri', '[]');
+              const parsed = JSON.parse(rawFilmApps);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                setFilmBaslaticiPaketleri(parsed);
+              }
+            } catch {}
+            try {
+              const rawLisans = await TVAppManager.getSetting('lisansAktif', 'true');
+              setLisansAktif(rawLisans === 'true');
+              const rawPin = await TVAppManager.getSetting('masterPin', '1905');
+              if (rawPin) setMasterPin(rawPin);
             } catch {}
           }
 
@@ -1552,6 +1583,87 @@ export default function App() {
       (u) => u.packageName.toLowerCase().includes('nuviola') || u.name.toLowerCase().includes('nuviola')
     );
     uygulamaBaslat(nuvApp ? nuvApp.packageName : 'com.nuviola.tv', 'Nuviola');
+  };
+
+  // Kullanıcının Seçtiği Özel Uygulama ile Film Başlatma (Otomatik Kopyalama + Intent)
+  const filmOynatOzelUygulama = async (
+    title: string,
+    pkg: string,
+    imdbId?: string,
+    backdropUrl?: string
+  ) => {
+    const app = uygulamalar.find((u) => u.packageName === pkg) || { name: 'Uygulama', packageName: pkg };
+    try {
+      if (TVAppManager && TVAppManager.copyToClipboard) {
+        await TVAppManager.copyToClipboard(title);
+      }
+    } catch {}
+
+    setBildirimMetni(`📋 "${title}" panoya kopyalandı! ${app.name} açılıyor...`);
+    setTimeout(() => setBildirimMetni(''), 4500);
+    setFilmDetayModalAcik(false);
+    filmGecmiseEkle(title, app.name, pkg, backdropUrl);
+
+    const pkgLower = pkg.toLowerCase();
+
+    // Stremio doğrudan detay desteği
+    if (pkgLower.includes('stremio') && Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
+      try {
+        const streamUri = imdbId ? `stremio:///detail/movie/${imdbId}` : `stremio:///search?search=${encodeURIComponent(title)}`;
+        await TVAppManager.launchMediaContent('com.stremio.one', imdbId || title, streamUri);
+        return;
+      } catch {}
+    }
+
+    // YouTube / SmartTube arama intent desteği
+    if ((pkgLower.includes('youtube') || pkgLower.includes('smarttube')) && Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
+      try {
+        const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' film izle')}`;
+        await TVAppManager.launchMediaContent(pkg, title, ytUrl);
+        return;
+      } catch {}
+    }
+
+    // Genel Başlatma
+    uygulamaBaslat(pkg, app.name);
+  };
+
+  const filmPaketiDegistir = (pkg: string) => {
+    setFilmBaslaticiPaketleri((prev) => {
+      const exists = prev.includes(pkg);
+      const yeni = exists ? prev.filter((p) => p !== pkg) : [...prev, pkg];
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+        TVAppManager.saveSetting('filmBaslaticiPaketleri', JSON.stringify(yeni)).catch(() => {});
+      }
+      return yeni;
+    });
+  };
+
+  const vipPinDene = (rakam: string) => {
+    if (vipGirilenPin.length < 6) {
+      const yeni = vipGirilenPin + rakam;
+      setVipGirilenPin(yeni);
+      if (yeni === masterPin) {
+        setLisansAktif(true);
+        if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+          TVAppManager.saveSetting('lisansAktif', 'true').catch(() => {});
+        }
+        setLisansKilitModalAcik(false);
+        setVipGirilenPin('');
+        setBildirimMetni('🎉 Cihaz Başarıyla Doğrulandı! Hoş Geldiniz.');
+        setTimeout(() => setBildirimMetni(''), 3500);
+      } else if (yeni.length >= masterPin.length) {
+        setBildirimMetni('❌ Hatalı PIN Kodu! Lütfen tekrar deneyin.');
+        setTimeout(() => {
+          setVipGirilenPin('');
+          setBildirimMetni('');
+        }, 1500);
+      }
+    }
+  };
+
+  const vipPinSil = () => {
+    setVipGirilenPin((prev) => prev.slice(0, -1));
   };
 
   const filmBaslat = (film: FilmVitrinItem) => {
@@ -2336,7 +2448,7 @@ export default function App() {
             <Image source={GS_ICON} style={styles.gsLogoResim} resizeMode="cover" />
             <View style={{ marginRight: 12 }}>
               <Text style={styles.gsBaslik}>GS LAUNCHER</Text>
-              <Text style={styles.gsSurum}>v2.6 Pro TV</Text>
+              <Text style={styles.gsSurum}>v2.7 Pro TV</Text>
             </View>
 
             <View style={[styles.aramaKapsul, { borderColor: aktifTema.surface, width: 175 }]}>
@@ -3174,6 +3286,44 @@ export default function App() {
                         <Text style={styles.tileIkon}>🚀</Text>
                         <Text style={[styles.tileBaslik, { color: '#EAB308', fontWeight: '900' }]}>Güncelleme Merkezi</Text>
                         <Text style={styles.tileAlt}>v{CURRENT_VERSION} (Denetle)</Text>
+                      </>
+                    )}
+                  </FocusableItem>
+
+                  {/* 8.c Film Oynatıcı Uygulamalarını Yönet */}
+                  <FocusableItem
+                    style={[styles.kontrolTile, { borderColor: '#A855F7', backgroundColor: 'rgba(168, 85, 247, 0.12)' }]}
+                    focusedStyle={[styles.kontrolTileOdak, { borderColor: '#FFFFFF' }]}
+                    onPress={() => {
+                      setKontrolMerkeziAcik(false);
+                      setOynaticiSeciciModalAcik(true);
+                    }}
+                  >
+                    {() => (
+                      <>
+                        <Text style={styles.tileIkon}>🎬</Text>
+                        <Text style={[styles.tileBaslik, { color: '#A855F7', fontWeight: '900' }]}>Film Oynatıcıları</Text>
+                        <Text style={styles.tileAlt}>
+                          {filmBaslaticiPaketleri.length > 0 ? `${filmBaslaticiPaketleri.length} Uygulama Seçili` : 'Listeyi Düzenle'}
+                        </Text>
+                      </>
+                    )}
+                  </FocusableItem>
+
+                  {/* 8.d VIP Lisans & Güvenlik Kilidi */}
+                  <FocusableItem
+                    style={[styles.kontrolTile, { borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}
+                    focusedStyle={[styles.kontrolTileOdak, { borderColor: '#FFFFFF' }]}
+                    onPress={() => {
+                      setKontrolMerkeziAcik(false);
+                      setLisansKilitModalAcik(true);
+                    }}
+                  >
+                    {() => (
+                      <>
+                        <Text style={styles.tileIkon}>🔐</Text>
+                        <Text style={[styles.tileBaslik, { color: '#10B981', fontWeight: '900' }]}>Güvenlik & Kilit</Text>
+                        <Text style={styles.tileAlt}>Yetkili Cihaz (PIN)</Text>
                       </>
                     )}
                   </FocusableItem>
@@ -4490,138 +4640,83 @@ export default function App() {
                   </Text>
                 )}
 
-                <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800', marginBottom: 10 }}>
-                  🎬 Oynatmak İstediğiniz Uygulamayı Seçin:
-                </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
+                    🎬 Oynatmak İstediğiniz Uygulamayı Seçin:
+                  </Text>
+                  <FocusableItem
+                    style={{ backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}
+                    focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                    onPress={() => setOynaticiSeciciModalAcik(true)}
+                  >
+                    {() => <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>⚙️ Uygulama Ekle / Düzenle</Text>}
+                  </FocusableItem>
+                </View>
 
+                {/* Kullanıcının Kendi Seçtiği Oynatıcılar Listesi */}
                 <View style={{ gap: 10 }}>
-                  {/* Cloudstream Seçeneği */}
-                  <FocusableItem
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: 'rgba(27, 59, 111, 0.45)',
-                      padding: 12,
-                      borderRadius: 12,
-                      borderWidth: 1.2,
-                      borderColor: '#1B3B6F',
-                    }}
-                    focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent, transform: [{ scale: 1.02 }] }}
-                    onPress={() => filmOynatCloudstream(seciliFilmDetay!.title, seciliFilmDetay!.backdropUrl)}
-                  >
-                    {(isFocused) => (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                          <Text style={{ fontSize: 20 }}>☁️</Text>
-                          <View>
-                            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
-                              Cloudstream ile Aç (Aramaya Kopyala)
-                            </Text>
-                            <Text style={{ color: isFocused ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)', fontSize: 11 }}>
-                              Film başlığı panoya kopyalanır ve arama kutusuna yapıştırılabilir
-                            </Text>
-                          </View>
-                        </View>
-                        <Text style={{ color: isFocused ? '#FFFFFF' : aktifTema.border, fontWeight: '800' }}>▶ Başlat</Text>
-                      </View>
-                    )}
-                  </FocusableItem>
-
-                  {/* Stremio Seçeneği */}
-                  <FocusableItem
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: 'rgba(123, 44, 191, 0.35)',
-                      padding: 12,
-                      borderRadius: 12,
-                      borderWidth: 1.2,
-                      borderColor: '#7B2CBF',
-                    }}
-                    focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent, transform: [{ scale: 1.02 }] }}
-                    onPress={() => filmOynatStremio(seciliFilmDetay!.title, seciliFilmDetay!.imdbId, seciliFilmDetay!.backdropUrl)}
-                  >
-                    {(isFocused) => (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                          <Text style={{ fontSize: 20 }}>🍿</Text>
-                          <View>
-                            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
-                              Stremio ile Doğrudan Oynat
-                            </Text>
-                            <Text style={{ color: isFocused ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)', fontSize: 11 }}>
-                              {seciliFilmDetay?.imdbId ? `IMDb (${seciliFilmDetay.imdbId}) ile doğrudan film sayfasını açar` : 'Stremio içinde filmi arar'}
-                            </Text>
-                          </View>
-                        </View>
-                        <Text style={{ color: isFocused ? '#FFFFFF' : aktifTema.border, fontWeight: '800' }}>▶ Başlat</Text>
-                      </View>
-                    )}
-                  </FocusableItem>
-
-                  {/* YouTube Seçeneği */}
-                  <FocusableItem
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: 'rgba(239, 68, 68, 0.25)',
-                      padding: 12,
-                      borderRadius: 12,
-                      borderWidth: 1.2,
-                      borderColor: '#EF4444',
-                    }}
-                    focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent, transform: [{ scale: 1.02 }] }}
-                    onPress={() => filmOynatYouTube(seciliFilmDetay!.title)}
-                  >
-                    {(isFocused) => (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                          <Text style={{ fontSize: 20 }}>▶️</Text>
-                          <View>
-                            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
-                              YouTube'da Fragman & İzle
-                            </Text>
-                            <Text style={{ color: isFocused ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)', fontSize: 11 }}>
-                              YouTube TV arama sonuçlarında doğrudan açar
-                            </Text>
-                          </View>
-                        </View>
-                        <Text style={{ color: isFocused ? '#FFFFFF' : aktifTema.border, fontWeight: '800' }}>🔍 Ara</Text>
-                      </View>
-                    )}
-                  </FocusableItem>
-
-                  {/* Nuviola Seçeneği */}
-                  <FocusableItem
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: 'rgba(255, 255, 255, 0.07)',
-                      padding: 12,
-                      borderRadius: 12,
-                      borderWidth: 1,
-                      borderColor: 'rgba(255, 255, 255, 0.15)',
-                    }}
-                    focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent, transform: [{ scale: 1.02 }] }}
-                    onPress={() => filmOynatNuviola(seciliFilmDetay!.title, seciliFilmDetay!.backdropUrl)}
-                  >
-                    {(isFocused) => (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                          <Text style={{ fontSize: 20 }}>💜</Text>
-                          <View>
-                            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
-                              Nuviola ile Aç
-                            </Text>
-                            <Text style={{ color: isFocused ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)', fontSize: 11 }}>
-                              Film başlığını kopyalar ve Nuviola uygulamasını açar
-                            </Text>
-                          </View>
-                        </View>
-                        <Text style={{ color: isFocused ? '#FFFFFF' : aktifTema.border, fontWeight: '800' }}>▶ Başlat</Text>
-                      </View>
-                    )}
-                  </FocusableItem>
+                  {filmBaslaticiPaketleri.length === 0 ? (
+                    <View style={{ backgroundColor: 'rgba(255,255,255,0.06)', padding: 18, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }}>
+                      <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800', marginBottom: 6 }}>
+                        Henüz oynatıcı uygulaması seçmediniz.
+                      </Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12, textAlign: 'center', marginBottom: 14, lineHeight: 18 }}>
+                        Televizyonunuzda yüklü Cloudstream, Stremio, SmartTube, Kodi, VLC veya dilediğiniz herhangi bir uygulamayı ekleyebilirsiniz.
+                      </Text>
+                      <FocusableItem
+                        style={[styles.modalKaydetKapatButon, { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF', minWidth: 200 }]}
+                        focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                        onPress={() => setOynaticiSeciciModalAcik(true)}
+                      >
+                        {() => <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent, fontWeight: '900' }]}>➕ Şimdi Uygulama Seç</Text>}
+                      </FocusableItem>
+                    </View>
+                  ) : (
+                    filmBaslaticiPaketleri.map((pkg) => {
+                      const app = uygulamalar.find((u) => u.packageName === pkg) || {
+                        name: pkg.split('.').pop() || 'Oynatıcı',
+                        packageName: pkg,
+                        iconUri: null,
+                      };
+                      return (
+                        <FocusableItem
+                          key={pkg}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                            padding: 12,
+                            borderRadius: 12,
+                            borderWidth: 1.2,
+                            borderColor: 'rgba(255, 255, 255, 0.15)',
+                          }}
+                          focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent, transform: [{ scale: 1.02 }] }}
+                          onPress={() => filmOynatOzelUygulama(seciliFilmDetay!.title, pkg, seciliFilmDetay!.imdbId, seciliFilmDetay!.backdropUrl)}
+                        >
+                          {(isFocused) => (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                {app.iconUri ? (
+                                  <Image source={{ uri: app.iconUri }} style={{ width: 36, height: 36, borderRadius: 8 }} resizeMode="cover" />
+                                ) : (
+                                  <Text style={{ fontSize: 24 }}>🎬</Text>
+                                )}
+                                <View>
+                                  <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
+                                    {app.name} ile Aç
+                                  </Text>
+                                  <Text style={{ color: isFocused ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)', fontSize: 11 }}>
+                                    Başlık otomatik kopyalanır ve {app.name} açılır
+                                  </Text>
+                                </View>
+                              </View>
+                              <Text style={{ color: isFocused ? '#FFFFFF' : aktifTema.border, fontWeight: '800' }}>▶ Başlat</Text>
+                            </View>
+                          )}
+                        </FocusableItem>
+                      );
+                    })
+                  )}
                 </View>
 
                 <View style={{ marginTop: 14, alignItems: 'center' }}>
@@ -4634,6 +4729,203 @@ export default function App() {
                   </FocusableItem>
                 </View>
               </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ================= MODAL: FİLM OYNATICI UYGULAMALARI SEÇİCİ ================= */}
+        <Modal
+          visible={oynaticiSeciciModalAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setOynaticiSeciciModalAcik(false)}
+        >
+          <View style={styles.modalArkaplan}>
+            <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border, maxHeight: '90%', width: '70%' }]}>
+              <View style={styles.modalBaslikSatir}>
+                <View>
+                  <Text style={styles.modalBaslik}>🎬 Film Oynatıcı Uygulamaları</Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, marginTop: 2 }}>
+                    Film kartlarına bastığınızda açılmasını istediğiniz uygulamaları seçin
+                  </Text>
+                </View>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setOynaticiSeciciModalAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕</Text>}
+                </FocusableItem>
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 360, marginVertical: 10 }}>
+                {uygulamalar.map((app) => {
+                  const secili = filmBaslaticiPaketleri.includes(app.packageName);
+                  return (
+                    <FocusableItem
+                      key={app.packageName}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: 12,
+                        borderRadius: 10,
+                        backgroundColor: secili ? 'rgba(234, 179, 8, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                        borderWidth: 1,
+                        borderColor: secili ? aktifTema.border : 'rgba(255, 255, 255, 0.1)',
+                        marginBottom: 8,
+                      }}
+                      focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent, transform: [{ scale: 1.02 }] }}
+                      onPress={() => filmPaketiDegistir(app.packageName)}
+                    >
+                      {(isFocused) => (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                            {app.iconUri ? (
+                              <Image source={{ uri: app.iconUri }} style={{ width: 32, height: 32, borderRadius: 6 }} resizeMode="cover" />
+                            ) : (
+                              <Text style={{ fontSize: 20 }}>📱</Text>
+                            )}
+                            <View>
+                              <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '700' }}>
+                                {app.name}
+                              </Text>
+                              <Text style={{ color: isFocused ? '#EEE' : 'rgba(255,255,255,0.5)', fontSize: 10 }}>
+                                {app.packageName}
+                              </Text>
+                            </View>
+                          </View>
+                          <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: secili ? '#22C55E' : 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                            <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '900' }}>{secili ? '✔' : ''}</Text>
+                          </View>
+                        </View>
+                      )}
+                    </FocusableItem>
+                  );
+                })}
+              </ScrollView>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 12 }}>
+                <FocusableItem
+                  style={[styles.modalKaydetKapatButon, { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF', minWidth: 160 }]}
+                  focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                  onPress={() => setOynaticiSeciciModalAcik(false)}
+                >
+                  {() => <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent, fontWeight: '900' }]}>✔ Tamamla & Kaydet</Text>}
+                </FocusableItem>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ================= MODAL: VIP MASTER LİSANS & GÜVENLİK KİLİDİ ================= */}
+        <Modal
+          visible={lisansKilitModalAcik || !lisansAktif}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {
+            if (lisansAktif) setLisansKilitModalAcik(false);
+          }}
+        >
+          <View style={[styles.modalArkaplan, { backgroundColor: 'rgba(5, 10, 20, 0.96)' }]}>
+            <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border, width: '55%', alignItems: 'center', padding: 24 }]}>
+              <Text style={{ fontSize: 44, marginBottom: 8 }}>🔒</Text>
+              <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '900', textAlign: 'center' }}>
+                GS TV Launcher - Güvenlik & Yetki Kilidi
+              </Text>
+              <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, textAlign: 'center', marginTop: 6, lineHeight: 18 }}>
+                Bu uygulama kişisel lisanslıdır. Televizyonunuzda kullanabilmek için lütfen yönetici PIN kodunuzu giriniz.
+              </Text>
+
+              {/* Cihaz ID */}
+              <View style={{ backgroundColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8, marginVertical: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+                <Text style={{ color: aktifTema.border, fontSize: 12, fontWeight: '800' }}>
+                  Cihaz No: GS-TV-{(cihazBilgisi.model || 'TV').replace(/\s+/g, '')}
+                </Text>
+              </View>
+
+              {/* PIN Noktaları */}
+              <View style={{ flexDirection: 'row', gap: 12, marginVertical: 12 }}>
+                {[0, 1, 2, 3].map((idx) => {
+                  const filled = vipGirilenPin.length > idx;
+                  return (
+                    <View
+                      key={idx}
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: 9,
+                        backgroundColor: filled ? aktifTema.accent : 'rgba(255,255,255,0.15)',
+                        borderWidth: 1.5,
+                        borderColor: filled ? '#FFFFFF' : 'rgba(255,255,255,0.3)',
+                      }}
+                    />
+                  );
+                })}
+              </View>
+
+              {/* Kumanda İçin Sayısal Tuş Takımı */}
+              <View style={{ width: '100%', maxWidth: 260, marginVertical: 10 }}>
+                {[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['Sil', '0', '✔']].map((row, rIdx) => (
+                  <View key={rIdx} style={{ flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
+                    {row.map((val) => (
+                      <FocusableItem
+                        key={val}
+                        style={{
+                          width: 60,
+                          height: 44,
+                          borderRadius: 10,
+                          backgroundColor: val === 'Sil' ? 'rgba(239, 68, 68, 0.25)' : val === '✔' ? aktifTema.accent : 'rgba(255, 255, 255, 0.1)',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderWidth: 1,
+                          borderColor: 'rgba(255,255,255,0.15)',
+                        }}
+                        focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.1 }] }}
+                        onPress={() => {
+                          if (val === 'Sil') vipPinSil();
+                          else if (val === '✔') {
+                            if (vipGirilenPin === masterPin) {
+                              setLisansAktif(true);
+                              if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+                                TVAppManager.saveSetting('lisansAktif', 'true').catch(() => {});
+                              }
+                              setLisansKilitModalAcik(false);
+                              setVipGirilenPin('');
+                              setBildirimMetni('🎉 Cihaz Doğrulandı!');
+                              setTimeout(() => setBildirimMetni(''), 3000);
+                            } else {
+                              setBildirimMetni('❌ Hatalı PIN Kodu!');
+                              setTimeout(() => {
+                                setVipGirilenPin('');
+                                setBildirimMetni('');
+                              }, 1500);
+                            }
+                          } else {
+                            vipPinDene(val);
+                          }
+                        }}
+                      >
+                        {() => (
+                          <Text style={{ color: val === '✔' ? aktifTema.textOnAccent : '#FFFFFF', fontSize: val === 'Sil' ? 12 : 16, fontWeight: '800' }}>
+                            {val}
+                          </Text>
+                        )}
+                      </FocusableItem>
+                    ))}
+                  </View>
+                ))}
+              </View>
+
+              {lisansAktif && (
+                <FocusableItem
+                  style={{ marginTop: 10, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.08)' }}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setLisansKilitModalAcik(false)}
+                >
+                  {() => <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '700' }}>✕ Kapat</Text>}
+                </FocusableItem>
+              )}
             </View>
           </View>
         </Modal>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GS TV Launcher - Android TV & Google TV İçin Akıllı Başlatıcı</title>
+  <meta name="description" content="Android TV ve Google TV cihazlar için geliştirilmiş hızlı, reklamsız, Monet Material You temalı, sinematik akıllı TV başlatıcısı.">
+  <style>
+    :root {
+      --bg: #090E1A;
+      --card: #151E32;
+      --accent: #EAB308;
+      --accent-hover: #CA8A04;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: #24324D;
+      --blue: #38BDF8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 20px;
+      color: #FFF;
+      text-decoration: none;
+    }
+    .brand img {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1.5px solid var(--accent);
+    }
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+    .hero {
+      text-align: center;
+      padding: 70px 20px 50px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(234, 179, 8, 0.15);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 44px;
+      line-height: 1.2;
+      margin: 0 0 20px 0;
+      color: #FFFFFF;
+      font-weight: 900;
+    }
+    h1 span {
+      background: linear-gradient(135deg, #FDE047, #EAB308);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 35px;
+    }
+    .cta-row {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 15px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background-color: var(--accent);
+      color: #000;
+    }
+    .btn-primary:hover {
+      background-color: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: var(--card);
+      color: #FFF;
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: #1C2742;
+      border-color: #3B82F6;
+      transform: translateY(-2px);
+    }
+    .preview-box {
+      max-width: 1000px;
+      margin: 40px auto 70px auto;
+      padding: 0 20px;
+    }
+    .preview-img {
+      width: 100%;
+      border-radius: 20px;
+      border: 2px solid var(--border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto 80px auto;
+      padding: 0 20px;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 30px;
+      border-radius: 16px;
+      transition: transform 0.2s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(234, 179, 8, 0.4);
+    }
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+    .feature-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #FFF;
+      margin-bottom: 10px;
+    }
+    .feature-desc {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    footer {
+      background: #060A13;
+      border-top: 1px solid var(--border);
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="brand">
+      <img src="assets/gs_icon.png" alt="GS Logo">
+      <span>GS TV LAUNCHER</span>
+    </a>
+    <div class="nav-links">
+      <a href="#ozellikler">Özellikler</a>
+      <a href="privacy.html">Gizlilik Politikası</a>
+      <a href="https://github.com/csprofesor/gs-tv-launcher" target="_blank">GitHub</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="badge">🚀 v2.6 Pro TV Sürümü Yayında</div>
+    <h1>Android TV İçin <span>Modern, Akıllı & Şık</span> Başlatıcı</h1>
+    <p class="hero-desc">
+      Xiaomi Mi Box, Google TV ve Android akıllı televizyonlar için özel olarak optimize edilmiş, reklamsız, hızlı ve tam donanımlı televizyon deneyimi.
+    </p>
+
+    <div class="cta-row">
+      <a href="https://tinyurl.com/276xhdgx" class="btn btn-primary">
+        ⬇️ En Son APK'yı İndir (v2.6)
+      </a>
+      <a href="privacy.html" class="btn btn-secondary">
+        📄 Google Play Gizlilik Politikası
+      </a>
+    </div>
+  </section>
+
+  <div class="preview-box">
+    <img src="assets/tv_wallpaper.jpg" alt="GS TV Launcher Arayüzü" class="preview-img">
+  </div>
+
+  <section id="ozellikler" class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🎬</div>
+      <div class="feature-title">Özelleştirilebilir Sinema Başlatıcı</div>
+      <div class="feature-desc">
+        Film ve dizi afişlerine tıkladığınızda istediğiniz uygulamaları seçin. Başlık panoya otomatik kopyalanır ve Cloudstream, Stremio, YouTube veya Nuviola ile anında açılır.
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">📸</div>
+      <div class="feature-title">Telefondan Wi-Fi / QR Fotoğraf Slaytı</div>
+      <div class="feature-desc">
+        Televizyon ekranında çıkan QR kodu telefonunuzla okutun. Eşinizin, ailenizin ve sevdiğiniz fotoğrafları tek tıkla TV'ye gönderin; uyku modunda şık bir fotoğraf çerçevesi olarak izleyin.
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🎨</div>
+      <div class="feature-title">Monet Material You Temaları</div>
+      <div class="feature-desc">
+        Galatasaray Aslan Sarısı, Akdeniz Turkuazı, Gece OLED Siyahı, Zümrüt Yeşili ve Siberpunk Neon temaları ile televizyonunuzun havasını tek tıkla değiştirin.
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">📺</div>
+      <div class="feature-title">Tekil & Çakışmasız Uyku Modu</div>
+      <div class="feature-desc">
+        Android TV'nin kendi uyku modu ile uygulamanın ekran koruyucusu arasındaki çakışmalar giderildi. Dinamik ekran uyanık tutma yönetimi ile kesintisiz estetik saat ve hava durumu.
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🚀</div>
+      <div class="feature-title">Uygulama İçi Canlı Güncelleme</div>
+      <div class="feature-desc">
+        GitHub Releases ve dinamik manifest entegrasyonu ile tek tuşla güncellemeleri denetleyin. Canlı yüzde çubuğu ile yeni sürümleri televizyonunuzdan doğrudan kurun.
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🧹</div>
+      <div class="feature-title">TV Performans & Hız Araçları</div>
+      <div class="feature-desc">
+        Dahili RAM temizleyici, Wi-Fi ağ hız testi, tek tıkla orijinal fabrika arayüzüne dönüş ve televizyonun dahili uydu yayınına geçiş kısayolları.
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      Geliştirici: <strong>Göktürk Şahan (csprofesor)</strong> • İletişim: <a href="mailto:gokturksahanss@gmail.com">gokturksahanss@gmail.com</a>
+    </p>
+    <p style="margin-top: 10px; font-size: 13px;">
+      <a href="privacy.html">Gizlilik Politikası (Privacy Policy)</a> • <a href="https://github.com/csprofesor/gs-tv-launcher" target="_blank">GitHub Deposu</a>
+    </p>
+    <p style="margin-top: 20px; font-size: 12px; color: #64748B;">
+      &copy; 2026 GS TV Launcher. Android TV ve Google TV, Google LLC'nin ticari markalarıdır.
+    </p>
+  </footer>
+
+</body>
+</html>
