@@ -1,6 +1,7 @@
 {
   "version": "3.1.0",
   "versionCode": 25,
-  "apkUrl": "https://tinyurl.com/491820",
+  "apkUrl": "https://expo.dev/artifacts/eas/ub141vEIRUEOAXG4366VOPcWe2q1iVXPqEmvCPlQYK4.apk",
+  "shortUrl": "https://tinyurl.com/gslauncher25",
   "changelog": "v3.1.0 (Build 25): Öneri şeritleri kaldırıldı, üst bar kristallendirildi ve net beyaz yapıldı, rastgele IMDb vitrini ve kurulu uygulama seçici entegre edildi, 'Tüm Uygulamalar' sekmesi en sona taşındı."
 }
