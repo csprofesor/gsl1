@@ -327,14 +327,15 @@ interface SonBaslatilanItem {
   zaman: string;
 }
 
-// Film & Dizi Vitrin Modeli (Cloudstream, Nuviola, Netflix, Stremio, Prime Video vb.)
+// Film & Dizi Vitrin Modeli (Cloudstream, Nuvio, Netflix, Stremio, Prime Video, IMDb vb.)
 export interface FilmVitrinItem {
   id: string;
   title: string;
+  imdbId?: string;
   year: string;
   rating: string;
   genre: string;
-  platform: 'Cloudstream' | 'Nuviola' | 'Netflix' | 'Stremio' | 'Prime Video' | 'Disney+' | 'YouTube' | 'Canlı TV';
+  platform: 'Cloudstream' | 'Netflix' | 'Stremio' | 'Prime Video' | 'Disney+' | 'YouTube' | 'Canlı TV' | 'IMDb';
   platformIcon: string;
   backdropUrl: string;
   posterUrl: string;
@@ -345,8 +346,54 @@ export interface FilmVitrinItem {
 
 export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
   {
+    id: 'oppenheimer',
+    title: 'Oppenheimer',
+    imdbId: 'tt15398776',
+    year: '2023',
+    rating: '8.9 ⭐ IMDb',
+    genre: 'Biyografi • Tarih • 4K UHD',
+    platform: 'IMDb',
+    platformIcon: '⭐',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt15398776/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt15398776/img',
+    overview: 'Amerikan nükleer programının babası J. Robert Oppenheimer\'ın insanlık tarihinin akışını sonsuza dek değiştiren Manhattan Projesi ve sonrasındaki dramatik hesaplaşması.',
+    packageCandidates: ['com.lagradost.cloudstream3', 'com.stremio.one'],
+    watchUrl: 'stremio:///detail/movie/tt15398776',
+  },
+  {
+    id: 'dark_knight',
+    title: 'Kara Şövalye (The Dark Knight)',
+    imdbId: 'tt0468569',
+    year: '2008',
+    rating: '9.0 ⭐ IMDb',
+    genre: 'Suç • Aksiyon • IMAX 4K',
+    platform: 'IMDb',
+    platformIcon: '⭐',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt0468569/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt0468569/img',
+    overview: 'Batman, Teğmen Gordon ve Savcı Dent ile Gotham\'ı suçtan arındırmaya çalışırken, şehri anarşiye sürükleyen şeytani zeka Joker ortaya çıkar.',
+    packageCandidates: ['com.stremio.one', 'com.lagradost.cloudstream3'],
+    watchUrl: 'stremio:///detail/movie/tt0468569',
+  },
+  {
+    id: 'inception',
+    title: 'Başlangıç (Inception)',
+    imdbId: 'tt1375666',
+    year: '2010',
+    rating: '8.8 ⭐ IMDb',
+    genre: 'Bilim Kurgu • Aksiyon • HDR10+',
+    platform: 'IMDb',
+    platformIcon: '⭐',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt1375666/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt1375666/img',
+    overview: 'İnsanların rüyalarına girerek bilinçaltındaki sırları çalan Dom Cobb, hayatını geri kazanmak için imkansız bir göreve soyunur.',
+    packageCandidates: ['com.stremio.one', 'com.lagradost.cloudstream3'],
+    watchUrl: 'stremio:///detail/movie/tt1375666',
+  },
+  {
     id: 'dune2',
     title: 'Dune: Çöl Gezegeni Bölüm İki',
+    imdbId: 'tt15239678',
     year: '2024',
     rating: '8.6 ⭐ IMDb',
     genre: 'Bilim Kurgu • Macera • 4K UHD',
@@ -355,26 +402,133 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     backdropUrl: 'https://images.metahub.space/background/medium/tt15239678/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt15239678/img',
     overview: 'Paul Atreides, Chani ve Fremenlerle birleşerek ailesini yok eden komploculara karşı destansı bir intikam savaşı başlatır.',
-    packageCandidates: ['com.lagradost.cloudstream3', 'com.nuviola.tv', 'com.stremio.one'],
+    packageCandidates: ['com.lagradost.cloudstream3', 'com.stremio.one'],
     watchUrl: 'cloudstream3://search?query=Dune%20Part%20Two',
+  },
+  {
+    id: 'the_penguin',
+    title: 'The Penguin (Penguen)',
+    imdbId: 'tt15474916',
+    year: '2024',
+    rating: '8.8 ⭐ IMDb',
+    genre: 'Suç • Kara Film • 4K UHD',
+    platform: 'IMDb',
+    platformIcon: '⭐',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt15474916/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt15474916/img',
+    overview: 'Carmine Falcone\'nin ölümünün ardından Gotham\'ın yeraltı dünyasındaki güç boşluğunu doldurmak isteyen Oz Cobb\'un yükselişi.',
+    packageCandidates: ['com.lagradost.cloudstream3', 'com.stremio.one'],
+    watchUrl: 'cloudstream3://search?query=The%20Penguin',
+  },
+  {
+    id: 'arcane',
+    title: 'Arcane (Final Sezonu)',
+    imdbId: 'tt11126994',
+    year: '2024',
+    rating: '9.0 ⭐ IMDb',
+    genre: 'Animasyon • Bilim Kurgu • 4K HDR',
+    platform: 'Netflix',
+    platformIcon: '🍿',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt11126994/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt11126994/img',
+    overview: 'Piltover ve Zaun arasındaki çatışmanın ortasında, iki kardeş birbirine zıt kutuplarda ölüm kalım savaşı verir.',
+    packageCandidates: ['com.netflix.ninja', 'com.stremio.one'],
+    watchUrl: 'nflx://www.netflix.com/search?q=Arcane',
   },
   {
     id: 'house_dragon',
     title: 'House of the Dragon (Ejderha Hanedanı)',
+    imdbId: 'tt11198330',
     year: '2024',
     rating: '8.4 ⭐ IMDb',
     genre: 'Epik Fantastik • Dizi • HDR10+',
-    platform: 'Nuviola',
-    platformIcon: '💜',
+    platform: 'IMDb',
+    platformIcon: '⭐',
     backdropUrl: 'https://images.metahub.space/background/medium/tt11198330/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt11198330/img',
     overview: 'Targaryen hanedanının çöküşünün ve Ejderhaların Dansı olarak bilinen acımasız iç savaşın başlangıç hikayesi.',
-    packageCandidates: ['com.nuviola.tv', 'com.lagradost.cloudstream3', 'com.stremio.one'],
+    packageCandidates: ['com.lagradost.cloudstream3', 'com.stremio.one'],
     watchUrl: 'cloudstream3://search?query=House%20of%20the%20Dragon',
+  },
+  {
+    id: 'interstellar',
+    title: 'Yıldızlararası (Interstellar)',
+    imdbId: 'tt0816692',
+    year: '2014',
+    rating: '8.7 ⭐ IMDb',
+    genre: 'Bilim Kurgu • Uzay Dramı • 4K UHD',
+    platform: 'Stremio',
+    platformIcon: '🟣',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt0816692/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt0816692/img',
+    overview: 'İnsanlığın Dünya\'daki varlığı tükenirken, bir grup kaşif insan ırkının geleceğini kurtarmak için solucan deliğinden geçer.',
+    packageCandidates: ['com.stremio.one', 'com.lagradost.cloudstream3'],
+    watchUrl: 'stremio:///search?query=Interstellar',
+  },
+  {
+    id: 'breaking_bad',
+    title: 'Breaking Bad',
+    imdbId: 'tt0903747',
+    year: '2013',
+    rating: '9.5 ⭐ IMDb',
+    genre: 'Suç • Başyapıt Dram • 4K',
+    platform: 'Netflix',
+    platformIcon: '🍿',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt0903747/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt0903747/img',
+    overview: 'Ölümcül akciğer kanseri teşhisi konan bir kimya öğretmeni, ailesinin geleceğini güvence altına almak için metamfetamin üretmeye başlar.',
+    packageCandidates: ['com.netflix.ninja', 'com.stremio.one'],
+    watchUrl: 'nflx://www.netflix.com/search?q=Breaking%20Bad',
+  },
+  {
+    id: 'gladiator2',
+    title: 'Gladyatör II (Gladiator II)',
+    imdbId: 'tt9218128',
+    year: '2024',
+    rating: '7.8 ⭐ IMDb',
+    genre: 'Tarihi Dram • Aksiyon • 4K HDR',
+    platform: 'Cloudstream',
+    platformIcon: '☁️',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt9218128/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt9218128/img',
+    overview: 'Maximus\'un ölümünden yıllar sonra Lucius, Roma\'nın tiran imparatorlarına karşı Kolezyum\'un kanlı kumlarında mücadeleye girişir.',
+    packageCandidates: ['com.lagradost.cloudstream3'],
+    watchUrl: 'cloudstream3://search?query=Gladiator%20II',
+  },
+  {
+    id: 'deadpool_wolv',
+    title: 'Deadpool & Wolverine',
+    imdbId: 'tt6263850',
+    year: '2024',
+    rating: '8.0 ⭐ IMDb',
+    genre: 'Aksiyon • Komedi • IMAX 4K',
+    platform: 'Stremio',
+    platformIcon: '🟣',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt6263850/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt6263850/img',
+    overview: 'Zaman Değişimi Otoritesi dünyasını tehdit edince Wade Wilson, isteksiz bir Wolverine ile güçlerini birleştirmek zorunda kalır.',
+    packageCandidates: ['com.stremio.one', 'com.lagradost.cloudstream3'],
+    watchUrl: 'stremio:///search?query=Deadpool%20Wolverine',
+  },
+  {
+    id: 'shogun',
+    title: 'Shōgun (Şogun)',
+    imdbId: 'tt2788316',
+    year: '2024',
+    rating: '8.7 ⭐ IMDb',
+    genre: 'Tarihi Epik • Samuray Dramı • 4K',
+    platform: 'IMDb',
+    platformIcon: '⭐',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt2788316/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt2788316/img',
+    overview: '1600 yılında Japonya\'da iç savaşın eşiğinde, Lord Toranaga rakiplerine karşı hayatının mücadelesini verirken gizemli bir Avrupa gemisi kıyıya vurur.',
+    packageCandidates: ['com.lagradost.cloudstream3', 'com.stremio.one'],
+    watchUrl: 'cloudstream3://search?query=Shogun',
   },
   {
     id: 'stranger_things',
     title: 'Stranger Things (Final Sezonu)',
+    imdbId: 'tt4574334',
     year: '2025',
     rating: '8.7 ⭐ IMDb',
     genre: 'Gizem • Bilim Kurgu • 4K Dolby',
@@ -387,74 +541,124 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     watchUrl: 'nflx://www.netflix.com/search?q=Stranger%20Things',
   },
   {
-    id: 'deadpool_wolv',
-    title: 'Deadpool & Wolverine',
-    year: '2024',
-    rating: '8.0 ⭐ IMDb',
-    genre: 'Aksiyon • Komedi • IMAX 4K',
-    platform: 'Stremio',
-    platformIcon: '🟣',
-    backdropUrl: 'https://images.metahub.space/background/medium/tt6263850/img',
-    posterUrl: 'https://images.metahub.space/poster/medium/tt6263850/img',
-    overview: 'Zaman Değişimi Otoritesi dünyasını tehdit edince Wade Wilson, isteksiz bir Wolverine ile güçlerini birleştirmek zorunda kalır.',
-    packageCandidates: ['com.stremio.one', 'com.lagradost.cloudstream3', 'com.nuviola.tv'],
-    watchUrl: 'stremio:///search?query=Deadpool%20Wolverine',
-  },
-  {
-    id: 'gladiator2',
-    title: 'Gladyatör II (Gladiator II)',
-    year: '2024',
-    rating: '7.8 ⭐ IMDb',
-    genre: 'Tarihi Dram • Aksiyon • 4K HDR',
-    platform: 'Cloudstream',
-    platformIcon: '☁️',
-    backdropUrl: 'https://images.metahub.space/background/medium/tt9218128/img',
-    posterUrl: 'https://images.metahub.space/poster/medium/tt9218128/img',
-    overview: 'Maximus\'un ölümünden yıllar sonra Lucius, Roma\'nın tiran imparatorlarına karşı Kolezyum\'un kanlı kumlarında mücadeleye girişir.',
-    packageCandidates: ['com.lagradost.cloudstream3', 'com.nuviola.tv'],
-    watchUrl: 'cloudstream3://search?query=Gladiator%20II',
-  },
-  {
-    id: 'shogun',
-    title: 'Shōgun (Şogun)',
+    id: 'severance',
+    title: 'Severance (Ayrılık)',
+    imdbId: 'tt11280740',
     year: '2024',
     rating: '8.7 ⭐ IMDb',
-    genre: 'Tarihi Epik • Samuray Dramı • 4K',
-    platform: 'Nuviola',
-    platformIcon: '💜',
-    backdropUrl: 'https://images.metahub.space/background/medium/tt2788316/img',
-    posterUrl: 'https://images.metahub.space/poster/medium/tt2788316/img',
-    overview: '1600 yılında Japonya\'da iç savaşın eşiğinde, Lord Toranaga rakiplerine karşı hayatının mücadelesini verirken gizemli bir Avrupa gemisi kıyıya vurur.',
-    packageCandidates: ['com.nuviola.tv', 'com.lagradost.cloudstream3', 'com.stremio.one'],
-    watchUrl: 'cloudstream3://search?query=Shogun',
+    genre: 'Psikolojik Gerilim • Gizem • 4K',
+    platform: 'IMDb',
+    platformIcon: '⭐',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt11280740/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt11280740/img',
+    overview: 'İş ve özel hayat anılarını cerrahi olarak ikiye bölen Lumon Industries çalışanları, şirketin karanlık gerçeğini keşfetmeye başlar.',
+    packageCandidates: ['com.lagradost.cloudstream3', 'com.stremio.one'],
+    watchUrl: 'cloudstream3://search?query=Severance',
   },
   {
-    id: 'interstellar',
-    title: 'Yıldızlararası (Interstellar)',
-    year: '2014',
+    id: 'the_last_of_us',
+    title: 'The Last of Us',
+    imdbId: 'tt3581920',
+    year: '2023',
     rating: '8.7 ⭐ IMDb',
-    genre: 'Bilim Kurgu • Uzay Dramı • 4K UHD',
-    platform: 'Stremio',
-    platformIcon: '🟣',
-    backdropUrl: 'https://images.metahub.space/background/medium/tt0816692/img',
-    posterUrl: 'https://images.metahub.space/poster/medium/tt0816692/img',
-    overview: 'İnsanlığın Dünya\'daki varlığı tükenirken, bir grup kaşif insan ırkının geleceğini kurtarmak için solucan deliğinden geçer.',
-    packageCandidates: ['com.stremio.one', 'com.lagradost.cloudstream3', 'com.nuviola.tv'],
-    watchUrl: 'stremio:///search?query=Interstellar',
+    genre: 'Kıyamet Sonrası • Dram • 4K',
+    platform: 'IMDb',
+    platformIcon: '⭐',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt3581920/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt3581920/img',
+    overview: 'Kıyamet sonrası Amerika\'da hayatta kalmaya çalışan Joel, insanlığın son umudu olabilecek 14 yaşındaki Ellie\'yi karantina bölgesinden kaçırır.',
+    packageCandidates: ['com.lagradost.cloudstream3', 'com.stremio.one'],
+    watchUrl: 'cloudstream3://search?query=The%20Last%20of%20Us',
   },
   {
-    id: 'breaking_bad',
-    title: 'Breaking Bad',
-    year: '2013',
-    rating: '9.5 ⭐ IMDb',
-    genre: 'Suç • Başyapıt Dram • 4K',
+    id: 'fallout',
+    title: 'Fallout',
+    imdbId: 'tt12637874',
+    year: '2024',
+    rating: '8.4 ⭐ IMDb',
+    genre: 'Nükleer Bilim Kurgu • Aksiyon • 4K',
+    platform: 'Prime Video',
+    platformIcon: '📦',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt12637874/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt12637874/img',
+    overview: 'Nükleer felaketten 200 yıl sonra lüks sığınaklarından çıkıp çorak topraklara adım atan sığınak sakinleri vahşi bir dünyayla karşılaşır.',
+    packageCandidates: ['com.amazon.amazonvideo.livingroom', 'com.stremio.one', 'com.lagradost.cloudstream3'],
+    watchUrl: 'cloudstream3://search?query=Fallout',
+  },
+  {
+    id: 'better_call_saul',
+    title: 'Better Call Saul',
+    imdbId: 'tt3032476',
+    year: '2022',
+    rating: '9.0 ⭐ IMDb',
+    genre: 'Suç • Hukuk Dramı • 4K',
     platform: 'Netflix',
     platformIcon: '🍿',
-    backdropUrl: 'https://images.metahub.space/background/medium/tt0903747/img',
-    posterUrl: 'https://images.metahub.space/poster/medium/tt0903747/img',
-    overview: 'Ölümcül akciğer kanseri teşhisi konan bir kimya öğretmeni, ailesinin geleceğini güvence altına almak için metamfetamin üretmeye başlar.',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt3032476/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt3032476/img',
+    overview: 'Dürüst bir avukat olmaya çalışan Jimmy McGill\'in ahlaki sınırları esneterek kurnaz savunma avukatı Saul Goodman\'a dönüşüm hikayesi.',
     packageCandidates: ['com.netflix.ninja', 'com.stremio.one'],
-    watchUrl: 'nflx://www.netflix.com/search?q=Breaking%20Bad',
+    watchUrl: 'nflx://www.netflix.com/search?q=Better%20Call%20Saul',
+  },
+  {
+    id: 'game_of_thrones',
+    title: 'Game of Thrones (Taht Oyunları)',
+    imdbId: 'tt0944947',
+    year: '2019',
+    rating: '9.2 ⭐ IMDb',
+    genre: 'Epik Fantastik • Dizi • 4K UHD',
+    platform: 'IMDb',
+    platformIcon: '⭐',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt0944947/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt0944947/img',
+    overview: 'Westeros\'un Yedi Krallığı\'nı kontrol etmek için soylu hanedanlar ölümcül bir güç mücadelesine girerken, kadim bir tehlike kuzeyden yaklaşmaktadır.',
+    packageCandidates: ['com.lagradost.cloudstream3', 'com.stremio.one'],
+    watchUrl: 'cloudstream3://search?query=Game%20of%20Thrones',
+  },
+  {
+    id: 'pulp_fiction',
+    title: 'Ucuz Roman (Pulp Fiction)',
+    imdbId: 'tt0110912',
+    year: '1994',
+    rating: '8.9 ⭐ IMDb',
+    genre: 'Kült Suç • Tarantino Başyapıtı • 4K',
+    platform: 'IMDb',
+    platformIcon: '⭐',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt0110912/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt0110912/img',
+    overview: 'İki felsefi kiralık katil, bir boksör, bir gangster ve karısının hayatları şiddet ve kurtuluş temalı iç içe geçmiş dört hikayede buluşur.',
+    packageCandidates: ['com.stremio.one', 'com.lagradost.cloudstream3'],
+    watchUrl: 'stremio:///detail/movie/tt0110912',
+  },
+  {
+    id: 'lotr_rotk',
+    title: 'Yüzüklerin Efendisi: Kralın Dönüşü',
+    imdbId: 'tt0167260',
+    year: '2003',
+    rating: '9.0 ⭐ IMDb',
+    genre: 'Epik Macera • Fantastik Başyapıt • 4K',
+    platform: 'IMDb',
+    platformIcon: '⭐',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt0167260/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt0167260/img',
+    overview: 'Frodo ve Sam tek yüzüğü yok etmek için Mordor\'un kalbine doğru ilerlerken, Aragorn Gondor tahtının hakkını almak için ordulara liderlik eder.',
+    packageCandidates: ['com.stremio.one', 'com.lagradost.cloudstream3'],
+    watchUrl: 'stremio:///detail/movie/tt0167260',
+  },
+  {
+    id: 'spider_verse',
+    title: 'Spider-Man: Örümcek Evrenine Geçiş',
+    imdbId: 'tt9362722',
+    year: '2023',
+    rating: '8.6 ⭐ IMDb',
+    genre: 'Animasyon • Aksiyon • Çoklu Evren • 4K',
+    platform: 'IMDb',
+    platformIcon: '⭐',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt9362722/img',
+    posterUrl: 'https://images.metahub.space/poster/medium/tt9362722/img',
+    overview: 'Miles Morales, Çoklu Evren boyunca yolculuk ederek kendi varlığını korumakla sevdiklerini kurtarmak arasında bir kahramanın tanımını yeniden yazar.',
+    packageCandidates: ['com.stremio.one', 'com.lagradost.cloudstream3'],
+    watchUrl: 'stremio:///detail/movie/tt9362722',
   },
 ];
 
@@ -631,7 +835,7 @@ export const PLATFORM_FILM_ONERILERI: Record<string, SeritAfisItem[]> = {
       genre: 'Korku • Bilim Kurgu',
     },
   ],
-  nuviola: [
+  nuvio: [
     {
       id: 'nuv_1',
       title: 'House of the Dragon',
@@ -763,7 +967,7 @@ export const getFilmOnerileriForApp = (appName: string, pkg: string): SeritAfisI
   const an = appName.toLowerCase();
   const pn = pkg.toLowerCase();
   if (an.includes('cloudstream') || pn.includes('cloudstream')) return PLATFORM_FILM_ONERILERI.cloudstream;
-  if (an.includes('nuvio') || pn.includes('nuvio')) return PLATFORM_FILM_ONERILERI.nuviola;
+  if (an.includes('nuvio') || pn.includes('nuvio')) return PLATFORM_FILM_ONERILERI.nuvio;
   if (an.includes('netflix') || pn.includes('netflix')) return PLATFORM_FILM_ONERILERI.netflix;
   if (an.includes('stremio') || pn.includes('stremio')) return PLATFORM_FILM_ONERILERI.stremio;
   
@@ -791,8 +995,8 @@ export default function App() {
   // 5. Gerçek Son Başlatılan Uygulamalar (Sıfır Sahte İçerik)
   const [sonBaslatilanlar, setSonBaslatilanlar] = useState<SonBaslatilanItem[]>([]);
 
-  // 5.b Film & Dizi Vitrin Seçimi & Otomatik Döngü
-  const [seciliFilmIndex, setSeciliFilmIndex] = useState(0);
+  // 5.b Film & Dizi Vitrin Seçimi & Otomatik Döngü (Başlangıçta Rastgele IMDb Filmi)
+  const [seciliFilmIndex, setSeciliFilmIndex] = useState(() => Math.floor(Math.random() * 21));
 
   // 5.c Uygulama İçi Güncelleme Durumu
   const [guncellemeModalAcik, setGuncellemeModalAcik] = useState(false);
@@ -836,40 +1040,7 @@ export default function App() {
   const lisansAktif = true;
 
   // 6. Dinamik Transparan Uygulama Şeritleri (Öneri Film & Dizi Afişleri)
-  const [seritler, setSeritler] = useState<IcerikSeridi[]>([
-    {
-      id: 'default_cs',
-      appName: 'Cloudstream',
-      pkg: 'com.lagradost.cloudstream3',
-      appColor: '#1B3B6F',
-      icon: '☁️',
-      afisler: PLATFORM_FILM_ONERILERI.cloudstream,
-    },
-    {
-      id: 'default_nuv',
-      appName: 'Nuviola',
-      pkg: 'com.nuviola.tv',
-      appColor: '#3A1448',
-      icon: '💜',
-      afisler: PLATFORM_FILM_ONERILERI.nuviola,
-    },
-    {
-      id: 'default_nflx',
-      appName: 'Netflix',
-      pkg: 'com.netflix.ninja',
-      appColor: '#831010',
-      icon: '🍿',
-      afisler: PLATFORM_FILM_ONERILERI.netflix,
-    },
-    {
-      id: 'default_strm',
-      appName: 'Stremio',
-      pkg: 'com.stremio.one',
-      appColor: '#2B1B4D',
-      icon: '🟣',
-      afisler: PLATFORM_FILM_ONERILERI.stremio,
-    },
-  ]);
+  const [seritler, setSeritler] = useState<IcerikSeridi[]>([]);
 
   // Ambiyans Ekran Koruyucu Duvar Kağıdı ve Şehir Durumu
   const [seciliAmbiyansWp, setSeciliAmbiyansWp] = useState<AmbiyansDuvarKagidi>(AMBIYANS_DUVAR_KAGITLARI[0]);
@@ -914,7 +1085,7 @@ export default function App() {
   const [bildirimListesi, setBildirimListesi] = useState<Array<{ id: string; baslik: string; mesaj: string; zaman: string; ikon: string }>>([
     {
       id: 'b1',
-      baslik: 'GS Launcher Mavi Rüya v3.0 Ultra TV',
+      baslik: 'GS Launcher Ultra TV',
       mesaj: 'Tüm kişiselleştirme ve performans özellikleri aktif.',
       zaman: 'Şimdi',
       ikon: '🚀',
@@ -946,7 +1117,7 @@ export default function App() {
     sari: { pkg: string; name: string };
     mavi: { pkg: string; name: string };
   }>({
-    kirmizi: { pkg: 'com.nuviola.tv', name: 'Nuviola' },
+    kirmizi: { pkg: '', name: 'Atanmadı' },
     yesil: { pkg: 'com.lagradost.cloudstream3', name: 'Cloudstream' },
     sari: { pkg: 'com.google.android.youtube.tv', name: 'YouTube TV' },
     mavi: { pkg: 'satellite', name: 'Canlı TV / Uydu' },
@@ -957,8 +1128,8 @@ export default function App() {
   // Gecikmeli Otomatik Başlatma (TV Açıldıktan X Saniye Sonra Uygulama Aç)
   const [otoBaslatmaEtkin, setOtoBaslatmaEtkin] = useState(false);
   const [otoBaslatmaGecikmeSn, setOtoBaslatmaGecikmeSn] = useState(15);
-  const [otoBaslatmaPkg, setOtoBaslatmaPkg] = useState('com.nuviola.tv');
-  const [otoBaslatmaAppName, setOtoBaslatmaAppName] = useState('Nuviola');
+  const [otoBaslatmaPkg, setOtoBaslatmaPkg] = useState('');
+  const [otoBaslatmaAppName, setOtoBaslatmaAppName] = useState('');
   const [kalanOtoBaslatmaSn, setKalanOtoBaslatmaSn] = useState<number | null>(null);
   const otoBaslatmaIptalEdildi = useRef(false);
 
@@ -1335,11 +1506,11 @@ export default function App() {
               if (!isNaN(parsedSn)) setOtoBaslatmaGecikmeSn(parsedSn);
             } catch {}
             try {
-              const rawOtoPkg = await TVAppManager.getSetting('otoBaslatmaPkg', 'com.nuviola.tv');
+              const rawOtoPkg = await TVAppManager.getSetting('otoBaslatmaPkg');
               if (rawOtoPkg) setOtoBaslatmaPkg(rawOtoPkg);
             } catch {}
             try {
-              const rawOtoApp = await TVAppManager.getSetting('otoBaslatmaAppName', 'Nuviola');
+              const rawOtoApp = await TVAppManager.getSetting('otoBaslatmaAppName', '');
               if (rawOtoApp) setOtoBaslatmaAppName(rawOtoApp);
             } catch {}
           }
@@ -1871,22 +2042,6 @@ export default function App() {
     Linking.openURL(ytUrl).catch(() => {});
   };
 
-  const filmOynatNuviola = async (title: string, backdropUrl?: string) => {
-    try {
-      if (TVAppManager && TVAppManager.copyToClipboard) {
-        await TVAppManager.copyToClipboard(title);
-      }
-    } catch {}
-    setBildirimMetni(`💜 "${title}" panoya kopyalandı! Nuviola açılıyor...`);
-    setTimeout(() => setBildirimMetni(''), 4500);
-    setFilmDetayModalAcik(false);
-    filmGecmiseEkle(title, 'Nuviola', 'com.nuviola.tv', backdropUrl);
-    const nuvApp = uygulamalar.find(
-      (u) => u.packageName.toLowerCase().includes('nuviola') || u.name.toLowerCase().includes('nuviola')
-    );
-    uygulamaBaslat(nuvApp ? nuvApp.packageName : 'com.nuviola.tv', 'Nuviola');
-  };
-
   // Kullanıcının Seçtiği Özel Uygulama ile Film Başlatma (Otomatik Kopyalama + Intent)
   const filmOynatOzelUygulama = async (
     title: string,
@@ -1944,6 +2099,31 @@ export default function App() {
   const filmBaslat = (film: FilmVitrinItem) => {
     filmDetayAc(film);
   };
+
+  // TV'de Kurulu Medya ve Oynatıcı Uygulamaları (Film Tıklandığında Seçenek Olarak Sunulanlar)
+  const kuruluOynaticiListesi = useMemo(() => {
+    const medyaKelimeleri = [
+      'cloudstream', 'nuvio', 'stremio', 'netflix', 'youtube', 'smarttube',
+      'vlc', 'kodi', 'mx', 'video', 'player', 'iptv', 'tv', 'cinema', 'film',
+      'dizi', 'stream', 'prime', 'disney', 'blutv', 'gain', 'exxen', 'tod',
+      'ssport', 'tivibu', 'inattv', 'web'
+    ];
+    return [...uygulamalar].sort((a, b) => {
+      // Önce kullanıcının önceden seçtikleri
+      const aPinned = filmBaslaticiPaketleri.includes(a.packageName);
+      const bPinned = filmBaslaticiPaketleri.includes(b.packageName);
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+
+      // Sonra medya kategorisinde olanlar veya medya anahtar kelimeleri içerenler
+      const aIsMedia = a.category === 'media' || a.category === 'tv' || medyaKelimeleri.some((k) => a.packageName.toLowerCase().includes(k) || a.name.toLowerCase().includes(k));
+      const bIsMedia = b.category === 'media' || b.category === 'tv' || medyaKelimeleri.some((k) => b.packageName.toLowerCase().includes(k) || b.name.toLowerCase().includes(k));
+      if (aIsMedia && !bIsMedia) return -1;
+      if (!aIsMedia && bIsMedia) return 1;
+
+      return a.name.localeCompare(b.name, 'tr');
+    });
+  }, [uygulamalar, filmBaslaticiPaketleri]);
 
   // İndirme ilerlemesini yerel modülden dinle
   useEffect(() => {
@@ -2833,18 +3013,18 @@ export default function App() {
         style={[styles.camKatman, { backgroundColor: aktifTema.bgGradientColor }]}
         onTouchStart={etkilesimSifirla}
       >
-        {/* ================= ÜST BAR: MONET + GS TV KONTROL PANELİ ================= */}
+        {/* ================= ÜST BAR: YÜKSEK KONTRASTLI BEYAZ TV KONTROL PANELİ ================= */}
         <View style={styles.ustBar}>
           {/* Sol: GS Logosu & Kompakt Arama */}
           <View style={styles.ustSol}>
             <Image source={GS_ICON} style={styles.gsLogoResim} resizeMode="cover" />
 
-            <View style={[styles.aramaKapsul, { borderColor: aktifTema.surface }]}>
+            <View style={[styles.aramaKapsul, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}>
               <Text style={styles.aramaIkon}>🔍</Text>
               <TextInput
                 style={styles.aramaGirdi}
                 placeholder="Ara..."
-                placeholderTextColor="rgba(255, 255, 255, 0.55)"
+                placeholderTextColor="rgba(255, 255, 255, 0.65)"
                 value={aramaMetni}
                 onChangeText={setAramaMetni}
               />
@@ -2860,8 +3040,8 @@ export default function App() {
           <View style={styles.ustSag}>
             {/* Canlı Hava Durumu */}
             <FocusableItem
-              style={[styles.havaKutu, { borderColor: aktifTema.surface }]}
-              focusedStyle={{ borderColor: aktifTema.border, transform: [{ scale: 1.05 }], backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
+              style={[styles.havaKutu, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
+              focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }], backgroundColor: aktifTema.accent }}
               onPress={() => setHavaModalAcik(true)}
             >
               {() => (
@@ -2879,7 +3059,7 @@ export default function App() {
 
             {/* 10.a Canlı Wi-Fi Tuşu */}
             <FocusableItem
-              style={[styles.miniAksiyonButon, { borderColor: aktifTema.surface }]}
+              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
               focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
               onPress={() => {
                 if (Platform.OS === 'android' && TVAppManager && TVAppManager.openWifiSettings) {
@@ -2891,7 +3071,7 @@ export default function App() {
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>📶</Text>
                   {isFocused && (
-                    <Text style={[styles.miniButonYazi, { color: aktifTema.textOnAccent }]}>
+                    <Text style={styles.miniButonYazi}>
                       Wi-Fi
                     </Text>
                   )}
@@ -2901,7 +3081,7 @@ export default function App() {
 
             {/* 10.b Canlı Hız Testi Tuşu */}
             <FocusableItem
-              style={[styles.miniAksiyonButon, { borderColor: aktifTema.surface }]}
+              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
               focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
               onPress={() => setHizTestiAcik(true)}
             >
@@ -2909,7 +3089,7 @@ export default function App() {
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>⚡</Text>
                   {isFocused && (
-                    <Text style={[styles.miniButonYazi, { color: aktifTema.textOnAccent }]}>
+                    <Text style={styles.miniButonYazi}>
                       Hız
                     </Text>
                   )}
@@ -2919,14 +3099,14 @@ export default function App() {
 
             {/* 9. Bildirim Tuşu */}
             <FocusableItem
-              style={[styles.miniAksiyonButon, { borderColor: aktifTema.surface }]}
+              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
               focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
               onPress={() => setBildirimPaneliAcik(true)}
             >
-              {(isFocused) => (
+              {() => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>🔔</Text>
-                  <Text style={[styles.miniButonYazi, { color: isFocused ? aktifTema.textOnAccent : '#FFFFFF', fontWeight: '800' }]}>
+                  <Text style={[styles.miniButonYazi, { fontWeight: '900' }]}>
                     {bildirimListesi.length}
                   </Text>
                 </View>
@@ -2935,14 +3115,14 @@ export default function App() {
 
             {/* Canlı Uydu / TV Butonu */}
             <FocusableItem
-              style={[styles.miniAksiyonButon, { borderColor: aktifTema.surface }]}
+              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
               focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
               onPress={canliUyduyaGec}
             >
-              {(isFocused) => (
+              {() => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>📡</Text>
-                  <Text style={[styles.miniButonYazi, isFocused && { color: aktifTema.textOnAccent }]}>
+                  <Text style={styles.miniButonYazi}>
                     TV
                   </Text>
                 </View>
@@ -2951,7 +3131,7 @@ export default function App() {
 
             {/* Uygulama İçi Güncelle Butonu */}
             <FocusableItem
-              style={[styles.miniAksiyonButon, { borderColor: aktifTema.border, backgroundColor: 'rgba(255, 255, 255, 0.08)' }]}
+              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.3)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
               focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
               onPress={() => setGuncellemeModalAcik(true)}
             >
@@ -2959,7 +3139,7 @@ export default function App() {
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>🔄</Text>
                   {isFocused && (
-                    <Text style={[styles.miniButonYazi, { color: aktifTema.textOnAccent }]}>
+                    <Text style={styles.miniButonYazi}>
                       Güncelle
                     </Text>
                   )}
@@ -2967,16 +3147,16 @@ export default function App() {
               )}
             </FocusableItem>
 
-            {/* ⚙️ AYARLAR BUTONU (ASLA TAŞMAZ, SÜPER KOMPAKT) */}
+            {/* ⚙️ AYARLAR BUTONU (ASLA TAŞMAZ, SÜPER KOMPAKT, BEYAZ VE NET) */}
             <FocusableItem
-              style={[styles.ayarlarTemalarButon, { borderColor: aktifTema.border, backgroundColor: aktifTema.surface }]}
+              style={[styles.ayarlarTemalarButon, { borderColor: 'rgba(255, 255, 255, 0.35)', backgroundColor: 'rgba(15, 23, 42, 0.85)' }]}
               focusedStyle={[styles.kontrolMerkeziOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
               onPress={() => setKontrolMerkeziAcik(true)}
             >
-              {(isFocused) => (
+              {() => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>⚙️</Text>
-                  <Text style={[styles.ayarlarTemalarYazi, { color: isFocused ? aktifTema.textOnAccent : '#FFFFFF' }]}>
+                  <Text style={styles.ayarlarTemalarYazi}>
                     Ayarlar
                   </Text>
                 </View>
@@ -3014,8 +3194,8 @@ export default function App() {
                     style={styles.filmPosterResim}
                     resizeMode="cover"
                   />
-                  <View style={[styles.filmPlatformRozet, { backgroundColor: aktifTema.accent }]}>
-                    <Text style={[styles.filmPlatformYazi, { color: aktifTema.textOnAccent }]}>
+                  <View style={[styles.filmPlatformRozet, { backgroundColor: 'rgba(15, 23, 42, 0.85)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.3)' }]}>
+                    <Text style={[styles.filmPlatformYazi, { color: '#FFFFFF', fontWeight: '800' }]}>
                       {aktifFilm.platformIcon} {aktifFilm.platform}
                     </Text>
                   </View>
@@ -3046,29 +3226,29 @@ export default function App() {
                   {/* Aksiyon Butonları */}
                   <View style={styles.filmAksiyonSatir}>
                     <FocusableItem
-                      style={[styles.filmOynatButon, { backgroundColor: aktifTema.accent }]}
-                      focusedStyle={[styles.simdiIzleOdak, { shadowColor: aktifTema.accent, borderColor: '#FFFFFF' }]}
+                      style={[styles.filmOynatButon, { backgroundColor: '#0284C7', borderColor: '#FFFFFF', borderWidth: 1 }]}
+                      focusedStyle={[styles.simdiIzleOdak, { shadowColor: aktifTema.accent, borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
                       onPress={() => filmBaslat(aktifFilm)}
                     >
                       {() => (
                         <View style={styles.simdiIzleIcerik}>
-                          <Text style={[styles.oynatUcgen, { color: aktifTema.textOnAccent }]}>▶</Text>
-                          <Text style={[styles.simdiIzleYazi, { color: aktifTema.textOnAccent }]}>
-                            Hemen İzle ({aktifFilm.platform})
+                          <Text style={[styles.oynatUcgen, { color: '#FFFFFF' }]}>▶</Text>
+                          <Text style={[styles.simdiIzleYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
+                            Filmi Oynat (Uygulama Seç)
                           </Text>
                         </View>
                       )}
                     </FocusableItem>
 
                     <FocusableItem
-                      style={[styles.filmRastgeleButon, { borderColor: aktifTema.border }]}
+                      style={[styles.filmRastgeleButon, { borderColor: 'rgba(255, 255, 255, 0.3)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
                       focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
                       onPress={() => {
                         const randomIdx = Math.floor(Math.random() * FILM_VITRIN_KATALOGU.length);
                         setSeciliFilmIndex(randomIdx);
                       }}
                     >
-                      {() => <Text style={styles.filmRastgeleYazi}>🎲 Rastgele Film</Text>}
+                      {() => <Text style={[styles.filmRastgeleYazi, { color: '#FFFFFF', fontWeight: '800' }]}>🔀 Başka IMDb Filmi</Text>}
                     </FocusableItem>
 
                     {/* Önceki / Sonraki Poster Tuşları */}
@@ -3096,15 +3276,15 @@ export default function App() {
             </View>
           )}
 
-          {/* 2. GS TV KATEGORİ SEKMELERİ (FİLTRE ÇUBUĞU) */}
+          {/* 2. GS TV KATEGORİ SEKMELERİ (FİLTRE ÇUBUĞU - "TÜMÜ" EN SONDA) */}
           <View style={styles.kategoriKapsayici}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {[
-                { id: 'all', title: '⭐ Tümü & Favoriler' },
                 { id: 'media', title: '🎬 Sinema & Dizi' },
                 { id: 'tv', title: '📡 Canlı TV & Spor' },
                 { id: 'games', title: '🎮 Oyunlar' },
                 { id: 'tools', title: '🛠️ Araçlar & Sistem' },
+                { id: 'all', title: '⭐ Tüm Uygulamalar' },
               ].map((kat) => {
                 const aktif = seciliKategori === kat.id;
                 return (
@@ -3112,16 +3292,16 @@ export default function App() {
                     key={kat.id}
                     style={[
                       styles.kategoriPill,
-                      aktif && [styles.kategoriPillAktif, { backgroundColor: aktifTema.accent }],
+                      aktif && [styles.kategoriPillAktif, { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }],
                     ]}
-                    focusedStyle={{ borderColor: aktifTema.border, transform: [{ scale: 1.06 }] }}
+                    focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.06 }] }}
                     onPress={() => setSeciliKategori(kat.id as AppCategory)}
                   >
                     {() => (
                       <Text
                         style={[
                           styles.kategoriPillYazi,
-                          aktif && [styles.kategoriPillYaziAktif, { color: aktifTema.textOnAccent }],
+                          aktif && [styles.kategoriPillYaziAktif, { color: '#FFFFFF', fontWeight: '900' }],
                         ]}
                       >
                         {kat.title}
@@ -3366,97 +3546,6 @@ export default function App() {
               )}
             </>
           )}
-
-          {/* 5. DİNAMİK TRANSPARAN FİLM & DİZİ ÖNERİ ŞERİTLERİ (GERÇEK AFİŞLERLE) */}
-          {seritler.map((serit) => (
-            <View key={serit.id} style={styles.seritKapsayici}>
-              <View style={styles.bolumBaslikSatir}>
-                <View style={styles.bolumBaslikIkonlu}>
-                  <Text style={{ fontSize: 18, marginRight: 8 }}>{serit.icon}</Text>
-                  <Text style={styles.bolumBaslik}>{serit.appName} - Önerilen Filmler & Diziler</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <FocusableItem
-                    onPress={() => uygulamaBaslat(serit.pkg, serit.appName)}
-                    style={[styles.miniAksiyonButon, { backgroundColor: aktifTema.accent }]}
-                    focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
-                  >
-                    {() => (
-                      <Text style={[styles.miniButonYazi, { color: aktifTema.textOnAccent, fontWeight: '800' }]}>
-                        ▶ {serit.appName} Aç
-                      </Text>
-                    )}
-                  </FocusableItem>
-                  <FocusableItem
-                    onPress={() => {
-                      Alert.alert('Şeridi Kaldır', `"${serit.appName}" şeridi kaldırılsın mı?`, [
-                        { text: 'Vazgeç', style: 'cancel' },
-                        { text: 'Kaldır', onPress: () => setSeritler(seritler.filter((s) => s.id !== serit.id)) },
-                      ]);
-                    }}
-                    style={styles.tumunuGorButon}
-                  >
-                    {() => <Text style={styles.tumunuGorYazi}>✕ Kaldır</Text>}
-                  </FocusableItem>
-                </View>
-              </View>
-
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
-                {serit.afisler.map((afis) => (
-                  <FocusableItem
-                    key={afis.id}
-                    style={[styles.filmAfisKarti, { borderColor: aktifTema.surface }]}
-                    focusedStyle={[styles.filmAfisOdak, { borderColor: aktifTema.border, shadowColor: aktifTema.accent }]}
-                    onPress={() =>
-                      filmDetayAc({
-                        title: afis.title,
-                        platform: serit.appName,
-                        pkg: serit.pkg,
-                        posterUrl: afis.posterUrl,
-                        genre: afis.genre,
-                      })
-                    }
-                  >
-                    {(isFocused) => (
-                      <View style={styles.filmAfisIcerik}>
-                        <Image source={{ uri: afis.posterUrl }} style={styles.filmAfisResim} resizeMode="cover" />
-                        <View style={[styles.filmAfisKarartma, isFocused && { backgroundColor: 'rgba(0,0,0,0.3)' }]}>
-                          {isFocused && (
-                            <View style={[styles.afisOynatDaire, { backgroundColor: aktifTema.accent }]}>
-                              <Text style={[styles.afisOynatIkon, { color: aktifTema.textOnAccent }]}>▶</Text>
-                            </View>
-                          )}
-                        </View>
-                        <View style={styles.filmAfisBilgi}>
-                          <Text style={styles.filmAfisBaslik} numberOfLines={1}>{afis.title}</Text>
-                          <Text style={[styles.filmAfisPuan, { color: aktifTema.border }]}>⭐ {afis.rating} • {afis.year}</Text>
-                        </View>
-                      </View>
-                    )}
-                  </FocusableItem>
-                ))}
-              </ScrollView>
-            </View>
-          ))}
-
-          {/* 6. '+ YENİ İÇERİK ŞERİDİ EKLE' */}
-          <View style={styles.seritEklemeAlani}>
-            <FocusableItem
-              style={[styles.yeniSeritButon, { borderColor: aktifTema.border }]}
-              focusedStyle={[styles.yeniSeritOdak, { borderColor: aktifTema.accent, shadowColor: aktifTema.accent }]}
-              onPress={() => {
-                yukluUygulamalariGetir();
-                setSeritEkleAcik(true);
-              }}
-            >
-              {() => (
-                <View style={styles.yeniSeritIcerik}>
-                  <Text style={styles.yeniSeritArti}>➕</Text>
-                  <Text style={styles.yeniSeritYazi}>Kurulu Uygulamalardan Yeni İçerik Şeridi Ekle</Text>
-                </View>
-              )}
-            </FocusableItem>
-          </View>
         </ScrollView>
 
         {/* TV Açılışında Gecikmeli Otomatik Başlatma Geri Sayım Barı */}
@@ -3506,7 +3595,7 @@ export default function App() {
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Image source={GS_ICON} style={styles.kontrolLogoResim} resizeMode="cover" />
                   <View>
-                    <Text style={styles.kontrolMerkeziBaslik}>⚙️ GS Launcher Mavi Rüya v3.0 Ultra TV</Text>
+                    <Text style={styles.kontrolMerkeziBaslik}>⚙️ GS Launcher Ultra TV</Text>
                     <Text style={styles.cihazBilgiYazi}>
                       {cihazBilgisi.manufacturer} {cihazBilgisi.model} • Android {cihazBilgisi.android} • Mi Box
                     </Text>
@@ -3818,7 +3907,7 @@ export default function App() {
                         >
                           {() => (
                             <Text style={[styles.kategoriSecimPillYazi, arkaplanKaynagi === 'varsayilan' && { color: aktifTema.textOnAccent, fontWeight: '900' }]}>
-                              🔵 GS Mavi Rüya
+                              🔵 Kristal Safir
                             </Text>
                           )}
                         </FocusableItem>
@@ -4240,7 +4329,7 @@ export default function App() {
                       focusedStyle={[styles.kontrolTileOdak, { borderColor: '#FFFFFF' }]}
                       onPress={() => {
                         setKontrolMerkeziAcik(false);
-                        setBildirimMetni('💡 Erişilebilirlik ekranında "GS Launcher Mavi Rüya" servisini Açık yapın!');
+                        setBildirimMetni('💡 Erişilebilirlik ekranında "GS Launcher" servisini Açık yapın!');
                         setTimeout(() => setBildirimMetni(''), 6000);
                         if (Platform.OS === 'android' && TVAppManager && TVAppManager.openAccessibilitySettings) {
                           TVAppManager.openAccessibilitySettings().catch(() => {});
@@ -5871,34 +5960,24 @@ export default function App() {
                   </FocusableItem>
                 </View>
 
-                {/* Kullanıcının Kendi Seçtiği Oynatıcılar Listesi */}
+                {/* TV'deki Kurulu Medya ve Oynatıcı Uygulamaları Listesi */}
                 <View style={{ gap: 10 }}>
-                  {filmBaslaticiPaketleri.length === 0 ? (
-                    <View style={{ backgroundColor: 'rgba(255,255,255,0.06)', padding: 18, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }}>
-                      <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800', marginBottom: 6 }}>
-                        Henüz oynatıcı uygulaması seçmediniz.
+                  {kuruluOynaticiListesi.length === 0 ? (
+                    <View style={{ backgroundColor: 'rgba(255,255,255,0.06)', padding: 18, borderRadius: 12, alignItems: 'center' }}>
+                      <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800', marginBottom: 4 }}>
+                        Kurulu medya uygulaması aranıyor...
                       </Text>
-                      <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12, textAlign: 'center', marginBottom: 14, lineHeight: 18 }}>
-                        Televizyonunuzda yüklü Cloudstream, Stremio, SmartTube, Kodi, VLC veya dilediğiniz herhangi bir uygulamayı ekleyebilirsiniz.
+                      <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12 }}>
+                        Televizyonunuzdaki uygulamalar taranıyor.
                       </Text>
-                      <FocusableItem
-                        style={[styles.modalKaydetKapatButon, { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF', minWidth: 200 }]}
-                        focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
-                        onPress={() => setOynaticiSeciciModalAcik(true)}
-                      >
-                        {() => <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent, fontWeight: '900' }]}>➕ Şimdi Uygulama Seç</Text>}
-                      </FocusableItem>
                     </View>
                   ) : (
-                    filmBaslaticiPaketleri.map((pkg) => {
-                      const app = uygulamalar.find((u) => u.packageName === pkg) || {
-                        name: pkg.split('.').pop() || 'Oynatıcı',
-                        packageName: pkg,
-                        iconUri: null,
-                      };
+                    kuruluOynaticiListesi.map((app) => {
+                      const isPinned = filmBaslaticiPaketleri.includes(app.packageName);
+                      const isMediaCat = app.category === 'media' || app.category === 'tv';
                       return (
                         <FocusableItem
-                          key={pkg}
+                          key={app.packageName}
                           style={{
                             flexDirection: 'row',
                             alignItems: 'center',
@@ -5906,29 +5985,45 @@ export default function App() {
                             padding: 12,
                             borderRadius: 12,
                             borderWidth: 1.2,
-                            borderColor: 'rgba(255, 255, 255, 0.15)',
+                            borderColor: isPinned ? aktifTema.border : 'rgba(255, 255, 255, 0.15)',
                           }}
                           focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent, transform: [{ scale: 1.02 }] }}
-                          onPress={() => filmOynatOzelUygulama(seciliFilmDetay!.title, pkg, seciliFilmDetay!.imdbId, seciliFilmDetay!.backdropUrl)}
+                          onPress={() =>
+                            filmOynatOzelUygulama(
+                              seciliFilmDetay!.title,
+                              app.packageName,
+                              seciliFilmDetay!.imdbId,
+                              seciliFilmDetay!.backdropUrl
+                            )
+                          }
                         >
                           {(isFocused) => (
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
                                 {app.iconUri ? (
                                   <Image source={{ uri: app.iconUri }} style={{ width: 36, height: 36, borderRadius: 8 }} resizeMode="cover" />
                                 ) : (
-                                  <Text style={{ fontSize: 24 }}>🎬</Text>
+                                  <Text style={{ fontSize: 24 }}>{app.icon || '🎬'}</Text>
                                 )}
-                                <View>
-                                  <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
-                                    {app.name} ile Aç
-                                  </Text>
-                                  <Text style={{ color: isFocused ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)', fontSize: 11 }}>
-                                    Başlık otomatik kopyalanır ve {app.name} açılır
+                                <View style={{ flex: 1 }}>
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                    <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
+                                      {app.name} ile Aç
+                                    </Text>
+                                    {isMediaCat && (
+                                      <View style={{ backgroundColor: 'rgba(14, 165, 233, 0.25)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 0.8, borderColor: '#38BDF8' }}>
+                                        <Text style={{ color: '#38BDF8', fontSize: 9, fontWeight: '800' }}>MEDYA</Text>
+                                      </View>
+                                    )}
+                                  </View>
+                                  <Text style={{ color: isFocused ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)', fontSize: 11, marginTop: 2 }}>
+                                    Başlık kopyalanır ve {app.name} açılır
                                   </Text>
                                 </View>
                               </View>
-                              <Text style={{ color: isFocused ? '#FFFFFF' : aktifTema.border, fontWeight: '800' }}>▶ Başlat</Text>
+                              <Text style={{ color: isFocused ? '#FFFFFF' : aktifTema.border, fontWeight: '900', fontSize: 13 }}>
+                                ▶ Başlat
+                              </Text>
                             </View>
                           )}
                         </FocusableItem>
@@ -6354,9 +6449,13 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   ayarlarTemalarYazi: {
-    fontSize: 10.5,
-    fontWeight: '800',
-    marginLeft: 3,
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '900',
+    marginLeft: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   miniAksiyonButon: {
     flexDirection: 'row',
@@ -6373,9 +6472,12 @@ const styles = StyleSheet.create({
   },
   miniButonYazi: {
     color: '#FFFFFF',
-    fontSize: 10.5,
-    fontWeight: '700',
-    marginLeft: 3,
+    fontSize: 11,
+    fontWeight: '900',
+    marginLeft: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 
   arkaplan: { flex: 1, backgroundColor: '#0A0C16' },
@@ -6466,8 +6568,16 @@ const styles = StyleSheet.create({
   uykuRozetYazi: { color: '#FFF', fontSize: 11, fontWeight: '700' },
 
   saatTarihKutu: { alignItems: 'flex-end', marginRight: 8 },
-  saatYazi: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', letterSpacing: 0.5 },
-  tarihYazi: { color: 'rgba(255, 255, 255, 0.55)', fontSize: 10 },
+  saatYazi: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  tarihYazi: { color: 'rgba(255, 255, 255, 0.7)', fontSize: 10 },
 
   havaKutu: {
     flexDirection: 'row',
@@ -6479,7 +6589,14 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   havaIkon: { fontSize: 15, marginRight: 4 },
-  havaDerece: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+  havaDerece: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
   havaSehir: { color: 'rgba(255, 255, 255, 0.55)', fontSize: 9 },
 
   canliTvButon: {
