@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">GSTVLauncher</string>
+    <string name="app_name">GS Launcher Mavi Rüya</string>
+    <string name="accessibility_service_description">GS Launcher Mavi Rüya\'nın TV açıldığında ve kumanda ana ekran tuşuna basıldığında varsayılan olarak sabit kalmasını sağlar.</string>
 </resources>

@@ -39,42 +39,6 @@ const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/l
 const VERSION_MANIFEST_URL = 'https://files.catbox.moe/x4ggkz.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/286x9mfv';
 
-// ================= GÜVENLİK & KRİPTOGRAFİK DOĞRULAMA (GITHUB'DA AÇIK ŞİFRE BULUNMAZ) =================
-const fnv1aHash = (str: string): string => {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  return (h >>> 0).toString(16);
-};
-
-// Master Yönetici Hash'i (Kodda düz şifre yazmaz, yalnızca kriptografik hash eşleşmesi kontrol edilir)
-const MASTER_AUTH_HASHES = ['c544c346', 'f31509c9'];
-
-// Cihaz Donanım Kimliğine Göre Benzersiz Cihaz Kodu ve PIN Hesaplama
-export const getCihazKoduBilgisi = (model?: string) => {
-  const clean = (model || 'TV').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  let acc = 1905;
-  for (let i = 0; i < clean.length; i++) {
-    acc = ((acc << 5) - acc + clean.charCodeAt(i) * 31) & 0xffffffff;
-  }
-  const kodNum = (Math.abs(acc) % 9000) + 1000;
-  const pinNum = ((kodNum * 7919 + 48271) % 9000) + 1000;
-  return {
-    cihazNoStr: `GS-TV-${clean}-${kodNum}`,
-    cihazPin: pinNum.toString(),
-  };
-};
-
-export const dogrulaPin = (girilen: string, model?: string): boolean => {
-  if (!girilen) return false;
-  if (MASTER_AUTH_HASHES.includes(fnv1aHash(girilen))) return true;
-  const { cihazPin } = getCihazKoduBilgisi(model);
-  if (girilen === cihazPin) return true;
-  return false;
-};
-
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
 export interface MonetTheme {
   id: string;
@@ -809,10 +773,8 @@ export default function App() {
   const [filmBaslaticiPaketleri, setFilmBaslaticiPaketleri] = useState<string[]>([]);
   const [oynaticiSeciciModalAcik, setOynaticiSeciciModalAcik] = useState(false);
 
-  // 5.f VIP Master Lisans & Cihaz Kilidi (Yetkisiz Kullanıcıları Engeller)
-  const [lisansAktif, setLisansAktif] = useState(true);
-  const [lisansKilitModalAcik, setLisansKilitModalAcik] = useState(false);
-  const [vipGirilenPin, setVipGirilenPin] = useState('');
+  // 5.f Lisans (Doğrudan Tam Yetki & Şifresiz)
+  const lisansAktif = true;
 
   // 6. Dinamik Transparan Uygulama Şeritleri (Öneri Film & Dizi Afişleri)
   const [seritler, setSeritler] = useState<IcerikSeridi[]>([
@@ -1008,10 +970,6 @@ export default function App() {
       setOynaticiSeciciModalAcik(false);
       return true;
     }
-    if (lisansKilitModalAcik && lisansAktif) {
-      setLisansKilitModalAcik(false);
-      return true;
-    }
     if (guncellemeModalAcik) {
       setGuncellemeModalAcik(false);
       return true;
@@ -1148,14 +1106,6 @@ export default function App() {
                 setFilmBaslaticiPaketleri(parsed);
               }
             } catch {}
-            try {
-              const rawLisans = await TVAppManager.getSetting('lisansAktif', 'false');
-              if (rawLisans === 'true') {
-                setLisansAktif(true);
-              } else {
-                setLisansAktif(false);
-              }
-            } catch {}
           }
 
           // Otomatik akıllı kategori ataması
@@ -1256,21 +1206,10 @@ export default function App() {
               model: info.model || 'Android TV',
               android: `Android ${info.androidVersion || '12'}`,
               manufacturer: info.manufacturer || 'Xiaomi',
-              isStoreInstall: isStore,
             });
-            // Google Play Store kurulumlarında otomatik tam lisans aktif edilir, asla şifre sormaz
-            if (isStore) {
-              setLisansAktif(true);
-              setLisansKilitModalAcik(false);
-              TVAppManager.saveSetting('lisansAktif', 'true').catch(() => {});
-            }
           }
         })
         .catch(() => {});
-    } else if (Platform.OS === 'ios') {
-      // Apple Store kurulumlarında otomatik tam lisans
-      setLisansAktif(true);
-      setLisansKilitModalAcik(false);
     }
 
     let batInterval: any;
@@ -1686,33 +1625,6 @@ export default function App() {
       }
       return yeni;
     });
-  };
-
-  const vipPinDene = (rakam: string) => {
-    if (vipGirilenPin.length < 6) {
-      const yeni = vipGirilenPin + rakam;
-      setVipGirilenPin(yeni);
-      if (dogrulaPin(yeni, cihazBilgisi.model)) {
-        setLisansAktif(true);
-        if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
-          TVAppManager.saveSetting('lisansAktif', 'true').catch(() => {});
-        }
-        setLisansKilitModalAcik(false);
-        setVipGirilenPin('');
-        setBildirimMetni('🎉 Cihaz Başarıyla Doğrulandı! Hoş Geldiniz.');
-        setTimeout(() => setBildirimMetni(''), 3500);
-      } else if (yeni.length >= 6) {
-        setBildirimMetni('❌ Hatalı PIN Kodu! Lütfen tekrar deneyin.');
-        setTimeout(() => {
-          setVipGirilenPin('');
-          setBildirimMetni('');
-        }, 1500);
-      }
-    }
-  };
-
-  const vipPinSil = () => {
-    setVipGirilenPin((prev) => prev.slice(0, -1));
   };
 
   const filmBaslat = (film: FilmVitrinItem) => {
@@ -3359,20 +3271,24 @@ export default function App() {
                     )}
                   </FocusableItem>
 
-                  {/* 8.d VIP Lisans & Güvenlik Kilidi */}
+                  {/* 8.d Sabit Başlatıcı Modu (Erişilebilirlik Hizmeti - Asla Kapanmaz) */}
                   <FocusableItem
                     style={[styles.kontrolTile, { borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}
                     focusedStyle={[styles.kontrolTileOdak, { borderColor: '#FFFFFF' }]}
                     onPress={() => {
                       setKontrolMerkeziAcik(false);
-                      setLisansKilitModalAcik(true);
+                      setBildirimMetni('💡 Açılan ekranda "GS Launcher Mavi Rüya" servisini Açık yapın!');
+                      setTimeout(() => setBildirimMetni(''), 6000);
+                      if (Platform.OS === 'android' && TVAppManager && TVAppManager.openAccessibilitySettings) {
+                        TVAppManager.openAccessibilitySettings().catch(() => {});
+                      }
                     }}
                   >
                     {() => (
                       <>
-                        <Text style={styles.tileIkon}>🔐</Text>
-                        <Text style={[styles.tileBaslik, { color: '#10B981', fontWeight: '900' }]}>Güvenlik & Kilit</Text>
-                        <Text style={styles.tileAlt}>Yetkili Cihaz (PIN)</Text>
+                        <Text style={styles.tileIkon}>🔒</Text>
+                        <Text style={[styles.tileBaslik, { color: '#10B981', fontWeight: '900' }]}>Sabit Başlatıcı</Text>
+                        <Text style={styles.tileAlt}>Varsayılan Yap</Text>
                       </>
                     )}
                   </FocusableItem>
@@ -4863,118 +4779,6 @@ export default function App() {
                   {() => <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent, fontWeight: '900' }]}>✔ Tamamla & Kaydet</Text>}
                 </FocusableItem>
               </View>
-            </View>
-          </View>
-        </Modal>
-
-        {/* ================= MODAL: VIP MASTER LİSANS & GÜVENLİK KİLİDİ ================= */}
-        <Modal
-          visible={lisansKilitModalAcik || !lisansAktif}
-          transparent
-          animationType="fade"
-          onRequestClose={() => {
-            if (lisansAktif) setLisansKilitModalAcik(false);
-          }}
-        >
-          <View style={[styles.modalArkaplan, { backgroundColor: 'rgba(5, 10, 20, 0.96)' }]}>
-            <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border, width: '55%', alignItems: 'center', padding: 24 }]}>
-              <Text style={{ fontSize: 44, marginBottom: 8 }}>🔒</Text>
-              <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '900', textAlign: 'center' }}>
-                GSL1 TV - Güvenlik & Yetki Kilidi
-              </Text>
-              <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, textAlign: 'center', marginTop: 6, lineHeight: 18 }}>
-                Bu uygulama kişisel lisanslıdır. Televizyonunuzda kullanabilmek için lütfen yönetici PIN kodunuzu giriniz.
-              </Text>
-
-              {/* Cihaz ID */}
-              <View style={{ backgroundColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8, marginVertical: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
-                <Text style={{ color: aktifTema.border, fontSize: 12, fontWeight: '800' }}>
-                  Cihaz No: {getCihazKoduBilgisi(cihazBilgisi.model).cihazNoStr}
-                </Text>
-              </View>
-
-              {/* PIN Noktaları */}
-              <View style={{ flexDirection: 'row', gap: 12, marginVertical: 12 }}>
-                {[0, 1, 2, 3, 4, 5].map((idx) => {
-                  const filled = vipGirilenPin.length > idx;
-                  return (
-                    <View
-                      key={idx}
-                      style={{
-                        width: 18,
-                        height: 18,
-                        borderRadius: 9,
-                        backgroundColor: filled ? aktifTema.accent : 'rgba(255,255,255,0.15)',
-                        borderWidth: 1.5,
-                        borderColor: filled ? '#FFFFFF' : 'rgba(255,255,255,0.3)',
-                      }}
-                    />
-                  );
-                })}
-              </View>
-
-              {/* Kumanda İçin Sayısal Tuş Takımı */}
-              <View style={{ width: '100%', maxWidth: 260, marginVertical: 10 }}>
-                {[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['Sil', '0', '✔']].map((row, rIdx) => (
-                  <View key={rIdx} style={{ flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
-                    {row.map((val) => (
-                      <FocusableItem
-                        key={val}
-                        style={{
-                          width: 60,
-                          height: 44,
-                          borderRadius: 10,
-                          backgroundColor: val === 'Sil' ? 'rgba(239, 68, 68, 0.25)' : val === '✔' ? aktifTema.accent : 'rgba(255, 255, 255, 0.1)',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderWidth: 1,
-                          borderColor: 'rgba(255,255,255,0.15)',
-                        }}
-                        focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.1 }] }}
-                        onPress={() => {
-                          if (val === 'Sil') vipPinSil();
-                          else if (val === '✔') {
-                            if (dogrulaPin(vipGirilenPin, cihazBilgisi.model)) {
-                              setLisansAktif(true);
-                              if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
-                                TVAppManager.saveSetting('lisansAktif', 'true').catch(() => {});
-                              }
-                              setLisansKilitModalAcik(false);
-                              setVipGirilenPin('');
-                              setBildirimMetni('🎉 Cihaz Doğrulandı!');
-                              setTimeout(() => setBildirimMetni(''), 3000);
-                            } else {
-                              setBildirimMetni('❌ Hatalı PIN Kodu!');
-                              setTimeout(() => {
-                                setVipGirilenPin('');
-                                setBildirimMetni('');
-                              }, 1500);
-                            }
-                          } else {
-                            vipPinDene(val);
-                          }
-                        }}
-                      >
-                        {() => (
-                          <Text style={{ color: val === '✔' ? aktifTema.textOnAccent : '#FFFFFF', fontSize: val === 'Sil' ? 12 : 16, fontWeight: '800' }}>
-                            {val}
-                          </Text>
-                        )}
-                      </FocusableItem>
-                    ))}
-                  </View>
-                ))}
-              </View>
-
-              {lisansAktif && (
-                <FocusableItem
-                  style={{ marginTop: 10, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.08)' }}
-                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
-                  onPress={() => setLisansKilitModalAcik(false)}
-                >
-                  {() => <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '700' }}>✕ Kapat</Text>}
-                </FocusableItem>
-              )}
             </View>
           </View>
         </Modal>

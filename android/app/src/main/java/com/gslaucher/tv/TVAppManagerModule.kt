@@ -282,6 +282,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     @ReactMethod
     fun openStockLauncher(promise: Promise) {
         try {
+            TVAccessibilityService.allowStockLauncherUntil = System.currentTimeMillis() + 180000L
             val pm = reactContext.packageManager
             val myPackage = reactContext.packageName
 
@@ -354,6 +355,36 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             promise.reject("ERROR_HOME_SETTINGS", "Varsayılan uygulama ayarları açılamadı.")
         } catch (e: Exception) {
             promise.reject("ERROR_HOME_SETTINGS", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun openAccessibilitySettings(promise: Promise) {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            if (intent.resolveActivity(reactContext.packageManager) != null) {
+                reactContext.startActivity(intent)
+                promise.resolve(true)
+            } else {
+                val fallback = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                reactContext.startActivity(fallback)
+                promise.resolve(true)
+            }
+        } catch (e: Exception) {
+            promise.reject("ERROR_ACCESSIBILITY", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun isAccessibilityEnabled(promise: Promise) {
+        try {
+            promise.resolve(TVAccessibilityService.isServiceRunning)
+        } catch (_: Exception) {
+            promise.resolve(false)
         }
     }
 
