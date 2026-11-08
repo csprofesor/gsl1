@@ -34,7 +34,7 @@ const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
 const CURRENT_VERSION = '3.0.0';
-const CURRENT_BUILD = 23;
+const CURRENT_BUILD = 24;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/847291';
@@ -2838,16 +2838,12 @@ export default function App() {
           {/* Sol: GS Logosu & Kompakt Arama */}
           <View style={styles.ustSol}>
             <Image source={GS_ICON} style={styles.gsLogoResim} resizeMode="cover" />
-            <View style={{ marginRight: 12 }}>
-              <Text style={styles.gsBaslik}>GS Launcher Mavi Rüya</Text>
-              <Text style={styles.gsSurum}>v2.8.1 Pro TV</Text>
-            </View>
 
-            <View style={[styles.aramaKapsul, { borderColor: aktifTema.surface, width: 175 }]}>
+            <View style={[styles.aramaKapsul, { borderColor: aktifTema.surface }]}>
               <Text style={styles.aramaIkon}>🔍</Text>
               <TextInput
                 style={styles.aramaGirdi}
-                placeholder="Ara: Film, Dizi, App..."
+                placeholder="Ara..."
                 placeholderTextColor="rgba(255, 255, 255, 0.55)"
                 value={aramaMetni}
                 onChangeText={setAramaMetni}
@@ -2860,9 +2856,9 @@ export default function App() {
             </View>
           </View>
 
-          {/* Sağ: Canlı Hava Durumu, Saat, TV, Güncelleme, Ayarlar & Temalar */}
+          {/* Sağ: Canlı Hava Durumu, Saat, TV, Güncelleme, Ayarlar */}
           <View style={styles.ustSag}>
-            {/* Canlı Hava Durumu (Tıklanınca Şehir Seçimi & Tahmin Açılır) */}
+            {/* Canlı Hava Durumu */}
             <FocusableItem
               style={[styles.havaKutu, { borderColor: aktifTema.surface }]}
               focusedStyle={{ borderColor: aktifTema.border, transform: [{ scale: 1.05 }], backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
@@ -2871,10 +2867,7 @@ export default function App() {
               {() => (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={styles.havaIkon}>{havaDurumu.ikon}</Text>
-                  <View>
-                    <Text style={styles.havaDerece}>{havaDurumu.derece}</Text>
-                    <Text style={styles.havaSehir} numberOfLines={1}>{havaDurumu.sehir}</Text>
-                  </View>
+                  <Text style={styles.havaDerece}>{havaDurumu.derece}</Text>
                 </View>
               )}
             </FocusableItem>
@@ -2882,13 +2875,12 @@ export default function App() {
             {/* Canlı Saat & Tarih */}
             <View style={styles.saatTarihKutu}>
               <Text style={styles.saatYazi}>{saat}</Text>
-              <Text style={styles.tarihYazi}>{tarih}</Text>
             </View>
 
             {/* 10.a Canlı Wi-Fi Tuşu */}
             <FocusableItem
               style={[styles.miniAksiyonButon, { borderColor: aktifTema.surface }]}
-              focusedStyle={{ borderColor: aktifTema.border, backgroundColor: aktifTema.accent }}
+              focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
               onPress={() => {
                 if (Platform.OS === 'android' && TVAppManager && TVAppManager.openWifiSettings) {
                   TVAppManager.openWifiSettings().catch(() => {});
@@ -2898,9 +2890,11 @@ export default function App() {
               {(isFocused) => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>📶</Text>
-                  <Text style={[styles.miniButonYazi, isFocused && { color: aktifTema.textOnAccent }]}>
-                    Wi-Fi
-                  </Text>
+                  {isFocused && (
+                    <Text style={[styles.miniButonYazi, { color: aktifTema.textOnAccent }]}>
+                      Wi-Fi
+                    </Text>
+                  )}
                 </View>
               )}
             </FocusableItem>
@@ -2908,15 +2902,17 @@ export default function App() {
             {/* 10.b Canlı Hız Testi Tuşu */}
             <FocusableItem
               style={[styles.miniAksiyonButon, { borderColor: aktifTema.surface }]}
-              focusedStyle={{ borderColor: aktifTema.border, backgroundColor: aktifTema.accent }}
+              focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
               onPress={() => setHizTestiAcik(true)}
             >
               {(isFocused) => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>⚡</Text>
-                  <Text style={[styles.miniButonYazi, isFocused && { color: aktifTema.textOnAccent }]}>
-                    Hız
-                  </Text>
+                  {isFocused && (
+                    <Text style={[styles.miniButonYazi, { color: aktifTema.textOnAccent }]}>
+                      Hız
+                    </Text>
+                  )}
                 </View>
               )}
             </FocusableItem>
@@ -2924,13 +2920,13 @@ export default function App() {
             {/* 9. Bildirim Tuşu */}
             <FocusableItem
               style={[styles.miniAksiyonButon, { borderColor: aktifTema.surface }]}
-              focusedStyle={{ borderColor: aktifTema.border, backgroundColor: aktifTema.accent }}
+              focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
               onPress={() => setBildirimPaneliAcik(true)}
             >
               {(isFocused) => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>🔔</Text>
-                  <Text style={[styles.miniButonYazi, isFocused && { color: aktifTema.textOnAccent }]}>
+                  <Text style={[styles.miniButonYazi, { color: isFocused ? aktifTema.textOnAccent : '#FFFFFF', fontWeight: '800' }]}>
                     {bildirimListesi.length}
                   </Text>
                 </View>
@@ -2940,7 +2936,7 @@ export default function App() {
             {/* Canlı Uydu / TV Butonu */}
             <FocusableItem
               style={[styles.miniAksiyonButon, { borderColor: aktifTema.surface }]}
-              focusedStyle={{ borderColor: aktifTema.border, backgroundColor: aktifTema.accent }}
+              focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
               onPress={canliUyduyaGec}
             >
               {(isFocused) => (
@@ -2962,14 +2958,16 @@ export default function App() {
               {(isFocused) => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>🔄</Text>
-                  <Text style={[styles.miniButonYazi, isFocused && { color: aktifTema.textOnAccent }]}>
-                    Güncelle
-                  </Text>
+                  {isFocused && (
+                    <Text style={[styles.miniButonYazi, { color: aktifTema.textOnAccent }]}>
+                      Güncelle
+                    </Text>
+                  )}
                 </View>
               )}
             </FocusableItem>
 
-            {/* ⚙️ AYARLAR & TEMALAR BUTONU (HER ZAMAN EKRANDA, ASLA TAŞMAZ) */}
+            {/* ⚙️ AYARLAR BUTONU (ASLA TAŞMAZ, SÜPER KOMPAKT) */}
             <FocusableItem
               style={[styles.ayarlarTemalarButon, { borderColor: aktifTema.border, backgroundColor: aktifTema.surface }]}
               focusedStyle={[styles.kontrolMerkeziOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
@@ -2977,9 +2975,9 @@ export default function App() {
             >
               {(isFocused) => (
                 <View style={styles.miniButonIcerik}>
-                  <Text style={{ fontSize: 15 }}>⚙️</Text>
+                  <Text style={{ fontSize: 13 }}>⚙️</Text>
                   <Text style={[styles.ayarlarTemalarYazi, { color: isFocused ? aktifTema.textOnAccent : '#FFFFFF' }]}>
-                    Ayarlar & Temalar
+                    Ayarlar
                   </Text>
                 </View>
               )}
@@ -6350,24 +6348,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 14,
-    marginLeft: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 10,
+    marginLeft: 5,
   },
   ayarlarTemalarYazi: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: '800',
-    marginLeft: 5,
+    marginLeft: 3,
   },
   miniAksiyonButon: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    marginLeft: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+    borderRadius: 9,
+    marginLeft: 5,
   },
   miniButonIcerik: {
     flexDirection: 'row',
@@ -6375,16 +6373,16 @@ const styles = StyleSheet.create({
   },
   miniButonYazi: {
     color: '#FFFFFF',
-    fontSize: 11.5,
+    fontSize: 10.5,
     fontWeight: '700',
-    marginLeft: 4,
+    marginLeft: 3,
   },
 
   arkaplan: { flex: 1, backgroundColor: '#0A0C16' },
   camKatman: {
     flex: 1,
-    paddingHorizontal: 32,
-    paddingTop: 16,
+    paddingHorizontal: 26,
+    paddingTop: 12,
   },
 
   // ÜST BAR
@@ -6392,14 +6390,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
+    width: '100%',
   },
-  ustSol: { flexDirection: 'row', alignItems: 'center' },
+  ustSol: { flexDirection: 'row', alignItems: 'center', flexShrink: 0 },
   gsLogoResim: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    marginRight: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    marginRight: 8,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.25)',
   },
@@ -6422,9 +6421,9 @@ const styles = StyleSheet.create({
   gsLogoYazi: { fontSize: 16, fontWeight: '900' },
   gsBaslik: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '800',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   gsSurum: {
     color: 'rgba(255, 255, 255, 0.45)',
@@ -6436,15 +6435,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 22,
-    paddingHorizontal: 14,
-    height: 38,
-    marginLeft: 20,
-    width: 320,
+    borderRadius: 18,
+    paddingHorizontal: 10,
+    height: 32,
+    marginLeft: 10,
+    width: 120,
     borderWidth: 1,
   },
-  aramaIkon: { fontSize: 14, marginRight: 8, opacity: 0.7 },
-  aramaGirdi: { flex: 1, color: '#FFFFFF', fontSize: 13 },
+  aramaIkon: { fontSize: 12, marginRight: 6, opacity: 0.7 },
+  aramaGirdi: { flex: 1, color: '#FFFFFF', fontSize: 11, padding: 0 },
   aramaTemizle: { color: 'rgba(255, 255, 255, 0.6)', fontSize: 14, paddingHorizontal: 4 },
   sesliAramaKutu: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -6455,7 +6454,7 @@ const styles = StyleSheet.create({
   },
   sesliAramaIkon: { fontSize: 13 },
 
-  ustSag: { flexDirection: 'row', alignItems: 'center' },
+  ustSag: { flexDirection: 'row', alignItems: 'center', flexShrink: 0 },
   uykuRozet: {
     borderWidth: 1,
     borderRadius: 12,
@@ -6466,21 +6465,21 @@ const styles = StyleSheet.create({
   },
   uykuRozetYazi: { color: '#FFF', fontSize: 11, fontWeight: '700' },
 
-  saatTarihKutu: { alignItems: 'flex-end', marginRight: 16 },
-  saatYazi: { color: '#FFFFFF', fontSize: 19, fontWeight: '700', letterSpacing: 0.5 },
+  saatTarihKutu: { alignItems: 'flex-end', marginRight: 8 },
+  saatYazi: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', letterSpacing: 0.5 },
   tarihYazi: { color: 'rgba(255, 255, 255, 0.55)', fontSize: 10 },
 
   havaKutu: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    marginRight: 14,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    marginRight: 6,
   },
-  havaIkon: { fontSize: 18, marginRight: 6 },
-  havaDerece: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  havaIkon: { fontSize: 15, marginRight: 4 },
+  havaDerece: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
   havaSehir: { color: 'rgba(255, 255, 255, 0.55)', fontSize: 9 },
 
   canliTvButon: {
