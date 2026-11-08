@@ -37,7 +37,7 @@ const CURRENT_VERSION = '3.0.0';
 const CURRENT_BUILD = 23;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://files.catbox.moe/x4ggkz.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/938271';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/847291';
 
 // ================= 18 MADDELİK GELİŞMİŞ TV ÖZELLEŞTİRME TİPLERİ =================
 export type IconShapeType = 'rounded' | 'circle' | 'squircle' | 'rectangle';
