@@ -39,6 +39,42 @@ const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/l
 const VERSION_MANIFEST_URL = 'https://files.catbox.moe/x4ggkz.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/286x9mfv';
 
+// ================= GÜVENLİK & KRİPTOGRAFİK DOĞRULAMA (GITHUB'DA AÇIK ŞİFRE BULUNMAZ) =================
+const fnv1aHash = (str: string): string => {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16);
+};
+
+// Master Yönetici Hash'i (Kodda düz şifre yazmaz, yalnızca hash eşleşmesi kontrol edilir)
+const MASTER_AUTH_HASHES = ['245af478', '265af79e'];
+
+// Cihaz Donanım Kimliğine Göre Benzersiz Cihaz Kodu ve PIN Hesaplama
+export const getCihazKoduBilgisi = (model?: string) => {
+  const clean = (model || 'TV').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  let acc = 1905;
+  for (let i = 0; i < clean.length; i++) {
+    acc = ((acc << 5) - acc + clean.charCodeAt(i) * 31) & 0xffffffff;
+  }
+  const kodNum = (Math.abs(acc) % 9000) + 1000;
+  const pinNum = ((kodNum * 7919 + 48271) % 9000) + 1000;
+  return {
+    cihazNoStr: `GS-TV-${clean}-${kodNum}`,
+    cihazPin: pinNum.toString(),
+  };
+};
+
+export const dogrulaPin = (girilen: string, model?: string): boolean => {
+  if (!girilen) return false;
+  if (MASTER_AUTH_HASHES.includes(fnv1aHash(girilen))) return true;
+  const { cihazPin } = getCihazKoduBilgisi(model);
+  if (girilen === cihazPin) return true;
+  return false;
+};
+
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
 export interface MonetTheme {
   id: string;
@@ -777,7 +813,6 @@ export default function App() {
   const [lisansAktif, setLisansAktif] = useState(true);
   const [lisansKilitModalAcik, setLisansKilitModalAcik] = useState(false);
   const [vipGirilenPin, setVipGirilenPin] = useState('');
-  const [masterPin, setMasterPin] = useState('1905');
 
   // 6. Dinamik Transparan Uygulama Şeritleri (Öneri Film & Dizi Afişleri)
   const [seritler, setSeritler] = useState<IcerikSeridi[]>([
@@ -874,7 +909,7 @@ export default function App() {
 
   // Durum Bildirimi (RAM temizleme, Güncelleme vb.)
   const [bildirimMetni, setBildirimMetni] = useState('');
-  const [cihazBilgisi, setCihazBilgisi] = useState<{ model?: string; android?: string; manufacturer?: string }>({});
+  const [cihazBilgisi, setCihazBilgisi] = useState<{ model?: string; android?: string; manufacturer?: string; isStoreInstall?: boolean }>({});
 
   // Vitrin Uygulamaları (Kullanıcının Favorileri veya İlk Kurulu Uygulamaları)
   const vitrinUygulamalari = useMemo(() => {
@@ -1114,10 +1149,12 @@ export default function App() {
               }
             } catch {}
             try {
-              const rawLisans = await TVAppManager.getSetting('lisansAktif', 'true');
-              setLisansAktif(rawLisans === 'true');
-              const rawPin = await TVAppManager.getSetting('masterPin', '1905');
-              if (rawPin) setMasterPin(rawPin);
+              const rawLisans = await TVAppManager.getSetting('lisansAktif', 'false');
+              if (rawLisans === 'true') {
+                setLisansAktif(true);
+              } else {
+                setLisansAktif(false);
+              }
             } catch {}
           }
 
@@ -1214,14 +1251,26 @@ export default function App() {
       TVAppManager.getDeviceInfo()
         .then((info: any) => {
           if (info) {
+            const isStore = !!info.isStoreInstall;
             setCihazBilgisi({
               model: info.model || 'Android TV',
               android: `Android ${info.androidVersion || '12'}`,
               manufacturer: info.manufacturer || 'Xiaomi',
+              isStoreInstall: isStore,
             });
+            // Google Play Store kurulumlarında otomatik tam lisans aktif edilir, asla şifre sormaz
+            if (isStore) {
+              setLisansAktif(true);
+              setLisansKilitModalAcik(false);
+              TVAppManager.saveSetting('lisansAktif', 'true').catch(() => {});
+            }
           }
         })
         .catch(() => {});
+    } else if (Platform.OS === 'ios') {
+      // Apple Store kurulumlarında otomatik tam lisans
+      setLisansAktif(true);
+      setLisansKilitModalAcik(false);
     }
 
     let batInterval: any;
@@ -1643,7 +1692,7 @@ export default function App() {
     if (vipGirilenPin.length < 6) {
       const yeni = vipGirilenPin + rakam;
       setVipGirilenPin(yeni);
-      if (yeni === masterPin) {
+      if (dogrulaPin(yeni, cihazBilgisi.model)) {
         setLisansAktif(true);
         if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
           TVAppManager.saveSetting('lisansAktif', 'true').catch(() => {});
@@ -1652,7 +1701,7 @@ export default function App() {
         setVipGirilenPin('');
         setBildirimMetni('🎉 Cihaz Başarıyla Doğrulandı! Hoş Geldiniz.');
         setTimeout(() => setBildirimMetni(''), 3500);
-      } else if (yeni.length >= masterPin.length) {
+      } else if (yeni.length >= 4) {
         setBildirimMetni('❌ Hatalı PIN Kodu! Lütfen tekrar deneyin.');
         setTimeout(() => {
           setVipGirilenPin('');
@@ -4840,7 +4889,7 @@ export default function App() {
               {/* Cihaz ID */}
               <View style={{ backgroundColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8, marginVertical: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
                 <Text style={{ color: aktifTema.border, fontSize: 12, fontWeight: '800' }}>
-                  Cihaz No: GS-TV-{(cihazBilgisi.model || 'TV').replace(/\s+/g, '')}
+                  Cihaz No: {getCihazKoduBilgisi(cihazBilgisi.model).cihazNoStr}
                 </Text>
               </View>
 
@@ -4885,7 +4934,7 @@ export default function App() {
                         onPress={() => {
                           if (val === 'Sil') vipPinSil();
                           else if (val === '✔') {
-                            if (vipGirilenPin === masterPin) {
+                            if (dogrulaPin(vipGirilenPin, cihazBilgisi.model)) {
                               setLisansAktif(true);
                               if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
                                 TVAppManager.saveSetting('lisansAktif', 'true').catch(() => {});

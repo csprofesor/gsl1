@@ -830,6 +830,23 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             map.putString("device", Build.DEVICE)
             map.putString("androidVersion", Build.VERSION.RELEASE)
             map.putInt("sdkInt", Build.VERSION.SDK_INT)
+
+            val pm = reactContext.packageManager
+            val myPackage = reactContext.packageName
+            val installer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                try {
+                    pm.getInstallSourceInfo(myPackage).installingPackageName
+                } catch (_: Exception) {
+                    pm.getInstallerPackageName(myPackage)
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                pm.getInstallerPackageName(myPackage)
+            }
+            map.putString("installer", installer ?: "")
+            val isOfficialStore = (installer == "com.android.vending")
+            map.putBoolean("isStoreInstall", isOfficialStore)
+
             promise.resolve(map)
         } catch (e: Exception) {
             promise.reject("ERROR_DEVICE_INFO", e.message, e)
