@@ -36,7 +36,7 @@ const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 const CURRENT_VERSION = '3.0.0';
 const CURRENT_BUILD = 23;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
-const VERSION_MANIFEST_URL = 'https://files.catbox.moe/x4ggkz.json';
+const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/847291';
 
 // ================= 18 MADDELİK GELİŞMİŞ TV ÖZELLEŞTİRME TİPLERİ =================
