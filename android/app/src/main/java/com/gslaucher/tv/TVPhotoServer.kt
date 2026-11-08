@@ -311,12 +311,12 @@ class TVPhotoServer(
           return;
         }
 
-        grid.innerHTML = list.map(item => `
-          <div class="gallery-item">
-            <img src="/photo?name=${encodeURIComponent(item.name)}" loading="lazy">
-            <button class="del-btn" onclick="deletePhoto('${encodeURIComponent(item.name)}')">✕</button>
-          </div>
-        `).join('');
+        grid.innerHTML = list.map(function(item) {
+          return '<div class="gallery-item">' +
+                 '<img src="/photo?name=' + encodeURIComponent(item.name) + '" loading="lazy">' +
+                 '<button class="del-btn" onclick="deletePhoto(\'' + encodeURIComponent(item.name) + '\')">✕</button>' +
+                 '</div>';
+        }).join('');
       } catch (e) {
         document.getElementById('galleryGrid').innerHTML = '<div class="empty-gallery">Bağlantı hatası.</div>';
       }

@@ -935,7 +935,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     fun setKeepScreenOn(keepOn: Boolean, promise: Promise) {
         UiThreadUtil.runOnUiThread {
             try {
-                val act = currentActivity
+                val act = reactContext.currentActivity
                 if (act != null) {
                     if (keepOn) {
                         act.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
