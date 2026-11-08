@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
@@ -12,8 +13,10 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.Settings
 import androidx.core.content.FileProvider
 import com.facebook.react.bridge.*
+import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.io.File
 import java.io.FileOutputStream
 
@@ -334,54 +337,168 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
         }
     }
 
+    private fun emitUpdateProgress(percent: Int, downloaded: Long, total: Long) {
+        try {
+            val params = Arguments.createMap().apply {
+                putInt("percent", percent)
+                putDouble("downloaded", downloaded.toDouble())
+                putDouble("total", total.toDouble())
+            }
+            reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("onUpdateDownloadProgress", params)
+        } catch (_: Exception) {}
+    }
+
+    @ReactMethod
+    fun checkInstallPermission(promise: Promise) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                promise.resolve(reactContext.packageManager.canRequestPackageInstalls())
+            } else {
+                promise.resolve(true)
+            }
+        } catch (e: Exception) {
+            promise.resolve(false)
+        }
+    }
+
+    @ReactMethod
+    fun requestInstallPermission(promise: Promise) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                    data = Uri.parse("package:${reactContext.packageName}")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                val act = reactContext.currentActivity ?: reactContext
+                act.startActivity(intent)
+                promise.resolve(true)
+            } else {
+                promise.resolve(true)
+            }
+        } catch (e: Exception) {
+            try {
+                val secIntent = Intent(Settings.ACTION_SECURITY_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                val act = reactContext.currentActivity ?: reactContext
+                act.startActivity(secIntent)
+                promise.resolve(true)
+            } catch (ex: Exception) {
+                promise.reject("ERROR_PERMISSION", ex.message, ex)
+            }
+        }
+    }
+
     @ReactMethod
     fun installUpdate(downloadUrl: String, promise: Promise) {
         Thread {
             try {
-                val destination = File(
-                    reactContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                    "update.apk"
-                )
+                // Android 8.0+ Bilinmeyen Uygulama İzni Kontrolü
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    if (!reactContext.packageManager.canRequestPackageInstalls()) {
+                        try {
+                            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                                data = Uri.parse("package:${reactContext.packageName}")
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            val act = reactContext.currentActivity ?: reactContext
+                            act.startActivity(intent)
+                        } catch (_: Exception) {
+                            try {
+                                val secIntent = Intent(Settings.ACTION_SECURITY_SETTINGS).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                val act = reactContext.currentActivity ?: reactContext
+                                act.startActivity(secIntent)
+                            } catch (_: Exception) {}
+                        }
+                        promise.reject(
+                            "PERMISSION_NEEDED",
+                            "Televizyonunuz 'Bilinmeyen Uygulamaları Yükle' izni istiyor. Lütfen ekrandaki izni açıp tekrar Güncelle butonuna basın."
+                        )
+                        return@Thread
+                    }
+                }
+
+                // Güvenli yerel indirme konumu (cacheDir veya externalCacheDir)
+                val targetDir = reactContext.externalCacheDir ?: reactContext.cacheDir
+                val destination = File(targetDir, "gs_launcher_update.apk")
                 if (destination.exists()) {
                     destination.delete()
                 }
 
                 var currentUrl = downloadUrl
                 var redirects = 0
-                while (true) {
-                    val url = java.net.URL(currentUrl)
-                    val conn = url.openConnection() as java.net.HttpURLConnection
-                    conn.instanceFollowRedirects = false
-                    conn.connectTimeout = 20000
-                    conn.readTimeout = 40000
-                    conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android TV; Mobile)")
-                    conn.connect()
+                val maxRedirects = 10
+                var connection: java.net.HttpURLConnection? = null
 
+                while (redirects < maxRedirects) {
+                    val url = java.net.URL(currentUrl)
+                    val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                        instanceFollowRedirects = false
+                        connectTimeout = 25000
+                        readTimeout = 45000
+                        setRequestProperty("User-Agent", "Mozilla/5.0 (Android TV; Mobile)")
+                        setRequestProperty("Accept-Encoding", "identity")
+                    }
+                    conn.connect()
                     val status = conn.responseCode
+
                     if (status == java.net.HttpURLConnection.HTTP_MOVED_PERM ||
                         status == java.net.HttpURLConnection.HTTP_MOVED_TEMP ||
                         status == 307 || status == 308
                     ) {
-                        currentUrl = conn.getHeaderField("Location")
+                        val location = conn.getHeaderField("Location")
+                        conn.disconnect()
+                        if (location.isNullOrEmpty()) {
+                            throw Exception("Yönlendirme adresi boş geldi.")
+                        }
+                        currentUrl = java.net.URL(url, location).toString()
                         redirects++
-                        if (redirects > 8) throw Exception("Çok fazla yönlendirme hatası")
                         continue
                     }
 
-                    conn.inputStream.use { input ->
-                        FileOutputStream(destination).use { output ->
-                            val buffer = ByteArray(16384)
-                            var bytesRead: Int
-                            while (input.read(buffer).also { bytesRead = it } != -1) {
-                                output.write(buffer, 0, bytesRead)
-                            }
-                            output.flush()
-                        }
+                    if (status != java.net.HttpURLConnection.HTTP_OK) {
+                        conn.disconnect()
+                        throw Exception("İndirme sunucusu yanıt vermedi (HTTP $status)")
                     }
+
+                    connection = conn
                     break
                 }
 
-                if (destination.exists() && destination.length() > 0) {
+                if (connection == null) {
+                    throw Exception("Güncelleme sunucusuna bağlanılamadı.")
+                }
+
+                val totalLength = connection.contentLengthLong
+                var downloadedLength = 0L
+
+                connection.inputStream.use { input ->
+                    FileOutputStream(destination).use { output ->
+                        val buffer = ByteArray(32768)
+                        var bytesRead: Int
+                        var lastEmitTime = System.currentTimeMillis()
+
+                        while (input.read(buffer).also { bytesRead = it } != -1) {
+                            output.write(buffer, 0, bytesRead)
+                            downloadedLength += bytesRead
+
+                            val now = System.currentTimeMillis()
+                            if (now - lastEmitTime > 250 || (totalLength > 0 && downloadedLength == totalLength)) {
+                                lastEmitTime = now
+                                val percent = if (totalLength > 0) ((downloadedLength * 100) / totalLength).toInt() else -1
+                                emitUpdateProgress(percent, downloadedLength, totalLength)
+                            }
+                        }
+                        output.flush()
+                    }
+                }
+                connection.disconnect()
+
+                if (destination.exists() && destination.length() > 5000000) {
                     val apkUri = FileProvider.getUriForFile(
                         reactContext,
                         "${reactContext.packageName}.provider",
@@ -390,15 +507,28 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     val installIntent = Intent(Intent.ACTION_VIEW).apply {
                         setDataAndType(apkUri, "application/vnd.android.package-archive")
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                     }
-                    reactContext.startActivity(installIntent)
+
+                    val resolveInfoList = reactContext.packageManager.queryIntentActivities(
+                        installIntent,
+                        PackageManager.MATCH_DEFAULT_ONLY
+                    )
+                    for (resolveInfo in resolveInfoList) {
+                        val pkg = resolveInfo.activityInfo.packageName
+                        reactContext.grantUriPermission(pkg, apkUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+
+                    val act = reactContext.currentActivity ?: reactContext
+                    act.startActivity(installIntent)
                     promise.resolve(true)
                 } else {
-                    promise.reject("ERROR_INSTALL", "APK dosyası indirilemedi.")
+                    promise.reject("ERROR_INSTALL", "APK dosyası eksik veya hatalı indirildi.")
                 }
             } catch (e: Exception) {
-                promise.reject("ERROR_INSTALL", e.message, e)
+                promise.reject("ERROR_INSTALL", e.message ?: "Güncelleme sırasında bir hata oluştu.", e)
             }
         }.start()
     }

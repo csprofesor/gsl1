@@ -17,6 +17,7 @@ import {
   NativeModules,
   BackHandler,
   Image,
+  DeviceEventEmitter,
 } from 'react-native';
 
 const { TVAppManager } = NativeModules;
@@ -31,8 +32,9 @@ export const sonEtkilesimiGuncelle = () => {
 const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
-// Sürüm Bilgisi
-const CURRENT_VERSION = '2.4.0';
+// Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
+const CURRENT_VERSION = '2.4.1';
+const VERSION_MANIFEST_URL = 'https://tinyurl.com/2bye7com';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/242ebrje';
 
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
@@ -733,7 +735,19 @@ export default function App() {
 
   // 5.c Uygulama İçi Güncelleme Durumu
   const [guncellemeModalAcik, setGuncellemeModalAcik] = useState(false);
-  const [guncellemeDurum, setGuncellemeDurum] = useState({ indiriliyor: false, basari: false, hata: '' });
+  const [guncellemeDurum, setGuncellemeDurum] = useState({
+    denetleniyor: false,
+    indiriliyor: false,
+    yuzde: 0,
+    indirilenMb: 0,
+    toplamMb: 0,
+    basari: false,
+    hata: '',
+    yeniSurumVar: false,
+    yeniSurum: CURRENT_VERSION,
+    yeniApkUrl: LATEST_RELEASE_APK,
+    yenilikler: '',
+  });
 
   // 6. Dinamik Transparan Uygulama Şeritleri (Öneri Film & Dizi Afişleri)
   const [seritler, setSeritler] = useState<IcerikSeridi[]>([
@@ -1455,22 +1469,101 @@ export default function App() {
     filmVeIcerikBaslat(film);
   };
 
+  // İndirme ilerlemesini yerel modülden dinle
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('onUpdateDownloadProgress', (event: any) => {
+      if (event) {
+        const mb = (event.downloaded / (1024 * 1024)).toFixed(1);
+        const totalMb = event.total > 0 ? (event.total / (1024 * 1024)).toFixed(1) : '47.5';
+        setGuncellemeDurum((prev) => ({
+          ...prev,
+          yuzde: event.percent >= 0 ? event.percent : prev.yuzde,
+          indirilenMb: parseFloat(mb),
+          toplamMb: parseFloat(totalMb),
+        }));
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Güncelleme modalı açıldığında çevrimiçi sürümü denetle
+  const surumDenetleVeBilgiAl = useCallback(async () => {
+    try {
+      setGuncellemeDurum((prev) => ({ ...prev, denetleniyor: true, hata: '' }));
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch(`${VERSION_MANIFEST_URL}?_t=${Date.now()}`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.version) {
+          const isNew = data.versionCode > 16 || data.version !== CURRENT_VERSION;
+          setGuncellemeDurum((prev) => ({
+            ...prev,
+            denetleniyor: false,
+            yeniSurumVar: isNew,
+            yeniSurum: data.version,
+            yeniApkUrl: data.apkUrl || LATEST_RELEASE_APK,
+            yenilikler: data.changelog || 'Sistem ve performans güncellemeleri',
+          }));
+          return;
+        }
+      }
+    } catch {}
+    setGuncellemeDurum((prev) => ({
+      ...prev,
+      denetleniyor: false,
+      yeniSurumVar: false,
+      yeniSurum: CURRENT_VERSION,
+      yeniApkUrl: LATEST_RELEASE_APK,
+    }));
+  }, []);
+
+  useEffect(() => {
+    if (guncellemeModalAcik) {
+      surumDenetleVeBilgiAl();
+    }
+  }, [guncellemeModalAcik, surumDenetleVeBilgiAl]);
+
   // Uygulama İçi Doğrudan Güncelleme (APK İndir & Kur)
   const guncellemeBaslat = async () => {
-    setGuncellemeDurum({ indiriliyor: true, basari: false, hata: '' });
+    const targetUrl = guncellemeDurum.yeniApkUrl || LATEST_RELEASE_APK;
+    setGuncellemeDurum((prev) => ({
+      ...prev,
+      indiriliyor: true,
+      yuzde: 0,
+      indirilenMb: 0,
+      basari: false,
+      hata: '',
+    }));
+    setBildirimMetni('⏳ Güncelleme paketi indiriliyor...');
+
     try {
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.installUpdate) {
-        setBildirimMetni('⏳ Güncelleme paketi indiriliyor...');
-        await TVAppManager.installUpdate('https://tinyurl.com/28an8vfs');
-        setGuncellemeDurum({ indiriliyor: false, basari: true, hata: '' });
+        await TVAppManager.installUpdate(targetUrl);
+        setGuncellemeDurum((prev) => ({
+          ...prev,
+          indiriliyor: false,
+          yuzde: 100,
+          basari: true,
+          hata: '',
+        }));
         setBildirimMetni('✔ İndirme tamamlandı! TV kurulum ekranı açıldı.');
       } else {
-        Alert.alert('Bilgi', 'Uygulama içi güncelleme Android TV üzerinde çalışır.');
-        setGuncellemeDurum({ indiriliyor: false, basari: false, hata: '' });
+        await Linking.openURL(targetUrl);
+        setGuncellemeDurum((prev) => ({ ...prev, indiriliyor: false, basari: true, hata: '' }));
       }
     } catch (err: any) {
-      setGuncellemeDurum({ indiriliyor: false, basari: false, hata: err?.message || 'İndirme hatası oluştu' });
-      setBildirimMetni('❌ Güncelleme indirilemedi.');
+      const errMsg = err?.message || 'İndirme sırasında bir hata oluştu.';
+      setGuncellemeDurum((prev) => ({
+        ...prev,
+        indiriliyor: false,
+        basari: false,
+        hata: errMsg,
+      }));
+      setBildirimMetni('❌ ' + errMsg);
     }
   };
 
@@ -1540,41 +1633,9 @@ export default function App() {
     setAksiyonMenusuAcik(false);
   };
 
-  // Otomatik Sessiz Güncelleme Denetle & Yükle
+  // Otomatik Güncelleme Denetle & Yükle Penceresini Aç
   const guncellemeDenetleVeYukle = async () => {
-    setBildirimMetni('🔄 Güncellemeler denetleniyor...');
-    setTimeout(async () => {
-      try {
-        Alert.alert(
-          '🚀 GS TV Launcher Güncellemesi',
-          `Sürüm v${CURRENT_VERSION} güncel bir yapı ile yenilensin mi?\n\n(Tarayıcı açılmadan otomatik olarak arka planda indirilir ve kurulur.)`,
-          [
-            { text: 'Vazgeç', style: 'cancel', onPress: () => setBildirimMetni('') },
-            {
-              text: 'Hemen Güncelle',
-              onPress: async () => {
-                setBildirimMetni('⏳ Güncelleme paketi indiriliyor... Lütfen bekleyin.');
-                if (Platform.OS === 'android' && TVAppManager && TVAppManager.installUpdate) {
-                  try {
-                    await TVAppManager.installUpdate(LATEST_RELEASE_APK);
-                    setBildirimMetni('✔ İndirme tamamlandı! Yükleyici başlatılıyor...');
-                  } catch {
-                    setBildirimMetni('');
-                    Linking.openURL(LATEST_RELEASE_APK);
-                  }
-                } else {
-                  setBildirimMetni('');
-                  Linking.openURL(LATEST_RELEASE_APK);
-                }
-              },
-            },
-          ]
-        );
-      } catch {
-        setBildirimMetni('');
-        Alert.alert('Hata', 'Güncelleme sunucusuna ulaşılamadı.');
-      }
-    }, 800);
+    setGuncellemeModalAcik(true);
   };
 
   // Orijinal TV Ekranına Dön (Mi Box / Google TV / Android TV Fabrika Başlatıcısı)
@@ -2041,7 +2102,7 @@ export default function App() {
             <Image source={GS_ICON} style={styles.gsLogoResim} resizeMode="cover" />
             <View style={{ marginRight: 12 }}>
               <Text style={styles.gsBaslik}>GS LAUNCHER</Text>
-              <Text style={styles.gsSurum}>v2.4 Pro TV</Text>
+              <Text style={styles.gsSurum}>v2.4.1 Pro TV</Text>
             </View>
 
             <View style={[styles.aramaKapsul, { borderColor: aktifTema.surface, width: 175 }]}>
@@ -2112,7 +2173,7 @@ export default function App() {
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>🔄</Text>
                   <Text style={[styles.miniButonYazi, isFocused && { color: aktifTema.textOnAccent }]}>
-                    v2.4
+                    v2.4.1
                   </Text>
                 </View>
               )}
@@ -3917,7 +3978,7 @@ export default function App() {
           onRequestClose={() => setGuncellemeModalAcik(false)}
         >
           <View style={styles.modalArkaplan}>
-            <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border }]}>
+            <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border, maxHeight: '92%', width: '70%' }]}>
               <View style={styles.modalBaslikSatir}>
                 <Text style={styles.modalBaslik}>🚀 GS TV Launcher Güncelleme</Text>
                 <FocusableItem
@@ -3929,70 +3990,115 @@ export default function App() {
                 </FocusableItem>
               </View>
 
-              <Text style={styles.modalAltBaslik}>
-                Mevcut: v{CURRENT_VERSION} • Yeni: v2.4 (Kararlı & Tam Sürüm)
-              </Text>
-
-              <View style={{ marginVertical: 12, backgroundColor: 'rgba(255,255,255,0.06)', padding: 12, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
-                <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700', marginBottom: 6 }}>
-                  ✨ v2.4 Sürüm Yenilikleri:
+              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
+                <Text style={styles.modalAltBaslik}>
+                  Mevcut: v{CURRENT_VERSION} • {guncellemeDurum.denetleniyor ? '🔍 Denetleniyor...' : guncellemeDurum.yeniSurumVar ? `✨ Yeni Sürüm: v${guncellemeDurum.yeniSurum}` : `✅ En Son Sürüm (v${CURRENT_VERSION})`}
                 </Text>
-                <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, lineHeight: 18 }}>
-                  • Menü ve Ayarlar Ekrandan Taşma Sorunları Tamamen Giderildi (Scroll & TV boyutu)
-                  {'\n'}• Film Önerilerine Tıklayınca Doğrudan Cloudstream / Stremio / Netflix / YouTube ile Başlatma
-                  {'\n'}• Kaldığın Yerden İzle: Sahte filmler kaldırıldı, sadece izledikleriniz kaydedilir
-                  {'\n'}• Uygulama Yöneticisi: Ekranda gösterilecek uygulamaları seçip kaydetme düzeltildi
-                  {'\n'}• Favori Ekle / Kaldır kalıcı hale getirildi (Hafızada saklanır)
-                  {'\n'}• Orijinal TV Ana Ekranına Dön ve Varsayılan Başlatıcı Ayarı eklendi
-                  {'\n'}• Tüm Film Afiş Resimleri 100% Çalışan Yüksek Kalite Metahub Bağlantılarıyla Yenilendi
-                  {'\n'}• Şık Yarı Saydam Buzlu Cam Odak Efekti (Göz yoran turuncu kaldırıldı)
-                  {'\n'}• Uyku Modu ve Hava Durumu İyileştirildi (15 dk varsayılan + seçilen şehir hatırlanır)
-                </Text>
-              </View>
 
-              {guncellemeDurum.indiriliyor ? (
-                <View style={{ alignItems: 'center', paddingVertical: 14 }}>
-                  <Text style={{ color: aktifTema.border, fontSize: 15, fontWeight: '800' }}>
-                    ⏳ Güncelleme paketi indiriliyor...
+                <View style={{ marginVertical: 10, backgroundColor: 'rgba(255,255,255,0.06)', padding: 12, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+                  <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700', marginBottom: 6 }}>
+                    ✨ v2.4.1 Sürüm Yenilikleri:
                   </Text>
-                  <Text style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: 11, marginTop: 4 }}>
-                    İndirme tamamlandığında TV kurulum penceresi ekrana gelecektir.
+                  <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, lineHeight: 18 }}>
+                    • Uygulama İçi Doğrudan Güncelleme (In-App Updater) Tamamen Düzeltildi
+                    {'\n'}• Gerçek Zamanlı İndirme İlerleme Çubuğu ve Yüzde Göstergesi Eklendi
+                    {'\n'}• Bilinmeyen Uygulamaları Yükle İzni Otomatik Yönlendirmesi Yapıldı
+                    {'\n'}• Film Önerilerine Tıklayınca Doğrudan Cloudstream / Stremio / Netflix / YouTube ile Başlatma
+                    {'\n'}• Menü ve Ayarlar Ekrandan Taşma Sorunları Giderildi (TV Scroll)
+                    {'\n'}• Kaldığın Yerden İzle: Sahte filmler kaldırıldı, sadece izledikleriniz kaydedilir
+                    {'\n'}• Uygulama Yöneticisi: Ekranda gösterilecek uygulamaları seçip kaydetme düzeltildi
+                    {'\n'}• Favori Ekle / Kaldır kalıcı hale getirildi (Hafızada saklanır)
+                    {'\n'}• Orijinal TV Ana Ekranına Dön ve Varsayılan Başlatıcı Ayarı eklendi
                   </Text>
                 </View>
-              ) : (
-                <FocusableItem
-                  style={[styles.modalKaydetKapatButon, { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }]}
-                  focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
-                  onPress={guncellemeBaslat}
-                >
-                  {() => (
-                    <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent }]}>
-                      ⬇️ Şimdi Güncelle & Kur (Doğrudan Yükle)
-                    </Text>
-                  )}
-                </FocusableItem>
-              )}
 
-              {!!guncellemeDurum.hata && (
-                <Text style={{ color: '#EF4444', fontSize: 11, marginTop: 8, textAlign: 'center' }}>
-                  Hata: {guncellemeDurum.hata}
-                </Text>
-              )}
-
-              {/* Vazgeç Butonu */}
-              <View style={{ marginTop: 10, alignItems: 'center' }}>
-                <FocusableItem
-                  style={[styles.modalKaydetKapatButon, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }]}
-                  focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
-                  onPress={() => setGuncellemeModalAcik(false)}
-                >
-                  {() => (
-                    <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>
-                      ✔ Vazgeç ve Ana Ekrana Dön
+                {/* İndirme İlerleme Durumu */}
+                {guncellemeDurum.indiriliyor ? (
+                  <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+                    <Text style={{ color: aktifTema.border, fontSize: 15, fontWeight: '800' }}>
+                      ⏳ Güncelleme İndiriliyor: %{guncellemeDurum.yuzde}
                     </Text>
-                  )}
-                </FocusableItem>
-              </View>
+                    <Text style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: 12, marginTop: 4 }}>
+                      {guncellemeDurum.indirilenMb > 0
+                        ? `${guncellemeDurum.indirilenMb} MB / ${guncellemeDurum.toplamMb} MB`
+                        : 'Dosya aktarılıyor, lütfen bekleyin...'}
+                    </Text>
+                    <View style={{ height: 10, width: '100%', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 5, overflow: 'hidden', marginTop: 10 }}>
+                      <View style={{ height: '100%', width: `${Math.max(4, Math.min(100, guncellemeDurum.yuzde))}%`, backgroundColor: aktifTema.accent }} />
+                    </View>
+                    <Text style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: 11, marginTop: 8 }}>
+                      İndirme tamamlandığında TV kurulum penceresi otomatik olarak açılacaktır.
+                    </Text>
+                  </View>
+                ) : guncellemeDurum.basari ? (
+                  <View style={{ alignItems: 'center', paddingVertical: 10, backgroundColor: 'rgba(34, 197, 94, 0.15)', borderRadius: 10, borderWidth: 1, borderColor: '#22C55E' }}>
+                    <Text style={{ color: '#22C55E', fontSize: 13, fontWeight: '800' }}>
+                      ✔ İndirme Tamamlandı! TV Kurulum Ekranı Açıldı.
+                    </Text>
+                    <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 11, marginTop: 4, textAlign: 'center' }}>
+                      Ekranda açılan pencerede kumandadan [Yükle / Güncelle] seçeneğine basarak tamamlayın.
+                    </Text>
+                  </View>
+                ) : (
+                  <FocusableItem
+                    style={[styles.modalKaydetKapatButon, { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }]}
+                    focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                    onPress={guncellemeBaslat}
+                  >
+                    {() => (
+                      <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent, fontWeight: '800' }]}>
+                        {guncellemeDurum.yeniSurumVar
+                          ? `⬇️ v${guncellemeDurum.yeniSurum} Sürümüne Şimdi Güncelle`
+                          : `⬇️ Şimdi Güncelle & Kur (Doğrudan Yükle)`}
+                      </Text>
+                    )}
+                  </FocusableItem>
+                )}
+
+                {/* Hata Bildirimi ve Manuel Tarayıcı Çözümü */}
+                {!!guncellemeDurum.hata && (
+                  <View style={{ marginTop: 10, padding: 10, backgroundColor: 'rgba(239, 68, 68, 0.15)', borderRadius: 10, borderWidth: 1, borderColor: '#EF4444' }}>
+                    <Text style={{ color: '#EF4444', fontSize: 12, textAlign: 'center', fontWeight: '700' }}>
+                      ❌ {guncellemeDurum.hata}
+                    </Text>
+                    <FocusableItem
+                      style={{ marginTop: 8, alignSelf: 'center', backgroundColor: '#EF4444', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 }}
+                      focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                      onPress={() => Linking.openURL(guncellemeDurum.yeniApkUrl || LATEST_RELEASE_APK)}
+                    >
+                      {() => <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '800' }}>🌐 Tarayıcı ile İndir</Text>}
+                    </FocusableItem>
+                  </View>
+                )}
+
+                {/* Downloader Uygulaması için Kısayol Bilgisi */}
+                <View style={{ marginTop: 12, backgroundColor: 'rgba(0, 0, 0, 0.35)', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.15)' }}>
+                  <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700', textAlign: 'center' }}>
+                    📺 Downloader Uygulamasından İndirmek İçin Kod:
+                  </Text>
+                  <Text style={{ color: aktifTema.border, fontSize: 15, fontWeight: '900', textAlign: 'center', marginVertical: 3 }}>
+                    tinyurl.com/242ebrje
+                  </Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, textAlign: 'center' }}>
+                    TV'deki Downloader uygulamasına bu linki yazarak da doğrudan kurabilirsiniz.
+                  </Text>
+                </View>
+
+                {/* Vazgeç Butonu */}
+                <View style={{ marginTop: 10, alignItems: 'center' }}>
+                  <FocusableItem
+                    style={[styles.modalKaydetKapatButon, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }]}
+                    focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+                    onPress={() => setGuncellemeModalAcik(false)}
+                  >
+                    {() => (
+                      <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>
+                        ✔ Kapat ve Ana Ekrana Dön
+                      </Text>
+                    )}
+                  </FocusableItem>
+                </View>
+              </ScrollView>
             </View>
           </View>
         </Modal>
