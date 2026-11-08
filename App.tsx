@@ -35,7 +35,7 @@ const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
 const CURRENT_VERSION = '2.7.0';
 const CURRENT_BUILD = 20;
-const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gs-tv-launcher/releases/latest';
+const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://files.catbox.moe/x4ggkz.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/286x9mfv';
 
@@ -2447,7 +2447,7 @@ export default function App() {
           <View style={styles.ustSol}>
             <Image source={GS_ICON} style={styles.gsLogoResim} resizeMode="cover" />
             <View style={{ marginRight: 12 }}>
-              <Text style={styles.gsBaslik}>GS LAUNCHER</Text>
+              <Text style={styles.gsBaslik}>GSL1 TV</Text>
               <Text style={styles.gsSurum}>v2.7 Pro TV</Text>
             </View>
 
@@ -3002,7 +3002,7 @@ export default function App() {
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Image source={GS_ICON} style={styles.kontrolLogoResim} resizeMode="cover" />
                   <View>
-                    <Text style={styles.kontrolMerkeziBaslik}>⚙️ GS TV Ayarlar & Kontrol Merkezi</Text>
+                    <Text style={styles.kontrolMerkeziBaslik}>⚙️ GSL1 Ayarlar & Kontrol Merkezi</Text>
                     <Text style={styles.cihazBilgiYazi}>
                       {cihazBilgisi.manufacturer} {cihazBilgisi.model} • {cihazBilgisi.android} • Mi Box
                     </Text>
@@ -4831,7 +4831,7 @@ export default function App() {
             <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border, width: '55%', alignItems: 'center', padding: 24 }]}>
               <Text style={{ fontSize: 44, marginBottom: 8 }}>🔒</Text>
               <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '900', textAlign: 'center' }}>
-                GS TV Launcher - Güvenlik & Yetki Kilidi
+                GSL1 TV - Güvenlik & Yetki Kilidi
               </Text>
               <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, textAlign: 'center', marginTop: 6, lineHeight: 18 }}>
                 Bu uygulama kişisel lisanslıdır. Televizyonunuzda kullanabilmek için lütfen yönetici PIN kodunuzu giriniz.
@@ -4942,7 +4942,7 @@ export default function App() {
               <View style={styles.modalBaslikSatir}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Text style={{ fontSize: 22 }}>🚀</Text>
-                  <Text style={styles.modalBaslik}>GS TV Launcher Güncelleme Merkezi</Text>
+                  <Text style={styles.modalBaslik}>GSL1 Güncelleme Merkezi</Text>
                 </View>
                 <FocusableItem
                   style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
