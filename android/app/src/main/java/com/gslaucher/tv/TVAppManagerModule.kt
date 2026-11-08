@@ -749,11 +749,33 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun openBluetoothSettings(promise: Promise) {
+        val pm = reactContext.packageManager
+        val candidates = listOf(
+            Intent().setClassName("com.android.tv.settings", "com.android.tv.settings.accessories.AccessoriesActivity"),
+            Intent().setClassName("com.android.tv.settings", "com.android.tv.settings.accessories.AddAccessoryActivity"),
+            Intent("android.settings.BLUETOOTH_SETTINGS"),
+            Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS),
+            Intent().setClassName("com.xiaomi.mitv.settings", "com.xiaomi.mitv.settings.accessory.AccessoryActivity"),
+            Intent().setClassName("com.android.tv.settings", "com.android.tv.settings.MainSettings"),
+            Intent("android.settings.SETTINGS")
+        )
+
+        for (intent in candidates) {
+            try {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                if (intent.resolveActivity(pm) != null) {
+                    reactContext.startActivity(intent)
+                    promise.resolve(true)
+                    return
+                }
+            } catch (_: Exception) {}
+        }
+
         try {
-            val intent = Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS).apply {
+            val fallback = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            reactContext.startActivity(intent)
+            reactContext.startActivity(fallback)
             promise.resolve(true)
         } catch (e: Exception) {
             promise.reject("ERROR_BT", e.message, e)
@@ -793,26 +815,105 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun openSoundSettings(promise: Promise) {
-        try {
-            val intent = Intent(android.provider.Settings.ACTION_SOUND_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            if (intent.resolveActivity(reactContext.packageManager) != null) {
-                reactContext.startActivity(intent)
-                promise.resolve(true)
-                return
-            }
-        } catch (_: Exception) {}
+        val pm = reactContext.packageManager
+        val candidates = listOf(
+            Intent().setClassName("com.android.tv.settings", "com.android.tv.settings.device.sound.SoundActivity"),
+            Intent().setClassName("com.android.tv.settings", "com.android.tv.settings.device.sound.SoundFormatActivity"),
+            Intent("android.settings.SOUND_SETTINGS"),
+            Intent(android.provider.Settings.ACTION_SOUND_SETTINGS),
+            Intent().setClassName("com.xiaomi.mitv.settings", "com.xiaomi.mitv.settings.sound.SoundActivity"),
+            Intent().setClassName("com.android.tv.settings", "com.android.tv.settings.MainSettings"),
+            Intent("android.settings.SETTINGS")
+        )
+
+        for (intent in candidates) {
+            try {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                if (intent.resolveActivity(pm) != null) {
+                    reactContext.startActivity(intent)
+                    promise.resolve(true)
+                    return
+                }
+            } catch (_: Exception) {}
+        }
 
         try {
-            val intent = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
+            val fallback = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            reactContext.startActivity(intent)
+            reactContext.startActivity(fallback)
             promise.resolve(true)
         } catch (err: Exception) {
             promise.reject("ERROR_SOUND", err.message, err)
         }
+    }
+
+    @ReactMethod
+    fun getRunningApps(promise: Promise) {
+        Thread {
+            try {
+                val am = reactContext.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+                val pm = reactContext.packageManager
+                val runningProcs = am.runningAppProcesses ?: emptyList()
+                val result = Arguments.createArray()
+                val myPkg = reactContext.packageName
+                val seen = mutableSetOf<String>()
+
+                for (proc in runningProcs) {
+                    val pkg = proc.pkgList?.firstOrNull() ?: continue
+                    if (pkg == myPkg || seen.contains(pkg)) continue
+                    seen.add(pkg)
+
+                    try {
+                        val appInfo = pm.getApplicationInfo(pkg, 0)
+                        val label = pm.getApplicationLabel(appInfo).toString()
+                        val item = Arguments.createMap()
+                        item.putString("packageName", pkg)
+                        item.putString("name", label)
+                        item.putInt("importance", proc.importance)
+                        result.pushMap(item)
+                    } catch (_: Exception) {}
+                }
+                promise.resolve(result)
+            } catch (e: Exception) {
+                promise.resolve(Arguments.createArray())
+            }
+        }.start()
+    }
+
+    @ReactMethod
+    fun killApp(packageName: String, promise: Promise) {
+        try {
+            val am = reactContext.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            am.killBackgroundProcesses(packageName)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.resolve(false)
+        }
+    }
+
+    @ReactMethod
+    fun clearAllBackgroundApps(promise: Promise) {
+        Thread {
+            try {
+                val am = reactContext.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+                val pm = reactContext.packageManager
+                val runningProcs = am.runningAppProcesses ?: emptyList()
+                val myPkg = reactContext.packageName
+
+                for (proc in runningProcs) {
+                    val pkg = proc.pkgList?.firstOrNull() ?: continue
+                    if (pkg != myPkg && !pkg.startsWith("android") && !pkg.startsWith("com.google.android.inputmethod")) {
+                        try {
+                            am.killBackgroundProcesses(pkg)
+                        } catch (_: Exception) {}
+                    }
+                }
+                promise.resolve(true)
+            } catch (e: Exception) {
+                promise.resolve(false)
+            }
+        }.start()
     }
 
     @ReactMethod
