@@ -34,8 +34,8 @@ const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
 const CURRENT_VERSION = '2.4.1';
-const VERSION_MANIFEST_URL = 'https://tinyurl.com/2bye7com';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/242ebrje';
+const VERSION_MANIFEST_URL = 'https://files.catbox.moe/v2bale.json';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/2d8f9q3h';
 
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
 export interface MonetTheme {
@@ -4077,7 +4077,7 @@ export default function App() {
                     📺 Downloader Uygulamasından İndirmek İçin Kod:
                   </Text>
                   <Text style={{ color: aktifTema.border, fontSize: 15, fontWeight: '900', textAlign: 'center', marginVertical: 3 }}>
-                    tinyurl.com/242ebrje
+                    tinyurl.com/2d8f9q3h
                   </Text>
                   <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, textAlign: 'center' }}>
                     TV'deki Downloader uygulamasına bu linki yazarak da doğrudan kurabilirsiniz.
