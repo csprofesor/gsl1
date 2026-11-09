@@ -1,7 +1,7 @@
 {
-  "version": "3.2.6",
-  "versionCode": 32,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.6/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gs326apk",
-  "changelog": "v3.2.6 (Build 32): IMDb film kartları yatay şeridi ana ekrandan tamamen kaldırıldı (yalnızca üst sinema vitrini korundu). Kaldığın yerden devam et listesi arındırıldı: preview_program tanıtım kanalları kaldırıldı, yalnızca kullanıcının gerçekten izlemekte olduğu devam eden (watch_next_type=0 / oynatma süresi olan) gerçek içerikler listeleniyor."
+  "version": "3.2.7",
+  "versionCode": 33,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.7/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gs327apk",
+  "changelog": "v3.2.7 (Build 33): Android TV Watch Next (Kaldığın Yerden Devam Et) mimarisi Projectivy Launcher standartlarında kökten çözüldü: 1) Eksik olan READ_TV_LISTINGS runtime izni için otomatik denetim, izin isteme ve ayarlara yönlendirme eklendi. 2) Canlı ContentObserver ile diğer TV uygulamalarında (Netflix, Stremio, YouTube, VLC vb.) video durdurulduğunda/bittiğinde anında otomatik algılama ve sıfır gecikmeli yenileme sağlandı. 3) Kullanıcının TV üzerinde anında test edebilmesi için '🧪 Test Et' (gerçek TvProvider içeriği yazma/silme) butonu ve Sistem ayarlarında tanılama paneli eklendi."
 }

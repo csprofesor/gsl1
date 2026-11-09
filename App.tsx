@@ -34,11 +34,11 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.6';
-const CURRENT_BUILD = 32;
+const CURRENT_VERSION = '3.2.7';
+const CURRENT_BUILD = 33;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gs326apk';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gs327apk';
 
 // ================= 18 MADDELİK GELİŞMİŞ TV ÖZELLEŞTİRME TİPLERİ =================
 export type IconShapeType = 'rounded' | 'circle' | 'squircle' | 'rectangle';
@@ -1231,6 +1231,8 @@ export default function App() {
   const [seciliAmbiyansWp, setSeciliAmbiyansWp] = useState<AmbiyansDuvarKagidi>(AMBIYANS_DUVAR_KAGITLARI[0]);
   const [seciliSehir, setSeciliSehir] = useState<string>('📍 Otomatik (Konum Tespiti)');
   const [devamEdenIcerikler, setDevamEdenIcerikler] = useState<KaldiginYerdenDevamEtItem[]>([]);
+  const [tvIzniVar, setTvIzniVar] = useState<boolean>(true);
+  const [tvTestAktif, setTvTestAktif] = useState<boolean>(false);
 
   // 7. Arama & Formlar
   const [aramaMetni, setAramaMetni] = useState('');
@@ -2161,6 +2163,71 @@ export default function App() {
     });
   };
 
+  // TV İzleme İzni Durumunu Denetle
+  const tvIzniniKontrolEt = useCallback(async () => {
+    try {
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.hasTvListingsPermission) {
+        const hasPerm = await TVAppManager.hasTvListingsPermission();
+        setTvIzniVar(hasPerm);
+        return hasPerm;
+      }
+    } catch {}
+    return true;
+  }, []);
+
+  // TV İzleme İzni İste
+  const tvIzniniIste = async () => {
+    try {
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.requestTvListingsPermission) {
+        setBildirimMetni('📺 TV İzleme İzni İsteniyor...');
+        await TVAppManager.requestTvListingsPermission();
+        setTimeout(async () => {
+          const hasPerm = await tvIzniniKontrolEt();
+          if (hasPerm) {
+            setBildirimMetni('✅ TV İzleme İzni Onaylandı! İçerikler yükleniyor...');
+            sistemSonIzlenenleriGetir();
+          } else {
+            setBildirimMetni('ℹ️ TV Ayarlarından "İçerik Sağlayıcılar / TV Listeleri" iznini açabilirsiniz.');
+          }
+        }, 1500);
+      }
+    } catch {
+      setBildirimMetni('⚠️ İzin penceresi açılamadı.');
+    }
+  };
+
+  // TV İzleme Geçmişi Gerçek Test İçeriği Oluştur
+  const tvIzlemeTestiYap = async () => {
+    try {
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.createTestWatchNextProgram) {
+        setBildirimMetni('🧪 Android TV Sistemine Test Yayını Yazılıyor...');
+        const ok = await TVAppManager.createTestWatchNextProgram();
+        if (ok) {
+          setTvTestAktif(true);
+          setBildirimMetni('✅ Test filmi (Interstellar) sisteme başarıyla yazıldı! Ekranda görünüyor.');
+          setTimeout(() => sistemSonIzlenenleriGetir(), 400);
+        } else {
+          setBildirimMetni('⚠️ Test içeriği eklenemedi.');
+        }
+      }
+    } catch (e: any) {
+      setBildirimMetni(`⚠️ Test Hatası: ${e?.message || 'Bilinmeyen hata'}`);
+    }
+  };
+
+  // TV İzleme Geçmişi Test İçeriklerini Temizle
+  const tvIzlemeTestiTemizle = async () => {
+    try {
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.clearAllTestWatchNextPrograms) {
+        setBildirimMetni('🧹 Test içerikleri temizleniyor...');
+        await TVAppManager.clearAllTestWatchNextPrograms();
+        setTvTestAktif(false);
+        setBildirimMetni('✅ Test filmleri sistemden tamamen silindi.');
+        setTimeout(() => sistemSonIzlenenleriGetir(), 400);
+      }
+    } catch {}
+  };
+
   // Android TV Sistem "Watch Next" / "Play Next" İçeriklerini Getir (Netflix, YouTube, Stremio, VLC vb.)
   const sistemSonIzlenenleriGetir = useCallback(async () => {
     try {
@@ -2182,14 +2249,26 @@ export default function App() {
 
   // TV Uygulamaları Arası Geçişte "Kaldığın Yerden Devam Et" Rafını Anında Güncelle
   useEffect(() => {
+    tvIzniniKontrolEt();
     sistemSonIzlenenleriGetir();
+
+    // Sistem TV ContentObserver Dinleyicisi (Diğer uygulamalar video bitirdiğinde/durdurduğunda anında yenile)
+    const subWatchNext = DeviceEventEmitter.addListener('onWatchNextChanged', () => {
+      sistemSonIzlenenleriGetir();
+    });
+
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
+        tvIzniniKontrolEt();
         sistemSonIzlenenleriGetir();
       }
     });
-    return () => sub.remove();
-  }, [sistemSonIzlenenleriGetir]);
+
+    return () => {
+      subWatchNext.remove();
+      sub.remove();
+    };
+  }, [sistemSonIzlenenleriGetir, tvIzniniKontrolEt]);
 
   // Kaldığın Yerden Devam Et Tıklama Eylemi (Doğrudan Başlatma & Sıfır Bekleme)
   const devamEdenIcerikBaslat = async (item: KaldiginYerdenDevamEtItem) => {
@@ -3934,31 +4013,63 @@ export default function App() {
               <View style={styles.bolumBaslikSatir}>
                 <View style={styles.bolumBaslikIkonlu}>
                   <Text style={styles.saatGecmisIkon}>▶</Text>
-                  <Text style={styles.bolumBaslik}>Kaldığın Yerden Devam Et & Son İzlenenler</Text>
+                  <Text style={styles.bolumBaslik}>Kaldığın Yerden Devam Et</Text>
                   {devamEdenIcerikler.length > 0 && (
                     <Text style={styles.appSayiRozet}>({devamEdenIcerikler.length})</Text>
                   )}
                 </View>
-                {devamEdenIcerikler.length > 0 && (
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {!tvIzniVar && (
+                    <FocusableItem
+                      onPress={tvIzniniIste}
+                      style={[styles.tumunuGorButon, { backgroundColor: '#DC2626', marginRight: 8 }]}
+                      focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                    >
+                      {() => <Text style={[styles.tumunuGorYazi, { color: '#FFF' }]}>🔒 TV İznini Aç</Text>}
+                    </FocusableItem>
+                  )}
                   <FocusableItem
-                    onPress={() => {
-                      Alert.alert('Geçmişi Sıfırla', 'Son izlenenler listesi temizlensin mi?', [
-                        { text: 'Vazgeç', style: 'cancel' },
-                        { text: 'Temizle', onPress: devamEtListesiniSifirla },
-                      ]);
-                    }}
-                    style={styles.tumunuGorButon}
+                    onPress={tvTestAktif ? tvIzlemeTestiTemizle : tvIzlemeTestiYap}
+                    style={[styles.tumunuGorButon, { marginRight: 8 }]}
+                    focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
                   >
-                    {() => <Text style={styles.tumunuGorYazi}>🗑️ Listeyi Temizle</Text>}
+                    {() => (
+                      <Text style={styles.tumunuGorYazi}>
+                        {tvTestAktif ? '🧹 Testi Sil' : '🧪 Test Et'}
+                      </Text>
+                    )}
                   </FocusableItem>
-                )}
+                  {devamEdenIcerikler.length > 0 && (
+                    <FocusableItem
+                      onPress={() => {
+                        Alert.alert('Geçmişi Sıfırla', 'Son izlenenler listesi temizlensin mi?', [
+                          { text: 'Vazgeç', style: 'cancel' },
+                          { text: 'Temizle', onPress: devamEtListesiniSifirla },
+                        ]);
+                      }}
+                      style={styles.tumunuGorButon}
+                      focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                    >
+                      {() => <Text style={styles.tumunuGorYazi}>🗑️ Listeyi Temizle</Text>}
+                    </FocusableItem>
+                  )}
+                </View>
               </View>
 
               {devamEdenIcerikler.length === 0 ? (
                 <View style={[styles.bosIzlemeKutusu, { borderColor: aktifTema.surface }]}>
                   <Text style={styles.bosIzlemeYazi}>
-                    Henüz izleme geçmişi yok. Yukarıdaki IMDb vitrininden veya film aramasından bir yapım başlattığınızda izleme geçmişiniz burada görünecektir.
+                    Henüz izleme geçmişi yok. Netflix, Stremio, YouTube, Cloudstream veya VLC'de bir film/dizi izlediğinizde otomatik olarak burada listelenecektir.
                   </Text>
+                  {!tvIzniVar ? (
+                    <Text style={{ color: '#F87171', fontSize: 11, marginTop: 6, fontWeight: '700' }}>
+                      ⚠️ TV izleme verilerine erişim izni bekleniyor. Yukarıdaki "🔒 TV İznini Aç" butonuna basarak onaylayabilirsiniz.
+                    </Text>
+                  ) : (
+                    <Text style={{ color: aktifTema.border, fontSize: 11, marginTop: 6, fontWeight: '700' }}>
+                      💡 Sistemin nasıl çalıştığını görmek için yukarıdaki "🧪 Test Et" butonuna basabilirsiniz.
+                    </Text>
+                  )}
                 </View>
               ) : (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
@@ -5349,6 +5460,43 @@ export default function App() {
                           <Text style={styles.tileIkon}>🏠</Text>
                           <Text style={[styles.tileBaslik, { color: '#38BDF8', fontWeight: '900' }]}>Orijinal TV Arayüzü</Text>
                           <Text style={styles.tileAlt}>Fabrika Ekranına Geç</Text>
+                        </>
+                      )}
+                    </FocusableItem>
+
+                    {/* TV İzleme Geçmişi (Watch Next) İzni & Test Paneli */}
+                    <FocusableItem
+                      style={[styles.kontrolTile, { borderColor: tvIzniVar ? '#10B981' : '#F59E0B', backgroundColor: tvIzniVar ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)' }]}
+                      focusedStyle={[styles.kontrolTileOdak, { borderColor: '#FFFFFF' }]}
+                      onPress={() => {
+                        Alert.alert(
+                          '📺 TV İzleme Geçmişi (Watch Next) Testi',
+                          `İzin Durumu: ${tvIzniVar ? '✅ İzin Verildi (Aktif)' : '❌ İzin Bekleniyor'}\n\nDiğer uygulamalarda (Netflix, Stremio, YouTube, Cloudstream, VLC vb.) kaldığınız filmlerin ana ekranda görünmesini test edebilirsiniz.`,
+                          [
+                            { text: 'Kapat', style: 'cancel' },
+                            {
+                              text: '🧪 Test İçeriği Ekle',
+                              onPress: tvIzlemeTestiYap,
+                            },
+                            {
+                              text: '🧹 Testi Sil',
+                              onPress: tvIzlemeTestiTemizle,
+                            },
+                            {
+                              text: tvIzniVar ? '⚙️ İzin Ayarları' : '🔓 İzin İste / Aç',
+                              onPress: tvIzniniIste,
+                            },
+                          ]
+                        );
+                      }}
+                    >
+                      {() => (
+                        <>
+                          <Text style={styles.tileIkon}>📺</Text>
+                          <Text style={[styles.tileBaslik, { color: tvIzniVar ? '#10B981' : '#F59E0B', fontWeight: '900' }]}>
+                            {tvIzniVar ? 'İzleme Geçmişi: Aktif' : 'İzleme Geçmişi: İzin İste'}
+                          </Text>
+                          <Text style={styles.tileAlt}>Watch Next Test & Tanılama</Text>
                         </>
                       )}
                     </FocusableItem>

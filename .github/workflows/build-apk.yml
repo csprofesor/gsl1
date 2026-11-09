@@ -52,16 +52,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v3.2.6' }}
-          name: "GS TV Launcher Ultra v3.2.6 (Build 32)"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v3.2.7' }}
+          name: "GS TV Launcher Ultra v3.2.7 (Build 33)"
           draft: false
           prerelease: false
           body: |
-            ## GS TV Launcher Ultra v3.2.6 (Build 32)
-            - 🎯 **Sadeleştirilmiş Ana Ekran:** Fazlalık oluşturan IMDb yatay film kartları şeridi kaldırıldı, yalnızca şık üst sinema vitrini korundu.
-            - 📺 **Temiz & Gerçek "Kaldığın Yerden Devam Et":** Android TV `preview_program` reklam/tanıtım kanalları tamamen temizlendi. Yalnızca kullanıcının gerçekten izlemekte olduğu yarıda kalan (watch_next_type=0 / gerçek oynatma konumu olan) içerikler listeleniyor.
-            - 🔍 **Akıllı Otomatik Arama & Pano Aktarımı:** Film oynatıldığında film adı arama kutusuna otomatik aktarılır ve panoya kopyalanır.
-            - ⚡ **Hızlı ve Akıcı:** Tüm Android TV ve TV Box cihazlarda (Mi Box, Chromecast vb.) yüksek performans.
+            ## GS TV Launcher Ultra v3.2.7 (Build 33)
+            - 📺 **Android TV Watch Next (Kaldığın Yerden Devam Et) Tam Çözümü:** Projectivy Launcher standartlarında `READ_TV_LISTINGS` runtime izin denetimi ve tek tıkla izin isteme diyaloğu eklendi.
+            - ⚡ **Canlı ContentObserver (Anında Algılama):** Netflix, Stremio, YouTube, VLC veya CloudStream'de video izlendiğinde ve çıkıldığında başlatıcı anında haberdar olur ve listeyi canlı yeniler.
+            - 🧪 **Ekranda Canlı Test Et Butonu:** Kullanıcının TV üzerinde sistem sağlayıcısını anında doğrulayabilmesi için "🧪 Test Et" (gerçek sistem yayını ekleme/silme) butonu ve Kontrol Merkezi Sistem sekmesinde tanılama paneli eklendi.
+            - 🎯 **Temiz ve Hızlı:** Sıralama en son izlenen içerik en başta olacak şekilde `last_engagement_time_utc_millis` ile optimize edildi.
             - 📦 **Play Store AAB & Sideload APK:** İmzalı paketler hazır.
           files: |
             android/app/build/outputs/apk/release/app-release.apk

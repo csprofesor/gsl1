@@ -4,10 +4,12 @@ import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.database.ContentObserver
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
@@ -15,7 +17,11 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
@@ -26,6 +32,45 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
     override fun getName(): String = "TVAppManager"
+
+    private var watchNextObserver: ContentObserver? = null
+
+    private fun registerWatchNextObserver() {
+        try {
+            if (watchNextObserver == null) {
+                watchNextObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+                    override fun onChange(selfChange: Boolean) {
+                        super.onChange(selfChange)
+                        try {
+                            reactContext
+                                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                                .emit("onWatchNextChanged", null)
+                        } catch (_: Exception) {}
+                    }
+                }
+                reactContext.contentResolver.registerContentObserver(
+                    Uri.parse("content://android.media.tv/watch_next_program"),
+                    true,
+                    watchNextObserver!!
+                )
+            }
+        } catch (_: Exception) {}
+    }
+
+    override fun initialize() {
+        super.initialize()
+        registerWatchNextObserver()
+    }
+
+    override fun invalidate() {
+        super.invalidate()
+        try {
+            watchNextObserver?.let {
+                reactContext.contentResolver.unregisterContentObserver(it)
+            }
+            watchNextObserver = null
+        } catch (_: Exception) {}
+    }
 
     private fun drawableToBitmap(drawable: Drawable): Bitmap {
         if (drawable is BitmapDrawable && drawable.bitmap != null) {
@@ -1243,18 +1288,79 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun hasTvListingsPermission(promise: Promise) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val granted = ContextCompat.checkSelfPermission(
+                    reactContext,
+                    "android.permission.READ_TV_LISTINGS"
+                ) == PackageManager.PERMISSION_GRANTED
+                promise.resolve(granted)
+            } else {
+                promise.resolve(true)
+            }
+        } catch (e: Exception) {
+            promise.resolve(false)
+        }
+    }
+
+    @ReactMethod
+    fun requestTvListingsPermission(promise: Promise) {
+        try {
+            val activity = currentActivity
+            if (activity != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                ActivityCompat.requestPermissions(
+                    activity,
+                    arrayOf("android.permission.READ_TV_LISTINGS"),
+                    2026
+                )
+                promise.resolve(true)
+            } else {
+                openAppPermissionSettings(promise)
+            }
+        } catch (e: Exception) {
+            promise.reject("PERMISSION_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun openAppPermissionSettings(promise: Promise) {
+        try {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", reactContext.packageName, null)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.resolve(false)
+        }
+    }
+
+    @ReactMethod
     fun getSystemWatchNextPrograms(promise: Promise) {
         val result = Arguments.createArray()
         val pm = reactContext.packageManager
 
         // Yalnızca resmi Android TV "Watch Next" sağlayıcısını sorgula (content://android.media.tv/watch_next_program)
-        // preview_program KESİNLİKLE sorgulanmaz çünkü tanıtım, kanal ve rastgele reklam içerir
         val uri = Uri.parse("content://android.media.tv/watch_next_program")
         var cursor: android.database.Cursor? = null
+
         try {
-            // Güvenli sorgu: projection=null ve sortOrder=null vererek SQLiteException syntax ve LIMIT hatalarını tamamen engelle
-            cursor = reactContext.contentResolver.query(uri, null, null, null, null)
-        } catch (e: Exception) {
+            // En son izlenenleri en başa almak için last_engagement_time_utc_millis DESC dene
+            cursor = reactContext.contentResolver.query(
+                uri,
+                null,
+                null,
+                null,
+                "last_engagement_time_utc_millis DESC"
+            )
+        } catch (_: Exception) {
+            try {
+                // Bazı ROM'larda bu sıralama sütunu yoksa sıralamasız güvenli sorgu yap
+                cursor = reactContext.contentResolver.query(uri, null, null, null, null)
+            } catch (_: Exception) {
+            }
         }
 
         if (cursor != null) {
@@ -1272,7 +1378,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                 val typeCol = cursor.getColumnIndex("watch_next_type")
 
                 var count = 0
-                while (cursor.moveToNext() && count < 25) {
+                while (cursor.moveToNext() && count < 30) {
                     val id = if (idCol >= 0) cursor.getLong(idCol) else 0L
                     val pkg = if (pkgCol >= 0) cursor.getString(pkgCol) ?: "" else ""
                     val title = if (titleCol >= 0) cursor.getString(titleCol) ?: "" else ""
@@ -1285,13 +1391,16 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     val durMs = if (durCol >= 0) cursor.getLong(durCol) else 0L
                     val watchNextType = if (typeCol >= 0) cursor.getInt(typeCol) else 0
 
-                    // Sadece kullanıcının gerçekten izlemekte olduğu programları kabul et
-                    // (WATCH_NEXT_TYPE_CONTINUE == 0 veya pozitif oynatma konumu olanlar; reklam/öneriler elenir)
-                    if (watchNextType != 0 && posMs <= 0) {
+                    // Yalnızca devam eden veya sıradaki bölüm (0=CONTINUE, 1=NEXT) veya pozitif izleme süresi olanları al
+                    if (watchNextType != 0 && watchNextType != 1 && posMs <= 0) {
                         continue
                     }
 
-                    val displayTitle = if (title.isNotEmpty()) title else epTitle
+                    val displayTitle = when {
+                        title.isNotEmpty() -> title
+                        epTitle.isNotEmpty() -> epTitle
+                        else -> ""
+                    }
                     if (displayTitle.isEmpty()) continue
 
                     var appName = pkg
@@ -1307,10 +1416,19 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     item.putString("platform", appName)
                     item.putString("platformIcon", "▶")
                     item.putString("title", displayTitle)
-                    val subtitle = if (epTitle.isNotEmpty() && epTitle != title) epTitle else if (desc.isNotEmpty()) desc else "${appName} • Kaldığın Yerden"
+
+                    val subtitle = when {
+                        epTitle.isNotEmpty() && epTitle != title -> "$appName • $epTitle"
+                        desc.isNotEmpty() -> "$appName • $desc"
+                        else -> "$appName • Kaldığın Yerden"
+                    }
                     item.putString("subtitle", subtitle)
-                    
-                    val backdrop = if (poster.isNotEmpty()) poster else thumb
+
+                    val backdrop = when {
+                        poster.isNotEmpty() -> poster
+                        thumb.isNotEmpty() -> thumb
+                        else -> ""
+                    }
                     item.putString("backdropUrl", backdrop)
                     item.putString("intentUri", intentUri)
 
@@ -1338,6 +1456,8 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
         try {
             val pm = reactContext.packageManager
             var launched = false
+
+            // 1. Doğrudan Intent URI ile oynatıcıyı başlat
             if (!intentUri.isNullOrEmpty()) {
                 try {
                     val intent = Intent.parseUri(intentUri, Intent.URI_INTENT_SCHEME).apply {
@@ -1349,6 +1469,25 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     }
                 } catch (_: Exception) {}
             }
+
+            // 2. Android TV TvContract program URI ile ACTION_VIEW dene
+            if (!launched && programId > 0) {
+                try {
+                    val contentUri = Uri.parse("content://android.media.tv/watch_next_program/${programId.toLong()}")
+                    val viewIntent = Intent(Intent.ACTION_VIEW, contentUri).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        if (!packageName.isNullOrEmpty()) {
+                            setPackage(packageName)
+                        }
+                    }
+                    if (viewIntent.resolveActivity(pm) != null) {
+                        reactContext.startActivity(viewIntent)
+                        launched = true
+                    }
+                } catch (_: Exception) {}
+            }
+
+            // 3. Hedef paketi başlat
             if (!launched && !packageName.isNullOrEmpty()) {
                 val launchIntent = pm.getLaunchIntentForPackage(packageName)?.apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -1358,6 +1497,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     launched = true
                 }
             }
+
             promise.resolve(launched)
         } catch (e: Exception) {
             promise.reject("LAUNCH_ERROR", e.message, e)
@@ -1370,6 +1510,45 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             val uri = Uri.parse("content://android.media.tv/watch_next_program/${programId.toLong()}")
             val count = reactContext.contentResolver.delete(uri, null, null)
             promise.resolve(count > 0)
+        } catch (e: Exception) {
+            promise.resolve(false)
+        }
+    }
+
+    @ReactMethod
+    fun createTestWatchNextProgram(promise: Promise) {
+        try {
+            val uri = Uri.parse("content://android.media.tv/watch_next_program")
+            val values = ContentValues().apply {
+                put("package_name", reactContext.packageName)
+                put("title", "Interstellar (Yıldızlararası)")
+                put("episode_title", "4K UHD • Bilim Kurgu")
+                put("short_description", "GS TV Launcher Test Yayını • Kaldığın Yerden Oynat")
+                put("poster_art_uri", "https://images.metahub.space/background/medium/tt0816692/img")
+                put("thumbnail_uri", "https://images.metahub.space/poster/medium/tt0816692/img")
+                put("watch_next_type", 0) // WATCH_NEXT_TYPE_CONTINUE
+                put("last_playback_position_millis", 54 * 60 * 1000L) // 54. dakika
+                put("duration_millis", 169 * 60 * 1000L) // 169 dakika
+                put("last_engagement_time_utc_millis", System.currentTimeMillis())
+                put("searchable", 1)
+            }
+            val insertedUri = reactContext.contentResolver.insert(uri, values)
+            promise.resolve(insertedUri != null)
+        } catch (e: Exception) {
+            promise.reject("TEST_INSERT_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun clearAllTestWatchNextPrograms(promise: Promise) {
+        try {
+            val uri = Uri.parse("content://android.media.tv/watch_next_program")
+            val deleted = reactContext.contentResolver.delete(
+                uri,
+                "package_name = ?",
+                arrayOf(reactContext.packageName)
+            )
+            promise.resolve(deleted > 0)
         } catch (e: Exception) {
             promise.resolve(false)
         }
