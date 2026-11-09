@@ -33,8 +33,8 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.0.0';
-const CURRENT_BUILD = 24;
+const CURRENT_VERSION = '3.2.0';
+const CURRENT_BUILD = 26;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/847291';
@@ -44,7 +44,7 @@ export type IconShapeType = 'rounded' | 'circle' | 'squircle' | 'rectangle';
 export type IconPackType = 'default' | 'neon' | 'glass' | 'gold' | 'mono' | 'retro';
 export type FocusAnimType = 'scale_glow' | 'pulse' | 'wiggle' | 'tilt';
 export type DuzenPresetType = 'sinematik' | 'minimalist' | 'klasik' | 'gamer';
-export type ArkaplanKaynagiType = 'varsayilan' | 'reddit_earth' | 'reddit_space' | 'google_art' | 'dark';
+export type ArkaplanKaynagiType = 'varsayilan' | 'reddit_earth' | 'reddit_space' | 'google_art' | 'dark' | 'custom';
 
 export interface DinamikDuvarKagidi {
   id: string;
@@ -55,44 +55,68 @@ export interface DinamikDuvarKagidi {
 
 export const REDDIT_GOOGLE_DUVAR_KAGITLARI: DinamikDuvarKagidi[] = [
   {
+    id: 'cat_1',
+    baslik: '🐱 Sevimli Yavru Kedi',
+    kaynak: 'Evcil Hayvan',
+    url: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1920&auto=format&fit=crop',
+  },
+  {
+    id: 'cat_2',
+    baslik: '🐾 Oyuncu Mavi Gözlü Kedi',
+    kaynak: 'Evcil Hayvan',
+    url: 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?q=80&w=1920&auto=format&fit=crop',
+  },
+  {
+    id: 'family_1',
+    baslik: '👨‍👩‍👧‍👦 Sıcak Aile & Yuva',
+    kaynak: 'Aile & Yuva',
+    url: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=1920&auto=format&fit=crop',
+  },
+  {
+    id: 'family_2',
+    baslik: '🏡 Huzurlu Sıcak Ev',
+    kaynak: 'Aile & Yuva',
+    url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1920&auto=format&fit=crop',
+  },
+  {
     id: 'reddit_earth_1',
-    baslik: 'Yosemite Vadisi (r/EarthPorn)',
+    baslik: '🌲 Yosemite Vadisi (Doğa)',
     kaynak: 'Reddit EarthPorn',
     url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1920&auto=format&fit=crop',
   },
   {
     id: 'reddit_earth_2',
-    baslik: 'Alp Dağları & Sis (r/EarthPorn)',
+    baslik: '🏔️ Alp Dağları & Sis (Doğa)',
     kaynak: 'Reddit EarthPorn',
     url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1920&auto=format&fit=crop',
   },
   {
     id: 'reddit_earth_3',
-    baslik: 'Como Gölü & Yansıma (r/EarthPorn)',
+    baslik: '🌊 Como Gölü & Yansıma',
     kaynak: 'Reddit EarthPorn',
     url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1920&auto=format&fit=crop',
   },
   {
     id: 'reddit_space_1',
-    baslik: 'Kozmik Nebula & Yıldız Tozu (r/SpacePorn)',
+    baslik: '✨ Kozmik Nebula (Uzay)',
     kaynak: 'Reddit SpacePorn',
     url: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1920&auto=format&fit=crop',
   },
   {
     id: 'reddit_space_2',
-    baslik: 'Yörüngeden Dünya & Atmosfer (r/SpacePorn)',
+    baslik: '🌍 Yörüngeden Dünya',
     kaynak: 'Reddit SpacePorn',
     url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1920&auto=format&fit=crop',
   },
   {
     id: 'google_art_1',
-    baslik: 'Yağlı Boya Doku Sanatı',
+    baslik: '🎨 Yağlı Boya Sanatı',
     kaynak: 'Google Chromecast Art',
     url: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=1920&auto=format&fit=crop',
   },
   {
     id: 'google_art_2',
-    baslik: 'Modern Geometrik Mimari',
+    baslik: '🏛️ Modern Mimari',
     kaynak: 'Google Chromecast Art',
     url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1920&auto=format&fit=crop',
   },
@@ -995,8 +1019,12 @@ export default function App() {
   // 5. Gerçek Son Başlatılan Uygulamalar (Sıfır Sahte İçerik)
   const [sonBaslatilanlar, setSonBaslatilanlar] = useState<SonBaslatilanItem[]>([]);
 
-  // 5.b Film & Dizi Vitrin Seçimi & Otomatik Döngü (Başlangıçta Rastgele IMDb Filmi)
-  const [seciliFilmIndex, setSeciliFilmIndex] = useState(() => Math.floor(Math.random() * 21));
+  // 5.b Canlı & Dinamik IMDb Vitrini (Herkeste farklı, her açılışta değişken katalog)
+  const [dinamikFilmKatalogu, setDinamikFilmKatalogu] = useState<FilmVitrinItem[]>(() => {
+    return [...FILM_VITRIN_KATALOGU].sort(() => 0.5 - Math.random());
+  });
+  const [seciliFilmIndex, setSeciliFilmIndex] = useState(() => Math.floor(Math.random() * (FILM_VITRIN_KATALOGU.length || 20)));
+  const [imdbYukleniyor, setImdbYukleniyor] = useState(false);
 
   // 5.c Uygulama İçi Güncelleme Durumu
   const [guncellemeModalAcik, setGuncellemeModalAcik] = useState(false);
@@ -1075,6 +1103,8 @@ export default function App() {
   const [odakAnimasyonu, setOdakAnimasyonu] = useState<FocusAnimType>('scale_glow');
   const [arkaplanKaynagi, setArkaplanKaynagi] = useState<ArkaplanKaynagiType>('varsayilan');
   const [seciliDinamikWp, setSeciliDinamikWp] = useState<DinamikDuvarKagidi | null>(null);
+  const [ozelDuvarKagidiUri, setOzelDuvarKagidiUri] = useState<string>('');
+  const [ozelUrlMetni, setOzelUrlMetni] = useState<string>('');
   const [duzenPreset, setDuzenPreset] = useState<DuzenPresetType>('sinematik');
 
   // Kontrol Merkezi Sekmesi (5 Sekmeli Dashboard)
@@ -1487,6 +1517,10 @@ export default function App() {
               setArkaplanKaynagi(rawWpSrc as ArkaplanKaynagiType);
             } catch {}
             try {
+              const rawOzelWp = await TVAppManager.getSetting('ozelDuvarKagidiUri', '');
+              if (rawOzelWp) setOzelDuvarKagidiUri(rawOzelWp);
+            } catch {}
+            try {
               const rawPreset = await TVAppManager.getSetting('duzenPreset', 'sinematik');
               setDuzenPreset(rawPreset as DuzenPresetType);
             } catch {}
@@ -1603,6 +1637,7 @@ export default function App() {
   // Cihaz Bilgilerini Alma
   useEffect(() => {
     yukluUygulamalariGetir();
+    canliImdbOnerileriGetir();
 
     if (Platform.OS === 'android' && TVAppManager && TVAppManager.getDeviceInfo) {
       TVAppManager.getDeviceInfo()
@@ -1870,6 +1905,31 @@ export default function App() {
     }, 800);
   };
 
+  // İzleme Geçmişine Kaydet Yardımcısı (Uygulama veya Film)
+  const filmGecmiseEkle = (title: string, platform: string, pkg: string, backdropUrl?: string, subtitle?: string) => {
+    const isApp = platform === 'Uygulama';
+    const yeniDevam: KaldiginYerdenDevamEtItem = {
+      id: `cont_${pkg || title}_${Date.now()}`,
+      title,
+      subtitle: subtitle || (isApp ? 'Uygulama • Son Açılan' : `${platform || 'Sinema'} • 4K`),
+      backdropUrl: backdropUrl || '',
+      platform: platform || (isApp ? 'Uygulama' : 'Sinema'),
+      platformIcon: isApp ? '📱' : '🎬',
+      pkg: pkg || '',
+      kaldigiDk: 100,
+      toplamDk: 100,
+      sonIzlemeZamani: 'Bugün',
+    };
+
+    setDevamEdenIcerikler((prev) => {
+      const guncel = [yeniDevam, ...prev.filter((d) => d.title !== title && (!pkg || d.pkg !== pkg))].slice(0, 15);
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+        TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(guncel)).catch(() => {});
+      }
+      return guncel;
+    });
+  };
+
   // Uygulama Başlatma (Gelişmiş Gerçek Geçmiş Kaydedicili & PIN Korumalı)
   const uygulamaBaslat = async (pkg: string, appName: string = '', pinDogrulandi: boolean = false) => {
     // 4 Haneli PIN Kontrolü
@@ -1894,6 +1954,9 @@ export default function App() {
         zaman: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setSonBaslatilanlar((prev) => [yeniSon, ...prev.filter((i) => i.packageName !== pkg)].slice(0, 10));
+
+      // Kaldığın Yerden Devam Et & Son İzlenenler rafına ekle (Sıfır Sahte İçerik)
+      filmGecmiseEkle(isim, 'Uygulama', pkg, hedef?.bannerUri || hedef?.iconUri || undefined, 'Hemen Başlat');
 
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
         TVAppManager.saveSetting('sonAcilanPkg', pkg).catch(() => {});
@@ -1925,44 +1988,88 @@ export default function App() {
     }
   };
 
+  // Canlı & Değişken IMDb Film & Dizi Kataloğu Çekme (Herkeste Farklı, Sürekli Değişken)
+  const canliImdbOnerileriGetir = async () => {
+    setImdbYukleniyor(true);
+    try {
+      const kategoriler = [
+        'https://cinemeta-catalogs.strem.io/top/catalog/movie/top.json',
+        'https://cinemeta-catalogs.strem.io/top/catalog/series/top.json',
+        'https://cinemeta-catalogs.strem.io/top/catalog/movie/top/genre=Sci-Fi.json',
+        'https://cinemeta-catalogs.strem.io/top/catalog/movie/top/genre=Action.json',
+        'https://cinemeta-catalogs.strem.io/top/catalog/movie/top/genre=Comedy.json',
+        'https://cinemeta-catalogs.strem.io/top/catalog/movie/top/genre=Animation.json',
+        'https://cinemeta-catalogs.strem.io/top/catalog/series/top/genre=Action.json',
+      ];
+      // Her açılışta rastgele 2 kategori seçip harmanla
+      const secilenler = [...kategoriler].sort(() => 0.5 - Math.random()).slice(0, 2);
+      const yeniFilmler: FilmVitrinItem[] = [];
+
+      for (const endpoint of secilenler) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 6000);
+          const res = await fetch(endpoint, { signal: controller.signal });
+          clearTimeout(timer);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && Array.isArray(data.metas)) {
+              for (const m of data.metas) {
+                if (m && m.name && (m.poster || m.background)) {
+                  const imdbId = m.imdb_id || m.id || '';
+                  yeniFilmler.push({
+                    id: imdbId || `m_${Math.random()}`,
+                    title: m.name,
+                    imdbId,
+                    year: (m.year || m.releaseInfo || '2024').toString().slice(0, 4),
+                    rating: m.imdbRating ? `${m.imdbRating} ⭐` : '8.5 ⭐',
+                    genre: Array.isArray(m.genre) ? m.genre.join(', ') : (m.genre || 'Sinema & Dizi'),
+                    platform: 'IMDb',
+                    platformIcon: '🍿',
+                    backdropUrl: m.background || m.poster || `https://images.metahub.space/background/medium/${imdbId}/img`,
+                    posterUrl: m.poster || m.background || `https://images.metahub.space/poster/medium/${imdbId}/img`,
+                    overview: m.description || `"${m.name}" filmi IMDb yüksek puanlı popüler içerikler arasındadır.`,
+                    packageCandidates: ['com.lagradost.cloudstream3', 'com.stremio.one', 'com.netflix.ninja'],
+                  });
+                }
+              }
+            }
+          }
+        } catch {}
+      }
+
+      if (yeniFilmler.length > 0) {
+        setDinamikFilmKatalogu(() => {
+          const tumListe = [...yeniFilmler, ...FILM_VITRIN_KATALOGU];
+          const gorulen = new Set<string>();
+          const benzersiz = tumListe.filter((f) => {
+            const anahtar = (f.imdbId || f.title).toLowerCase();
+            if (gorulen.has(anahtar)) return false;
+            gorulen.add(anahtar);
+            return true;
+          });
+          return benzersiz.sort(() => 0.5 - Math.random());
+        });
+      }
+    } catch {} finally {
+      setImdbYukleniyor(false);
+    }
+  };
+
   // Aktif Film & Dizi Afişi (Otomatik veya elle seçilen)
   const aktifFilm = useMemo(() => {
-    if (FILM_VITRIN_KATALOGU.length === 0) return null;
-    return FILM_VITRIN_KATALOGU[seciliFilmIndex % FILM_VITRIN_KATALOGU.length];
-  }, [seciliFilmIndex]);
+    if (dinamikFilmKatalogu.length === 0) return null;
+    return dinamikFilmKatalogu[seciliFilmIndex % dinamikFilmKatalogu.length];
+  }, [dinamikFilmKatalogu, seciliFilmIndex]);
 
   // Film Vitrini Otomatik Döngü (12 saniyede bir yeni film afişi)
   useEffect(() => {
-    if (!vitrinGorunur) return;
+    if (!vitrinGorunur || dinamikFilmKatalogu.length === 0) return;
     const interval = setInterval(() => {
-      setSeciliFilmIndex((prev) => (prev + 1) % FILM_VITRIN_KATALOGU.length);
+      setSeciliFilmIndex((prev) => (prev + 1) % dinamikFilmKatalogu.length);
     }, 12000);
     return () => clearInterval(interval);
-  }, [vitrinGorunur]);
-
-  // İzleme Geçmişine Kaydet Yardımcısı
-  const filmGecmiseEkle = (title: string, platform: string, pkg: string, backdropUrl?: string, subtitle?: string) => {
-    const yeniDevam: KaldiginYerdenDevamEtItem = {
-      id: `cont_${Date.now()}`,
-      title,
-      subtitle: subtitle || `${platform || 'Sinema'} • 4K`,
-      backdropUrl: backdropUrl || 'https://images.metahub.space/poster/medium/tt15239678/img',
-      platform: platform || 'Sinema',
-      platformIcon: '🎬',
-      pkg: pkg || 'com.lagradost.cloudstream3',
-      kaldigiDk: 1,
-      toplamDk: 120,
-      sonIzlemeZamani: 'Bugün',
-    };
-
-    setDevamEdenIcerikler((prev) => {
-      const guncel = [yeniDevam, ...prev.filter((d) => d.title !== title)].slice(0, 10);
-      if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
-        TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(guncel)).catch(() => {});
-      }
-      return guncel;
-    });
-  };
+  }, [vitrinGorunur, dinamikFilmKatalogu.length]);
 
   // Akıllı Film & İçerik Başlatıcı Modalı Açma
   const filmDetayAc = (item: {
@@ -2979,14 +3086,17 @@ export default function App() {
     );
   };
 
-  // Dinamik Duvar Kağıdı Belirleme (Reddit, Google Art, Unsplash veya GS Teması)
+  // Dinamik Duvar Kağıdı Belirleme (Özel Fotoğraf, Reddit, Google Art, Unsplash veya GS Teması)
   const seciliDuvarKagidiKaynagi = useMemo(() => {
     if (arkaplanKaynagi === 'dark' || aktifTema.wallpaperKey === 'oled') return undefined;
+    if (arkaplanKaynagi === 'custom' && ozelDuvarKagidiUri) {
+      return { uri: ozelDuvarKagidiUri };
+    }
     if (seciliDinamikWp && seciliDinamikWp.url) {
       return { uri: seciliDinamikWp.url };
     }
     return BG_WALLPAPER;
-  }, [arkaplanKaynagi, seciliDinamikWp, aktifTema]);
+  }, [arkaplanKaynagi, ozelDuvarKagidiUri, seciliDinamikWp, aktifTema]);
 
   // Arka plan rengi veya duvar kağıdı
   const arkaplanStili = [
@@ -3244,11 +3354,28 @@ export default function App() {
                       style={[styles.filmRastgeleButon, { borderColor: 'rgba(255, 255, 255, 0.3)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
                       focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
                       onPress={() => {
-                        const randomIdx = Math.floor(Math.random() * FILM_VITRIN_KATALOGU.length);
+                        const count = dinamikFilmKatalogu.length || 1;
+                        const randomIdx = Math.floor(Math.random() * count);
                         setSeciliFilmIndex(randomIdx);
                       }}
                     >
                       {() => <Text style={[styles.filmRastgeleYazi, { color: '#FFFFFF', fontWeight: '800' }]}>🔀 Başka IMDb Filmi</Text>}
+                    </FocusableItem>
+
+                    <FocusableItem
+                      style={[styles.filmRastgeleButon, { borderColor: 'rgba(255, 255, 255, 0.3)', backgroundColor: 'rgba(15, 23, 42, 0.75)', marginLeft: 8 }]}
+                      focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                      onPress={async () => {
+                        await canliImdbOnerileriGetir();
+                        setBildirimMetni('🍿 Yeni IMDb filmleri çekildi!');
+                        setTimeout(() => setBildirimMetni(''), 2500);
+                      }}
+                    >
+                      {() => (
+                        <Text style={[styles.filmRastgeleYazi, { color: '#FFFFFF', fontWeight: '800' }]}>
+                          {imdbYukleniyor ? '⏳ Çekiliyor...' : '🔄 Yenile'}
+                        </Text>
+                      )}
                     </FocusableItem>
 
                     {/* Önceki / Sonraki Poster Tuşları */}
@@ -3256,16 +3383,20 @@ export default function App() {
                       <FocusableItem
                         style={styles.vitrinOkButon}
                         focusedStyle={{ backgroundColor: aktifTema.accent }}
-                        onPress={() =>
-                          setSeciliFilmIndex((prev) => (prev - 1 + FILM_VITRIN_KATALOGU.length) % FILM_VITRIN_KATALOGU.length)
-                        }
+                        onPress={() => {
+                          const count = dinamikFilmKatalogu.length || 1;
+                          setSeciliFilmIndex((prev) => (prev - 1 + count) % count);
+                        }}
                       >
                         {() => <Text style={styles.okYazi}>‹</Text>}
                       </FocusableItem>
                       <FocusableItem
                         style={styles.vitrinOkButon}
                         focusedStyle={{ backgroundColor: aktifTema.accent }}
-                        onPress={() => setSeciliFilmIndex((prev) => (prev + 1) % FILM_VITRIN_KATALOGU.length)}
+                        onPress={() => {
+                          const count = dinamikFilmKatalogu.length || 1;
+                          setSeciliFilmIndex((prev) => (prev + 1) % count);
+                        }}
                       >
                         {() => <Text style={styles.okYazi}>›</Text>}
                       </FocusableItem>
@@ -3276,15 +3407,15 @@ export default function App() {
             </View>
           )}
 
-          {/* 2. GS TV KATEGORİ SEKMELERİ (FİLTRE ÇUBUĞU - "TÜMÜ" EN SONDA) */}
+          {/* 2. GS TV KATEGORİ SEKMELERİ (FİLTRE ÇUBUĞU - "TÜMÜ" EN BAŞTA) */}
           <View style={styles.kategoriKapsayici}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {[
+                { id: 'all', title: '⭐ Tüm Uygulamalar' },
                 { id: 'media', title: '🎬 Sinema & Dizi' },
                 { id: 'tv', title: '📡 Canlı TV & Spor' },
                 { id: 'games', title: '🎮 Oyunlar' },
                 { id: 'tools', title: '🛠️ Araçlar & Sistem' },
-                { id: 'all', title: '⭐ Tüm Uygulamalar' },
               ].map((kat) => {
                 const aktif = seciliKategori === kat.id;
                 return (
@@ -3490,15 +3621,19 @@ export default function App() {
                         key={item.id}
                         style={[styles.devamEtKarti, { borderColor: aktifTema.surface }]}
                         focusedStyle={[styles.devamEtOdak, { borderColor: aktifTema.border, shadowColor: aktifTema.accent }]}
-                        onPress={() =>
-                          filmDetayAc({
-                            title: item.title,
-                            platform: item.platform,
-                            pkg: item.pkg,
-                            backdropUrl: item.backdropUrl,
-                            genre: item.subtitle,
-                          })
-                        }
+                        onPress={() => {
+                          if (item.pkg && uygulamalar.some((u) => u.packageName === item.pkg)) {
+                            uygulamaBaslat(item.pkg, item.title);
+                          } else {
+                            filmDetayAc({
+                              title: item.title,
+                              platform: item.platform,
+                              pkg: item.pkg,
+                              backdropUrl: item.backdropUrl,
+                              genre: item.subtitle,
+                            });
+                          }
+                        }}
                         onLongPress={() => {
                           Alert.alert('Listeden Kaldır', `"${item.title}" devam listesinden silinsin mi?`, [
                             { text: 'Vazgeç', style: 'cancel' },
@@ -3512,7 +3647,13 @@ export default function App() {
                       >
                         {(isFocused) => (
                           <View style={styles.devamEtIcerik}>
-                            <Image source={{ uri: item.backdropUrl }} style={styles.devamEtResim} resizeMode="cover" />
+                            {item.backdropUrl ? (
+                              <Image source={{ uri: item.backdropUrl }} style={styles.devamEtResim} resizeMode="cover" />
+                            ) : (
+                              <View style={[styles.devamEtResim, { backgroundColor: '#1E293B', alignItems: 'center', justifyContent: 'center' }]}>
+                                <Text style={{ fontSize: 32 }}>{item.platformIcon || '📺'}</Text>
+                              </View>
+                            )}
                             <View style={[styles.devamEtKarartma, isFocused && { backgroundColor: 'rgba(5, 10, 25, 0.45)' }]}>
                               <View style={[styles.devamEtUstRozet, { backgroundColor: 'rgba(0,0,0,0.7)', borderColor: aktifTema.border, borderWidth: 0.8 }]}>
                                 <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '800' }}>
@@ -3524,7 +3665,7 @@ export default function App() {
                                   {item.title}
                                 </Text>
                                 <Text style={styles.devamEtAltBaslik}>
-                                  {item.subtitle} • {item.kaldigiDk}. dk / {item.toplamDk} dk
+                                  {item.subtitle}
                                 </Text>
                                 {/* İlerleme Çubuğu */}
                                 <View style={styles.devamEtIlerlemeArka}>
@@ -3532,7 +3673,7 @@ export default function App() {
                                 </View>
                                 {isFocused && (
                                   <Text style={[styles.devamEtOynatMetin, { color: aktifTema.border }]}>
-                                    ▶ Oynat & Devam Et
+                                    ▶ Başlat & Devam Et
                                   </Text>
                                 )}
                               </View>
@@ -3965,6 +4106,114 @@ export default function App() {
                           );
                         })}
                       </ScrollView>
+                    </View>
+
+                    {/* Kendi Fotoğrafını Yükle / Özel Duvar Kağıdı */}
+                    <View style={styles.ayarGrubuKutusu}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <Text style={styles.ayarGrubuBaslik}>📸 Kendi Fotoğrafın (Aile, Evcil Hayvan, Kedi veya Özel URL):</Text>
+                        <FocusableItem
+                          style={[styles.kategoriSecimPill, { backgroundColor: '#0284C7', borderColor: '#FFFFFF' }]}
+                          focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                          onPress={() => setFotoYuklemeModalAcik(true)}
+                        >
+                          {() => <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800' }}>📲 Telefondan Fotoğraf Yükle (QR Kod)</Text>}
+                        </FocusableItem>
+                      </View>
+
+                      {/* Telefondan Yüklenen Fotoğraflar Varsa Listele */}
+                      {yuklenenFotograflar.length > 0 && (
+                        <View style={{ marginBottom: 12 }}>
+                          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 6 }}>
+                            🖼️ Telefondan Gönderilen Fotoğraflar (Tıklayarak arka plan yapın):
+                          </Text>
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {yuklenenFotograflar.map((foto, idx) => {
+                              const secili = arkaplanKaynagi === 'custom' && ozelDuvarKagidiUri === foto.uri;
+                              return (
+                                <FocusableItem
+                                  key={foto.name || idx}
+                                  style={{
+                                    width: 130,
+                                    height: 80,
+                                    borderRadius: 10,
+                                    overflow: 'hidden',
+                                    borderWidth: 2,
+                                    borderColor: secili ? '#38BDF8' : 'rgba(255,255,255,0.2)',
+                                    marginRight: 10,
+                                    backgroundColor: '#0F172A',
+                                  }}
+                                  focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.08 }] }}
+                                  onPress={() => {
+                                    setArkaplanKaynagi('custom');
+                                    setOzelDuvarKagidiUri(foto.uri);
+                                    setSeciliDinamikWp(null);
+                                    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+                                      TVAppManager.saveSetting('arkaplanKaynagi', 'custom').catch(() => {});
+                                      TVAppManager.saveSetting('ozelDuvarKagidiUri', foto.uri).catch(() => {});
+                                    }
+                                    setBildirimMetni('✔ Telefondan yüklenen fotoğraf arka plan yapıldı!');
+                                    setTimeout(() => setBildirimMetni(''), 2500);
+                                  }}
+                                >
+                                  {() => (
+                                    <View style={{ flex: 1 }}>
+                                      <Image source={{ uri: foto.uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                                      {secili && (
+                                        <View style={{ position: 'absolute', top: 4, right: 4, backgroundColor: '#0284C7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                          <Text style={{ color: '#FFF', fontSize: 9, fontWeight: '900' }}>✔ AKTİF</Text>
+                                        </View>
+                                      )}
+                                    </View>
+                                  )}
+                                </FocusableItem>
+                              );
+                            })}
+                          </ScrollView>
+                        </View>
+                      )}
+
+                      {/* Özel Fotoğraf / Resim URL Girişi */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <TextInput
+                          style={{
+                            flex: 1,
+                            backgroundColor: 'rgba(255,255,255,0.08)',
+                            borderColor: 'rgba(255,255,255,0.2)',
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            color: '#FFFFFF',
+                            fontSize: 12,
+                          }}
+                          placeholder="İnternetten özel fotoğraf URL'si yapıştırın (https://...)"
+                          placeholderTextColor="rgba(255,255,255,0.4)"
+                          value={ozelUrlMetni}
+                          onChangeText={setOzelUrlMetni}
+                        />
+                        <FocusableItem
+                          style={[styles.kategoriSecimPill, { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }]}
+                          focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                          onPress={() => {
+                            if (!ozelUrlMetni.trim()) {
+                              Alert.alert('Bilgi', 'Lütfen geçerli bir resim linki (URL) girin.');
+                              return;
+                            }
+                            setArkaplanKaynagi('custom');
+                            setOzelDuvarKagidiUri(ozelUrlMetni.trim());
+                            setSeciliDinamikWp(null);
+                            if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+                              TVAppManager.saveSetting('arkaplanKaynagi', 'custom').catch(() => {});
+                              TVAppManager.saveSetting('ozelDuvarKagidiUri', ozelUrlMetni.trim()).catch(() => {});
+                            }
+                            setBildirimMetni('✔ Özel fotoğraf arka plan yapıldı!');
+                            setTimeout(() => setBildirimMetni(''), 2500);
+                          }}
+                        >
+                          {() => <Text style={[styles.kategoriSecimPillYazi, { color: '#FFFFFF', fontWeight: '900' }]}>🖼️ Arka Plan Yap</Text>}
+                        </FocusableItem>
+                      </View>
                     </View>
 
                     {/* Satır Görünürlükleri */}
@@ -5852,11 +6101,47 @@ export default function App() {
                     </View>
                   ) : (
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row' }}>
-                      {yuklenenFotograflar.map((f, i) => (
-                        <View key={f.name || i} style={{ width: 120, height: 75, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#334155', backgroundColor: '#000', marginRight: 10 }}>
-                          <Image source={{ uri: f.uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                        </View>
-                      ))}
+                      {yuklenenFotograflar.map((f, i) => {
+                        const secili = arkaplanKaynagi === 'custom' && ozelDuvarKagidiUri === f.uri;
+                        return (
+                          <FocusableItem
+                            key={f.name || i}
+                            style={{
+                              width: 140,
+                              height: 90,
+                              borderRadius: 8,
+                              overflow: 'hidden',
+                              borderWidth: 2,
+                              borderColor: secili ? '#38BDF8' : '#334155',
+                              backgroundColor: '#000',
+                              marginRight: 10,
+                            }}
+                            focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                            onPress={() => {
+                              setArkaplanKaynagi('custom');
+                              setOzelDuvarKagidiUri(f.uri);
+                              setSeciliDinamikWp(null);
+                              if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+                                TVAppManager.saveSetting('arkaplanKaynagi', 'custom').catch(() => {});
+                                TVAppManager.saveSetting('ozelDuvarKagidiUri', f.uri).catch(() => {});
+                              }
+                              setBildirimMetni('✔ Bu fotoğraf ana ekran duvar kağıdı yapıldı!');
+                              setTimeout(() => setBildirimMetni(''), 2500);
+                            }}
+                          >
+                            {() => (
+                              <View style={{ flex: 1 }}>
+                                <Image source={{ uri: f.uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.7)', paddingVertical: 2, alignItems: 'center' }}>
+                                  <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '700' }}>
+                                    {secili ? '✔ Aktif Duvar Kağıdı' : '🖼️ Arka Plan Yap'}
+                                  </Text>
+                                </View>
+                              </View>
+                            )}
+                          </FocusableItem>
+                        );
+                      })}
                     </ScrollView>
                   )}
                 </View>
