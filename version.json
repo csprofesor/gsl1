@@ -2,6 +2,6 @@
   "version": "3.2.10",
   "versionCode": 36,
   "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.10/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gs3210apk",
+  "shortUrl": "https://tinyurl.com/gs3210tv",
   "changelog": "v3.2.10 (Build 36): Üst panel görünürlük optimizasyonu: 1) Üst paneldeki 'Hız' yazısının siyah gölge nedeniyle kararması ve okunmaması sorunu düzeltildi; saf beyaz (#FFFFFF), yüksek kontrastlı ve keskin yazı tipi uygulandı. 2) Üst bar butonlarındaki ('Wi-Fi', 'Hız', 'Güncelle', 'TV', 'Bildirim') etiketler sürekli görünür hale getirilerek kumanda navigasyonu kolaylaştırıldı."
 }
