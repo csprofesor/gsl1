@@ -33,11 +33,11 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.1';
-const CURRENT_BUILD = 27;
+const CURRENT_VERSION = '3.2.2';
+const CURRENT_BUILD = 28;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gsultra321';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gsultra322';
 
 // ================= 18 MADDELİK GELİŞMİŞ TV ÖZELLEŞTİRME TİPLERİ =================
 export type IconShapeType = 'rounded' | 'circle' | 'squircle' | 'rectangle';
@@ -489,8 +489,8 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     year: '2024',
     rating: '8.6 ⭐ IMDb',
     genre: 'Bilim Kurgu • Macera • 4K UHD',
-    platform: 'Cloudstream',
-    platformIcon: '☁️',
+    platform: 'IMDb',
+    platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt15239678/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt15239678/img',
     overview: 'Paul Atreides, Chani ve Fremenlerle birleşerek ailesini yok eden komploculara karşı destansı bir intikam savaşı başlatır.',
@@ -505,7 +505,7 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     rating: '8.8 ⭐ IMDb',
     genre: 'Suç • Kara Film • 4K UHD',
     platform: 'IMDb',
-    platformIcon: '⭐',
+    platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt15474916/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt15474916/img',
     overview: 'Carmine Falcone\'nin ölümünün ardından Gotham\'ın yeraltı dünyasındaki güç boşluğunu doldurmak isteyen Oz Cobb\'un yükselişi.',
@@ -519,7 +519,7 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     year: '2024',
     rating: '9.0 ⭐ IMDb',
     genre: 'Animasyon • Bilim Kurgu • 4K HDR',
-    platform: 'Netflix',
+    platform: 'IMDb',
     platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt11126994/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt11126994/img',
@@ -535,7 +535,7 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     rating: '8.4 ⭐ IMDb',
     genre: 'Epik Fantastik • Dizi • HDR10+',
     platform: 'IMDb',
-    platformIcon: '⭐',
+    platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt11198330/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt11198330/img',
     overview: 'Targaryen hanedanının çöküşünün ve Ejderhaların Dansı olarak bilinen acımasız iç savaşın başlangıç hikayesi.',
@@ -549,8 +549,8 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     year: '2014',
     rating: '8.7 ⭐ IMDb',
     genre: 'Bilim Kurgu • Uzay Dramı • 4K UHD',
-    platform: 'Stremio',
-    platformIcon: '🟣',
+    platform: 'IMDb',
+    platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt0816692/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt0816692/img',
     overview: 'İnsanlığın Dünya\'daki varlığı tükenirken, bir grup kaşif insan ırkının geleceğini kurtarmak için solucan deliğinden geçer.',
@@ -564,7 +564,7 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     year: '2013',
     rating: '9.5 ⭐ IMDb',
     genre: 'Suç • Başyapıt Dram • 4K',
-    platform: 'Netflix',
+    platform: 'IMDb',
     platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt0903747/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt0903747/img',
@@ -579,8 +579,8 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     year: '2024',
     rating: '7.8 ⭐ IMDb',
     genre: 'Tarihi Dram • Aksiyon • 4K HDR',
-    platform: 'Cloudstream',
-    platformIcon: '☁️',
+    platform: 'IMDb',
+    platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt9218128/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt9218128/img',
     overview: 'Maximus\'un ölümünden yıllar sonra Lucius, Roma\'nın tiran imparatorlarına karşı Kolezyum\'un kanlı kumlarında mücadeleye girişir.',
@@ -594,8 +594,8 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     year: '2024',
     rating: '8.0 ⭐ IMDb',
     genre: 'Aksiyon • Komedi • IMAX 4K',
-    platform: 'Stremio',
-    platformIcon: '🟣',
+    platform: 'IMDb',
+    platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt6263850/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt6263850/img',
     overview: 'Zaman Değişimi Otoritesi dünyasını tehdit edince Wade Wilson, isteksiz bir Wolverine ile güçlerini birleştirmek zorunda kalır.',
@@ -624,7 +624,7 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     year: '2025',
     rating: '8.7 ⭐ IMDb',
     genre: 'Gizem • Bilim Kurgu • 4K Dolby',
-    platform: 'Netflix',
+    platform: 'IMDb',
     platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt4574334/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt4574334/img',
@@ -640,7 +640,7 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     rating: '8.7 ⭐ IMDb',
     genre: 'Psikolojik Gerilim • Gizem • 4K',
     platform: 'IMDb',
-    platformIcon: '⭐',
+    platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt11280740/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt11280740/img',
     overview: 'İş ve özel hayat anılarını cerrahi olarak ikiye bölen Lumon Industries çalışanları, şirketin karanlık gerçeğini keşfetmeye başlar.',
@@ -655,7 +655,7 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     rating: '8.7 ⭐ IMDb',
     genre: 'Kıyamet Sonrası • Dram • 4K',
     platform: 'IMDb',
-    platformIcon: '⭐',
+    platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt3581920/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt3581920/img',
     overview: 'Kıyamet sonrası Amerika\'da hayatta kalmaya çalışan Joel, insanlığın son umudu olabilecek 14 yaşındaki Ellie\'yi karantina bölgesinden kaçırır.',
@@ -669,8 +669,8 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     year: '2024',
     rating: '8.4 ⭐ IMDb',
     genre: 'Nükleer Bilim Kurgu • Aksiyon • 4K',
-    platform: 'Prime Video',
-    platformIcon: '📦',
+    platform: 'IMDb',
+    platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt12637874/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt12637874/img',
     overview: 'Nükleer felaketten 200 yıl sonra lüks sığınaklarından çıkıp çorak topraklara adım atan sığınak sakinleri vahşi bir dünyayla karşılaşır.',
@@ -684,7 +684,7 @@ export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
     year: '2022',
     rating: '9.0 ⭐ IMDb',
     genre: 'Suç • Hukuk Dramı • 4K',
-    platform: 'Netflix',
+    platform: 'IMDb',
     platformIcon: '🍿',
     backdropUrl: 'https://images.metahub.space/background/medium/tt3032476/img',
     posterUrl: 'https://images.metahub.space/poster/medium/tt3032476/img',
@@ -862,7 +862,68 @@ export interface KaldiginYerdenDevamEtItem {
   sonIzlemeZamani: string;
 }
 
-export const VARSAYILAN_DEVAM_ET: KaldiginYerdenDevamEtItem[] = [];
+export const VARSAYILAN_DEVAM_ET: KaldiginYerdenDevamEtItem[] = [
+  {
+    id: 'cont_oppenheimer',
+    title: 'Oppenheimer',
+    subtitle: 'IMDb 8.9 • 4K UHD',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt15398776/img',
+    platform: 'IMDb',
+    platformIcon: '🍿',
+    pkg: '',
+    kaldigiDk: 85,
+    toplamDk: 180,
+    sonIzlemeZamani: 'Bugün',
+  },
+  {
+    id: 'cont_dune2',
+    title: 'Dune: Çöl Gezegeni Bölüm İki',
+    subtitle: 'IMDb 8.6 • 4K UHD',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt15239678/img',
+    platform: 'IMDb',
+    platformIcon: '🍿',
+    pkg: '',
+    kaldigiDk: 110,
+    toplamDk: 166,
+    sonIzlemeZamani: 'Dün',
+  },
+  {
+    id: 'cont_penguin',
+    title: 'The Penguin',
+    subtitle: 'IMDb 8.8 • 4K UHD',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt15474916/img',
+    platform: 'IMDb',
+    platformIcon: '⭐',
+    pkg: '',
+    kaldigiDk: 45,
+    toplamDk: 60,
+    sonIzlemeZamani: 'Bugün',
+  },
+  {
+    id: 'cont_interstellar',
+    title: 'Yıldızlararası (Interstellar)',
+    subtitle: 'IMDb 8.7 • 4K UHD',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt0816692/img',
+    platform: 'IMDb',
+    platformIcon: '🍿',
+    pkg: '',
+    kaldigiDk: 95,
+    toplamDk: 169,
+    sonIzlemeZamani: '2 gün önce',
+  },
+  {
+    id: 'cont_gladiator2',
+    title: 'Gladyatör II',
+    subtitle: 'IMDb 7.8 • 4K UHD',
+    backdropUrl: 'https://images.metahub.space/background/medium/tt9218128/img',
+    platform: 'IMDb',
+    platformIcon: '🍿',
+    pkg: '',
+    kaldigiDk: 60,
+    toplamDk: 148,
+    sonIzlemeZamani: 'Bugün',
+  },
+];
 
 // Uygulama Film & Dizi Şeridi Afiş Modeli
 export interface SeritAfisItem {
@@ -1500,10 +1561,26 @@ export default function App() {
             try {
               const rawDevam = await TVAppManager.getSetting('devamEdenIcerikler', '[]');
               const parsedDevam = JSON.parse(rawDevam);
-              if (Array.isArray(parsedDevam)) {
-                setDevamEdenIcerikler(parsedDevam);
+              if (Array.isArray(parsedDevam) && parsedDevam.length > 0) {
+                // SADECE ve SADECE gerçek film ve dizileri tut; eski sürümlerden kalma uygulama kartlarını tamamen temizle
+                const temizFilmler = parsedDevam.filter((item) => {
+                  if (!item || !item.title) return false;
+                  if (item.platform === 'Uygulama') return false;
+                  if (!item.backdropUrl || (!item.backdropUrl.startsWith('http') && !item.backdropUrl.includes('metahub') && !item.backdropUrl.includes('wsrv.nl') && !item.backdropUrl.includes('unsplash'))) return false;
+                  return true;
+                });
+                if (temizFilmler.length > 0) {
+                  setDevamEdenIcerikler(temizFilmler);
+                } else {
+                  setDevamEdenIcerikler(VARSAYILAN_DEVAM_ET);
+                  TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(VARSAYILAN_DEVAM_ET)).catch(() => {});
+                }
+              } else {
+                setDevamEdenIcerikler(VARSAYILAN_DEVAM_ET);
               }
-            } catch {}
+            } catch {
+              setDevamEdenIcerikler(VARSAYILAN_DEVAM_ET);
+            }
             try {
               const rawSize = await TVAppManager.getSetting('kartBoyutu', 'standard');
               if (rawSize === 'compact' || rawSize === 'standard' || rawSize === 'large') {
@@ -2000,14 +2077,16 @@ export default function App() {
 
   // İzleme Geçmişine Kaydet Yardımcısı (Film & Dizi)
   const filmGecmiseEkle = (title: string, platform: string, pkg: string, backdropUrl?: string, subtitle?: string) => {
+    // Sadece gerçek film eklenir. Asla platform="Uygulama" kabul edilmez!
+    if (platform === 'Uygulama') return;
     const guvenli = guvenliGorselUrl(backdropUrl);
     const yeniDevam: KaldiginYerdenDevamEtItem = {
-      id: `cont_${pkg || title}_${Date.now()}`,
+      id: `cont_${(title || 'film').replace(/\s+/g, '_')}_${Date.now()}`,
       title,
-      subtitle: subtitle || `${platform || 'Sinema'} • 4K UHD`,
-      backdropUrl: guvenli,
-      platform: platform || 'Sinema',
-      platformIcon: '🎬',
+      subtitle: subtitle || 'IMDb • 4K UHD',
+      backdropUrl: guvenli || 'https://images.metahub.space/background/medium/tt15398776/img',
+      platform: 'IMDb',
+      platformIcon: '🍿',
       pkg: pkg || '',
       kaldigiDk: Math.floor(Math.random() * 40) + 25,
       toplamDk: 125,
@@ -2015,7 +2094,9 @@ export default function App() {
     };
 
     setDevamEdenIcerikler((prev) => {
-      const guncel = [yeniDevam, ...prev.filter((d) => d.title !== title)].slice(0, 15);
+      // Eski uygulama kartlarını da aradan temizle
+      const temiz = prev.filter((d) => d.title !== title && d.platform !== 'Uygulama');
+      const guncel = [yeniDevam, ...temiz].slice(0, 15);
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
         TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(guncel)).catch(() => {});
       }
@@ -2183,9 +2264,9 @@ export default function App() {
       year: item.year || '2024',
       rating: item.rating || '8.5 ⭐',
       genre: item.genre || 'Sinema & Dizi',
-      platform: item.platform || 'Cloudstream',
-      backdropUrl: item.backdropUrl || item.posterUrl || 'https://images.metahub.space/poster/medium/tt15239678/img',
-      posterUrl: item.posterUrl || item.backdropUrl || 'https://images.metahub.space/poster/medium/tt15239678/img',
+      platform: 'IMDb',
+      backdropUrl: item.backdropUrl || item.posterUrl || 'https://images.metahub.space/background/medium/tt15398776/img',
+      posterUrl: item.posterUrl || item.backdropUrl || 'https://images.metahub.space/poster/medium/tt15398776/img',
       overview: item.overview || `"${item.title}" filmini veya dizisini seçtiğiniz platform üzerinden hemen başlatabilirsiniz.`,
       pkg: item.pkg,
     });
@@ -2199,22 +2280,34 @@ export default function App() {
         await TVAppManager.copyToClipboard(title);
       }
     } catch {}
-    setBildirimMetni(`📋 "${title}" panoya kopyalandı! Cloudstream açılıyor...`);
+    setBildirimMetni(`📋 "${title}" kopyalandı! Cloudstream içinde aranıyor...`);
     setTimeout(() => setBildirimMetni(''), 4500);
     setFilmDetayModalAcik(false);
-    filmGecmiseEkle(title, 'Cloudstream', 'com.lagradost.cloudstream3', backdropUrl);
+    filmGecmiseEkle(title, 'IMDb', 'com.lagradost.cloudstream3', backdropUrl);
     const csApp = uygulamalar.find(
       (u) => u.packageName.toLowerCase().includes('cloudstream') || u.name.toLowerCase().includes('cloudstream')
     );
     const pkg = csApp ? csApp.packageName : 'com.lagradost.cloudstream3';
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
+      try {
+        const csUri = `cloudstream3://search?query=${encodeURIComponent(title)}`;
+        await TVAppManager.launchMediaContent(pkg, title, csUri);
+        return;
+      } catch {}
+    }
     uygulamaBaslat(pkg, 'Cloudstream');
   };
 
   const filmOynatStremio = async (title: string, imdbId?: string, backdropUrl?: string) => {
-    setBildirimMetni(`🍿 "${title}" Stremio'da açılıyor...`);
+    try {
+      if (TVAppManager && TVAppManager.copyToClipboard) {
+        await TVAppManager.copyToClipboard(title);
+      }
+    } catch {}
+    setBildirimMetni(`🍿 "${title}" kopyalandı! Stremio'da açılıyor...`);
     setTimeout(() => setBildirimMetni(''), 3500);
     setFilmDetayModalAcik(false);
-    filmGecmiseEkle(title, 'Stremio', 'com.stremio.one', backdropUrl);
+    filmGecmiseEkle(title, 'IMDb', 'com.stremio.one', backdropUrl);
     if (Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
       try {
         const streamUri = imdbId ? `stremio:///detail/movie/${imdbId}` : `stremio:///search?search=${encodeURIComponent(title)}`;
@@ -2226,10 +2319,16 @@ export default function App() {
   };
 
   const filmOynatYouTube = async (title: string) => {
+    try {
+      if (TVAppManager && TVAppManager.copyToClipboard) {
+        await TVAppManager.copyToClipboard(title);
+      }
+    } catch {}
     setBildirimMetni(`▶ "${title}" YouTube'da aranıyor...`);
     setTimeout(() => setBildirimMetni(''), 3000);
     setFilmDetayModalAcik(false);
-    const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' film izle')}`;
+    filmGecmiseEkle(title, 'IMDb', 'com.google.android.youtube.tv');
+    const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title)}`;
     if (Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
       try {
         await TVAppManager.launchMediaContent('com.google.android.youtube.tv', title, ytUrl);
@@ -2239,7 +2338,7 @@ export default function App() {
     Linking.openURL(ytUrl).catch(() => {});
   };
 
-  // Kullanıcının Seçtiği Özel Uygulama ile Film Başlatma (Otomatik Kopyalama + Intent)
+  // Kullanıcının Seçtiği Özel Uygulama ile Film Başlatma (Otomatik Kopyalama + Intent Arama)
   const filmOynatOzelUygulama = async (
     title: string,
     pkg: string,
@@ -2253,27 +2352,55 @@ export default function App() {
       }
     } catch {}
 
-    setBildirimMetni(`📋 "${title}" panoya kopyalandı! ${app.name} açılıyor...`);
+    setBildirimMetni(`📋 "${title}" kopyalandı! ${app.name} içinde aranıyor...`);
     setTimeout(() => setBildirimMetni(''), 4500);
     setFilmDetayModalAcik(false);
-    filmGecmiseEkle(title, app.name, pkg, backdropUrl);
+    
+    // İzleme geçmişine gerçek film kartı olarak kaydet
+    filmGecmiseEkle(title, 'IMDb', pkg, backdropUrl);
 
     const pkgLower = pkg.toLowerCase();
 
-    // Stremio doğrudan detay desteği
-    if (pkgLower.includes('stremio') && Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
+    // 1. Cloudstream Arama
+    if (pkgLower.includes('cloudstream') && Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
       try {
-        const streamUri = imdbId ? `stremio:///detail/movie/${imdbId}` : `stremio:///search?search=${encodeURIComponent(title)}`;
-        await TVAppManager.launchMediaContent('com.stremio.one', imdbId || title, streamUri);
+        const csUri = `cloudstream3://search?query=${encodeURIComponent(title)}`;
+        await TVAppManager.launchMediaContent(pkg, title, csUri);
         return;
       } catch {}
     }
 
-    // YouTube / SmartTube arama intent desteği
+    // 2. Stremio Arama
+    if (pkgLower.includes('stremio') && Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
+      try {
+        const streamUri = imdbId ? `stremio:///detail/movie/${imdbId}` : `stremio:///search?search=${encodeURIComponent(title)}`;
+        await TVAppManager.launchMediaContent(pkg, title, streamUri);
+        return;
+      } catch {}
+    }
+
+    // 3. YouTube / SmartTube Arama
     if ((pkgLower.includes('youtube') || pkgLower.includes('smarttube')) && Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
       try {
-        const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' film izle')}`;
+        const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title)}`;
         await TVAppManager.launchMediaContent(pkg, title, ytUrl);
+        return;
+      } catch {}
+    }
+
+    // 4. Netflix Arama
+    if (pkgLower.includes('netflix') && Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
+      try {
+        const nflxUrl = `nflx://www.netflix.com/search?q=${encodeURIComponent(title)}`;
+        await TVAppManager.launchMediaContent(pkg, title, nflxUrl);
+        return;
+      } catch {}
+    }
+
+    // 5. Diğer tüm TV uygulamaları için launchMediaContent ile SEARCH intent yolla:
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
+      try {
+        await TVAppManager.launchMediaContent(pkg, title, '');
         return;
       } catch {}
     }
@@ -3396,7 +3523,7 @@ export default function App() {
                   />
                   <View style={[styles.filmPlatformRozet, { backgroundColor: 'rgba(15, 23, 42, 0.85)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.3)' }]}>
                     <Text style={[styles.filmPlatformYazi, { color: '#FFFFFF', fontWeight: '800' }]}>
-                      {aktifFilm.platformIcon} {aktifFilm.platform}
+                      ⭐ IMDb En İyiler
                     </Text>
                   </View>
                 </View>
@@ -3731,39 +3858,40 @@ export default function App() {
                           ]);
                         }}
                       >
-                        {(isFocused) => (
-                          <View style={styles.devamEtIcerik}>
-                            {item.backdropUrl ? (
-                              <Image source={{ uri: guvenliGorselUrl(item.backdropUrl) }} style={styles.devamEtResim} resizeMode="cover" />
-                            ) : (
-                              <Image source={{ uri: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&q=80' }} style={styles.devamEtResim} resizeMode="cover" />
-                            )}
-                            <View style={[styles.devamEtKarartma, isFocused && { backgroundColor: 'rgba(5, 10, 25, 0.45)' }]}>
-                              <View style={[styles.devamEtUstRozet, { backgroundColor: 'rgba(0,0,0,0.7)', borderColor: aktifTema.border, borderWidth: 0.8 }]}>
-                                <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '800' }}>
-                                  {item.platformIcon} {item.platform}
-                                </Text>
-                              </View>
-                              <View style={styles.devamEtAltBilgi}>
-                                <Text style={styles.devamEtBaslik} numberOfLines={1}>
-                                  {item.title}
-                                </Text>
-                                <Text style={styles.devamEtAltBaslik}>
-                                  {item.subtitle}
-                                </Text>
-                                {/* İlerleme Çubuğu */}
-                                <View style={styles.devamEtIlerlemeArka}>
-                                  <View style={[styles.devamEtIlerlemeOn, { width: `${yuzde}%`, backgroundColor: aktifTema.accent }]} />
-                                </View>
-                                {isFocused && (
-                                  <Text style={[styles.devamEtOynatMetin, { color: aktifTema.border }]}>
-                                    ▶ Başlat & Devam Et
+                        {(isFocused) => {
+                          const safeBackdrop = (item.backdropUrl && !item.backdropUrl.startsWith('content://') && !item.backdropUrl.includes('icon'))
+                            ? guvenliGorselUrl(item.backdropUrl)
+                            : guvenliGorselUrl('https://images.metahub.space/background/medium/tt15398776/img');
+                          return (
+                            <View style={styles.devamEtIcerik}>
+                              <Image source={{ uri: safeBackdrop }} style={styles.devamEtResim} resizeMode="cover" />
+                              <View style={[styles.devamEtKarartma, isFocused && { backgroundColor: 'rgba(5, 10, 25, 0.45)' }]}>
+                                <View style={[styles.devamEtUstRozet, { backgroundColor: 'rgba(0,0,0,0.75)', borderColor: '#EAB308', borderWidth: 1 }]}>
+                                  <Text style={{ color: '#FACC15', fontSize: 10, fontWeight: '900' }}>
+                                    ⭐ IMDb • Kaldığın Yerden
                                   </Text>
-                                )}
+                                </View>
+                                <View style={styles.devamEtAltBilgi}>
+                                  <Text style={styles.devamEtBaslik} numberOfLines={1}>
+                                    {item.title}
+                                  </Text>
+                                  <Text style={styles.devamEtAltBaslik}>
+                                    {item.subtitle || 'IMDb • 4K UHD'}
+                                  </Text>
+                                  {/* İlerleme Çubuğu */}
+                                  <View style={styles.devamEtIlerlemeArka}>
+                                    <View style={[styles.devamEtIlerlemeOn, { width: `${yuzde}%`, backgroundColor: aktifTema.accent }]} />
+                                  </View>
+                                  {isFocused && (
+                                    <Text style={[styles.devamEtOynatMetin, { color: aktifTema.border }]}>
+                                      ▶ Başlat & Devam Et
+                                    </Text>
+                                  )}
+                                </View>
                               </View>
                             </View>
-                          </View>
-                        )}
+                          );
+                        }}
                       </FocusableItem>
                     );
                   })}

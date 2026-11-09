@@ -52,19 +52,18 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: v3.2.1
-          name: "GS TV Launcher Ultra v3.2.1 (Build 27)"
+          tag_name: v3.2.2
+          name: "GS TV Launcher Ultra v3.2.2 (Build 28)"
           draft: false
           prerelease: false
           body: |
-            ## GS TV Launcher Ultra v3.2.1 (Build 27)
-            - 🎨 **Tema Özelleştirme (Kendi Özel Temanı Tasarla):** Kontrol Merkezi Düzen sekmesine 13 canlı renk paleti ve özel HEX renk kodu (#...) girişi eklendi.
-            - 🖼️ **IMDb & Metahub Görsel Kilidi Çözüldü:** Türkiye ISP engeli Cloudflare CDN Edge proxy (wsrv.nl) ile aşıldı, tüm afiş ve film kartları anında yükleniyor.
-            - 🎬 **Kaldığın Yerden Devam Et Kusursuzlaştırıldı:** Arka planda açılan uygulamaların film afişlerini ezmesi önlendi, filmler tıklandığında oynatıcı seçimi sunulur.
-            - 📺 **Xiaomi Mi Box Sabit Başlatıcı Uyumluluğu:** Doğrudan TV Sistem Ayarları entegrasyonu ile 'Bu işlemi işleyecek uygulama yok' sorunu giderildi.
-            - 🌅 **Ekran Koruyucu İyileştirmesi:** Ambiyans modundaki tuş bilgisi yazısı kaldırıldı, tam sinematik görsel deneyim sağlandı.
-            - 🔑 **Resmi EAS Keystore İmzası:** Önceki sürümlerin üzerine sorunsuz güncellenir ("Uygulama yüklenemedi" hatası vermez).
-            - 📦 **Google Play Store Paketi (.AAB):** Play Console'a doğrudan yüklenebilir Android App Bundle eklendi.
+            ## GS TV Launcher Ultra v3.2.2 (Build 28)
+            - 🎬 **Kaldığın Yerden Devam Et Tamamen Yenilendi:** Eski uygulama kartları temizlendi, 5 popüler IMDb filmiyle başlatıldı, sadece gerçek film içerikleri gösterilir.
+            - ⭐ **Saf IMDb Vitrin Rozetleri:** Tüm harici platform isimleri kaldırılarak vitrin ve öneriler saf IMDb olarak sabitlendi.
+            - 📋 **Film İsmi Kopyalama & Oynatıcıda Otomatik Arama:** Seçilen uygulamada (Cloudstream, Stremio, YouTube, vb.) filmin adı hem panoya kopyalanır hem de arama intenti ile doğrudan açılır.
+            - 🎨 **Tema Özelleştirme:** Kontrol Merkezi Düzen sekmesinde 13 canlı renk paleti ve özel HEX renk kodu desteği.
+            - 🔑 **Resmi EAS Keystore İmzası:** Sorunsuz güncelleme desteği.
+            - 📦 **Google Play Store Paketi (.AAB) & Sideload APK:** Hem Play Store hem doğrudan kurulum desteği.
           files: |
             android/app/build/outputs/apk/release/app-release.apk
             android/app/build/outputs/bundle/release/app-release.aab

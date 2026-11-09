@@ -185,6 +185,38 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             if (!query.isNullOrEmpty()) {
                 val pkg = packageName?.lowercase() ?: ""
 
+                // Cloudstream için doğrudan arama deep-link
+                if (pkg.contains("cloudstream")) {
+                    try {
+                        val csUri = Uri.parse("cloudstream3://search?query=" + Uri.encode(query))
+                        val csIntent = Intent(Intent.ACTION_VIEW, csUri).apply {
+                            setPackage(packageName)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        if (csIntent.resolveActivity(pm) != null) {
+                            reactContext.startActivity(csIntent)
+                            promise.resolve(true)
+                            return
+                        }
+                    } catch (_: Exception) {}
+                }
+
+                // Nuvio için doğrudan arama deep-link
+                if (pkg.contains("nuvio")) {
+                    try {
+                        val nuvioUri = Uri.parse("nuvio://search?query=" + Uri.encode(query))
+                        val nuvioIntent = Intent(Intent.ACTION_VIEW, nuvioUri).apply {
+                            setPackage(packageName)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        if (nuvioIntent.resolveActivity(pm) != null) {
+                            reactContext.startActivity(nuvioIntent)
+                            promise.resolve(true)
+                            return
+                        }
+                    } catch (_: Exception) {}
+                }
+
                 // Stremio için doğrudan IMDb detay veya arama deep-link
                 if (pkg.contains("stremio")) {
                     try {
@@ -206,10 +238,11 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                 }
 
                 // YouTube için özel leanback arama intent
-                if (pkg.contains("youtube")) {
+                if (pkg.contains("youtube") || pkg.contains("smarttube")) {
                     try {
                         val ytUri = Uri.parse("https://www.youtube.com/results?search_query=" + Uri.encode(query))
                         val ytIntent = Intent(Intent.ACTION_VIEW, ytUri).apply {
+                            if (!packageName.isNullOrEmpty()) setPackage(packageName)
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
                         reactContext.startActivity(ytIntent)
@@ -230,12 +263,13 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     } catch (_: Exception) {}
                 }
 
-                // Standart Android TV Media / Search Intent
+                // Standart Android TV Media / Search Intent (Tüm Diğer Medya Uygulamaları)
                 if (!packageName.isNullOrEmpty()) {
                     val searchIntent = Intent(Intent.ACTION_SEARCH).apply {
                         setPackage(packageName)
                         putExtra("query", query)
                         putExtra(android.app.SearchManager.QUERY, query)
+                        putExtra(Intent.EXTRA_TEXT, query)
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     if (searchIntent.resolveActivity(pm) != null) {
@@ -246,7 +280,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                 }
             }
 
-            // 3. Fallback: Hedef Uygulamayı Aç (query argümanı ile)
+            // 3. Fallback: Hedef Uygulamayı Aç (Arama ve Pano ekstra verileriyle)
             if (!packageName.isNullOrEmpty()) {
                 val launchIntent = pm.getLeanbackLaunchIntentForPackage(packageName)
                     ?: pm.getLaunchIntentForPackage(packageName)
@@ -254,6 +288,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     if (!query.isNullOrEmpty()) {
                         launchIntent.putExtra("query", query)
                         launchIntent.putExtra(android.app.SearchManager.QUERY, query)
+                        launchIntent.putExtra(Intent.EXTRA_TEXT, query)
                     }
                     launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     reactContext.startActivity(launchIntent)

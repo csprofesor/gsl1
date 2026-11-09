@@ -1,7 +1,7 @@
 {
-  "version": "3.2.1",
-  "versionCode": 27,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.1/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gsultra321",
-  "changelog": "v3.2.1 (Build 27): Tema Özelleştirme (13 renk paleti + HEX kod girişi) eklendi, IMDb & Metahub görselleri Türkiye ISP engeline karşı Cloudflare CDN Edge proxy ile hızlandırıldı, Kaldığın Yerden Devam Et film kartları ve afişleri korundu, Mi Box sabit başlatıcı ayar uyumluluğu sağlandı, ekran koruyucu çıkış yazısı temizlendi, resmi EAS release anahtarı ile imzalandı."
+  "version": "3.2.2",
+  "versionCode": 28,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.2/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gsultra322",
+  "changelog": "v3.2.2 (Build 28): Kaldığın Yerden Devam Et rafı tamamen film içerikleriyle yenilendi (eski uygulama kartları temizlendi), tüm film vitrin kartları ve öneriler saf IMDb olarak sabitlendi, seçilen her oynatıcıda (Cloudstream, Stremio, YouTube vb.) film ismini panoya kopyalayıp doğrudan arama intenti ile açma özelliği entegre edildi."
 }
