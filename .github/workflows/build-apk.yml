@@ -52,15 +52,19 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v3.2.10' }}
-          name: "GS TV Launcher Ultra v3.2.10 (Build 36)"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v3.2.11' }}
+          name: "GS TV Launcher Ultra v3.2.11 (Build 37)"
           draft: false
           prerelease: false
           body: |
-            ## GS TV Launcher Ultra v3.2.10 (Build 36)
-            - ⚡ **Üst Panel 'Hız' Yazısı Görünürlük Düzeltmesi:** Üst paneldeki Hız butonu yazısında oluşan siyah gölge kararması giderildi, saf beyaz (#FFFFFF) ve yüksek kontrastlı net yazı tipi uygulandı.
-            - 🌐 **Üst Bar Kontrol Butonları İyileştirmesi:** 'Wi-Fi', 'Hız', 'Güncelle', 'TV' ve 'Bildirim' etiketleri sürekli görünür yapılarak uzaktan kumanda ile gezinti kolaylaştırıldı.
-            - 🔌 **Eklentiler & Senkronizasyon (Trakt.tv, Stremio, TV Kanalları):** Cihazlar arası devam etme ve mağaza uyumlu metaveri altyapısı.
+            ## GS TV Launcher Ultra v3.2.11 (Build 37)
+            - 🛡️ **Sabit Başlatıcı ve Erişilebilirlik Servisi:** Android 13/14 'Kısıtlı Ayarlar' engeli için akıllı uyarı ve tek tıkla izin verme butonu eklendi.
+            - 🔑 **Trakt.tv API Entegrasyonu:** Özel Client ID girme ve yapılandırma desteği ile kod alma sorunu çözüldü.
+            - 📱 **QR Kod ve Fotoğraf Yükleme:** QR kod bağlantısı ve yerel IP tespiti yenilendi, dinamik IP yenileme eklendi.
+            - 🔄 **Ayarlar Gezinti Hafızası:** Ayarlar menüsünden açılan alt pencerelerden (Hız, Wi-Fi, Fotoğraf vb.) geri dönüldüğünde kalınan sekmeye dönülmesi sağlandı.
+            - 📶 **Uygulama İçi Wi-Fi Tarama & Üst Bar Canlı SSID:** Wi-Fi doğrudan uygulama içinde taranır ve bağlı ağın adı üst panelde görünür.
+            - 🚀 **Yüksek Kontrastlı Roket Hız İkonu:** TV ekranında görünürlüğü artırıldı.
+            - 📺 **Ekran Koruyucu Çakışma Önleyici:** Sistem ekran koruyucusu bastırılarak yalnızca launcher ekran koruyucusunun çalışması sağlandı.
           files: |
             android/app/build/outputs/apk/release/app-release.apk
             android/app/build/outputs/bundle/release/app-release.aab

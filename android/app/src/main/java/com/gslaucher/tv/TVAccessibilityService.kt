@@ -45,6 +45,15 @@ class TVAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        try {
+            val info = serviceInfo ?: android.accessibilityservice.AccessibilityServiceInfo()
+            info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+            info.feedbackType = android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_GENERIC
+            info.notificationTimeout = 100
+            info.flags = android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS or
+                         android.accessibilityservice.AccessibilityServiceInfo.DEFAULT
+            serviceInfo = info
+        } catch (e: Exception) {}
         isServiceRunning = true
     }
 
@@ -76,7 +85,7 @@ class TVAccessibilityService : AccessibilityService() {
                     return true
                 }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
         return false
     }
 

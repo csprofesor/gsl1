@@ -34,11 +34,11 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.10';
-const CURRENT_BUILD = 36;
+const CURRENT_VERSION = '3.2.11';
+const CURRENT_BUILD = 37;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gs3210apk';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gs3211apk';
 
 // Trakt.tv Açık API & Scrobbler Kimlikleri (Google Play & Apple App Store %100 Uyumlu)
 const TRAKT_CLIENT_ID = 'db7483669be745d448651a141b71192e21e05a8f4c2c54ec8360d2cf34d28f8f';
@@ -1370,6 +1370,19 @@ export default function App() {
   const [tvAppKanallari, setTvAppKanallari] = useState<Array<{ id: number; pkg: string; appName: string; displayName: string; description: string }>>([]);
   const [tvKanallariYukleniyor, setTvKanallariYukleniyor] = useState(false);
   const traktTokenPollerRef = useRef<any>(null);
+  const oncekiMenuRef = useRef<'ayarlar' | null>(null);
+
+  // Wi-Fi Durumu & Uygulama İçi Ağ Arama
+  const [bagliWifiAdi, setBagliWifiAdi] = useState<string>('');
+  const [wifiSinyalGucu, setWifiSinyalGucu] = useState<number>(-100);
+  const [wifiModalAcik, setWifiModalAcik] = useState(false);
+  const [wifiAgListesi, setWifiAgListesi] = useState<Array<{ ssid: string; level: number; isConnected: boolean; isSecure: boolean; frequency: number }>>([]);
+  const [wifiTaraniyor, setWifiTaraniyor] = useState(false);
+
+  // Trakt Özel Client ID
+  const [traktClientId, setTraktClientId] = useState<string>('');
+  const [traktClientIdModalAcik, setTraktClientIdModalAcik] = useState(false);
+  const [girilenTraktClientId, setGirilenTraktClientId] = useState<string>('');
 
   const etkilesimSifirla = useCallback(() => {
     sonEtkilesimZamani.current = Date.now();
@@ -1435,8 +1448,24 @@ export default function App() {
       setEkranKoruyucuAcik(false);
       return true;
     }
+    if (traktClientIdModalAcik) {
+      setTraktClientIdModalAcik(false);
+      return true;
+    }
+    if (wifiModalAcik) {
+      setWifiModalAcik(false);
+      if (oncekiMenuRef.current === 'ayarlar') {
+        setKontrolMerkeziAcik(true);
+        oncekiMenuRef.current = null;
+      }
+      return true;
+    }
     if (fotoYuklemeModalAcik) {
       setFotoYuklemeModalAcik(false);
+      if (oncekiMenuRef.current === 'ayarlar') {
+        setKontrolMerkeziAcik(true);
+        oncekiMenuRef.current = null;
+      }
       return true;
     }
     if (pinModalAcik) {
@@ -1446,14 +1475,26 @@ export default function App() {
     }
     if (hizTestiAcik) {
       setHizTestiAcik(false);
+      if (oncekiMenuRef.current === 'ayarlar') {
+        setKontrolMerkeziAcik(true);
+        oncekiMenuRef.current = null;
+      }
       return true;
     }
     if (havaModalAcik) {
       setHavaModalAcik(false);
+      if (oncekiMenuRef.current === 'ayarlar') {
+        setKontrolMerkeziAcik(true);
+        oncekiMenuRef.current = null;
+      }
       return true;
     }
     if (gorevYoneticisiAcik) {
       setGorevYoneticisiAcik(false);
+      if (oncekiMenuRef.current === 'ayarlar') {
+        setKontrolMerkeziAcik(true);
+        oncekiMenuRef.current = null;
+      }
       return true;
     }
     if (bildirimPaneliAcik) {
@@ -1463,18 +1504,34 @@ export default function App() {
     if (tusAtamaModalAcik) {
       setTusAtamaModalAcik(false);
       setSeciliDuzenlenenTus(null);
+      if (oncekiMenuRef.current === 'ayarlar') {
+        setKontrolMerkeziAcik(true);
+        oncekiMenuRef.current = null;
+      }
       return true;
     }
-    if (kontrolMerkeziAcik) {
-      setKontrolMerkeziAcik(false);
+    if (eklentiModalAcik) {
+      setEklentiModalAcik(false);
+      if (oncekiMenuRef.current === 'ayarlar') {
+        setKontrolMerkeziAcik(true);
+        oncekiMenuRef.current = null;
+      }
       return true;
     }
     if (temaSeciciAcik) {
       setTemaSeciciAcik(false);
+      if (oncekiMenuRef.current === 'ayarlar') {
+        setKontrolMerkeziAcik(true);
+        oncekiMenuRef.current = null;
+      }
       return true;
     }
     if (uygulamaSeciciAcik) {
       setUygulamaSeciciAcik(false);
+      if (oncekiMenuRef.current === 'ayarlar') {
+        setKontrolMerkeziAcik(true);
+        oncekiMenuRef.current = null;
+      }
       return true;
     }
     if (aksiyonMenusuAcik) {
@@ -1495,10 +1552,18 @@ export default function App() {
     }
     if (guncellemeModalAcik) {
       setGuncellemeModalAcik(false);
+      if (oncekiMenuRef.current === 'ayarlar') {
+        setKontrolMerkeziAcik(true);
+        oncekiMenuRef.current = null;
+      }
       return true;
     }
     if (seritEkleAcik) {
       setSeritEkleAcik(false);
+      return true;
+    }
+    if (kontrolMerkeziAcik) {
+      setKontrolMerkeziAcik(false);
       return true;
     }
     if (kalanOtoBaslatmaSn !== null) {
@@ -1515,6 +1580,8 @@ export default function App() {
     return true; // Ana ekranda başlatıcıyı sabit ve kararlı tutar (Yanlışlıkla kapanmayı önler)
   }, [
     ekranKoruyucuAcik,
+    traktClientIdModalAcik,
+    wifiModalAcik,
     fotoYuklemeModalAcik,
     pinModalAcik,
     hizTestiAcik,
@@ -1522,6 +1589,7 @@ export default function App() {
     gorevYoneticisiAcik,
     bildirimPaneliAcik,
     tusAtamaModalAcik,
+    eklentiModalAcik,
     kontrolMerkeziAcik,
     temaSeciciAcik,
     uygulamaSeciciAcik,
@@ -1712,6 +1780,16 @@ export default function App() {
               }
             } catch {}
             try {
+              const rawTraktClientId = await TVAppManager.getSetting('trakt_client_id', '');
+              if (rawTraktClientId) setTraktClientId(rawTraktClientId);
+            } catch {}
+            try {
+              const rawSekme = await TVAppManager.getSetting('sonAyarlarSekmesi', 'gorunum');
+              if (['gorunum', 'duzen', 'donanim', 'otomasyon', 'sistem'].includes(rawSekme)) {
+                setKontrolSekmesi(rawSekme as any);
+              }
+            } catch {}
+            try {
               const rawFilmApps = await TVAppManager.getSetting('filmBaslaticiPaketleri', '[]');
               const parsed = JSON.parse(rawFilmApps);
               if (Array.isArray(parsed) && parsed.length > 0) {
@@ -1779,6 +1857,8 @@ export default function App() {
               }
               const rawTraktUser = await TVAppManager.getSetting('trakt_username', '');
               if (rawTraktUser) setTraktKullanici(rawTraktUser);
+              const rawTraktClientId = await TVAppManager.getSetting('trakt_client_id', '');
+              if (rawTraktClientId) setTraktClientId(rawTraktClientId);
             } catch {}
           }
 
@@ -2310,23 +2390,39 @@ export default function App() {
 
   // Trakt Cihaz Kodu Al (OAuth Device Flow)
   const traktCihazKoduAl = async () => {
+    const aktifCId = traktClientId?.trim() || TRAKT_CLIENT_ID;
     try {
       setTraktDogrulaniyor(true);
       setBildirimMetni('⏳ Trakt.tv cihaz kodu alınıyor...');
       const res = await fetch('https://api.trakt.tv/oauth/device/code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ client_id: TRAKT_CLIENT_ID }),
+        body: JSON.stringify({ client_id: aktifCId }),
       });
       const data = await res.json();
-      if (data && data.user_code && data.device_code) {
+      if (res.ok && data && data.user_code && data.device_code) {
         setTraktUserCode(data.user_code);
         setTraktDeviceCode(data.device_code);
         setBildirimMetni(`🔑 Kod: ${data.user_code} (trakt.tv/activate adresine girin)`);
-        traktTokenPoller(data.device_code, data.interval || 5);
+        traktTokenPoller(data.device_code, data.interval || 5, aktifCId);
       } else {
         setTraktDogrulaniyor(false);
-        setBildirimMetni('❌ Trakt kodu alınamadı.');
+        const errMsg = data?.error_description || data?.error || 'client not found';
+        Alert.alert(
+          '🔑 Trakt.tv Client ID Gerekli',
+          `Trakt API Yanıtı: "${errMsg}".\n\nTrakt.tv hesabınızı bağlamak için ücretsiz API Client ID'nizi girmeniz önerilir.\n\nNasıl alınır?\n1. Bilgisayar veya telefondan trakt.tv/oauth/applications adresine girin.\n2. "New Application" oluşturun.\n3. Size verilen Client ID kodunu buraya yapıştırın.`,
+          [
+            {
+              text: '🔑 Client ID Gir',
+              onPress: () => {
+                setGirilenTraktClientId(traktClientId || '');
+                setTraktClientIdModalAcik(true);
+              },
+            },
+            { text: 'Kapat', style: 'cancel' },
+          ]
+        );
+        setBildirimMetni('❌ Trakt: Geçerli bir Client ID giriniz.');
       }
     } catch (e: any) {
       setTraktDogrulaniyor(false);
@@ -2335,9 +2431,10 @@ export default function App() {
   };
 
   // Trakt Cihaz Tokenı İçin Arka Planda Polling
-  const traktTokenPoller = (deviceCode: string, intervalSeconds: number) => {
+  const traktTokenPoller = (deviceCode: string, intervalSeconds: number, cId?: string) => {
     if (traktTokenPollerRef.current) clearInterval(traktTokenPollerRef.current);
     const pollInterval = Math.max(intervalSeconds, 5) * 1000;
+    const aktifCId = cId || traktClientId?.trim() || TRAKT_CLIENT_ID;
     let elapsed = 0;
 
     traktTokenPollerRef.current = setInterval(async () => {
@@ -2348,7 +2445,7 @@ export default function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             code: deviceCode,
-            client_id: TRAKT_CLIENT_ID,
+            client_id: aktifCId,
             client_secret: TRAKT_CLIENT_SECRET,
           }),
         });
@@ -2372,7 +2469,7 @@ export default function App() {
                 headers: {
                   'Content-Type': 'application/json',
                   'trakt-api-version': '2',
-                  'trakt-api-key': TRAKT_CLIENT_ID,
+                  'trakt-api-key': aktifCId,
                   Authorization: `Bearer ${data.access_token}`,
                 },
               });
@@ -2387,7 +2484,7 @@ export default function App() {
               }
             } catch {}
 
-            traktPlaybackCek(data.access_token);
+            traktPlaybackCek(data.access_token, aktifCId);
           }
         } else if (res.status === 404 || res.status === 410 || res.status === 418) {
           if (traktTokenPollerRef.current) clearInterval(traktTokenPollerRef.current);
@@ -2404,9 +2501,10 @@ export default function App() {
   };
 
   // Trakt İzleme Geçmişini Getir (/sync/playback)
-  const traktPlaybackCek = async (tokenOverride?: string) => {
+  const traktPlaybackCek = async (tokenOverride?: string, cId?: string) => {
     const token = tokenOverride || traktToken;
     if (!token) return;
+    const aktifCId = cId || traktClientId?.trim() || TRAKT_CLIENT_ID;
     try {
       setTraktSenkronizeEdiliyor(true);
       setBildirimMetni('🔄 Trakt.tv izlemeleri senkronize ediliyor...');
@@ -2414,7 +2512,7 @@ export default function App() {
         headers: {
           'Content-Type': 'application/json',
           'trakt-api-version': '2',
-          'trakt-api-key': TRAKT_CLIENT_ID,
+          'trakt-api-key': aktifCId,
           Authorization: `Bearer ${token}`,
         },
       });
@@ -3194,6 +3292,42 @@ export default function App() {
     }
   };
 
+  // Wi-Fi Bilgisini Canlı Güncelle
+  const wifiBilgisiGuncelle = useCallback(async () => {
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.getConnectedWifiInfo) {
+      try {
+        const info = await TVAppManager.getConnectedWifiInfo();
+        if (info && info.isConnected && info.ssid) {
+          setBagliWifiAdi(info.ssid);
+          setWifiSinyalGucu(info.rssi ?? -50);
+        } else {
+          setBagliWifiAdi('');
+        }
+      } catch {}
+    }
+  }, []);
+
+  // Yakındaki Wi-Fi Ağlarını Uygulama İçinde Tara
+  const wifiAglariniTara = useCallback(async () => {
+    setWifiTaraniyor(true);
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.scanWifiNetworks) {
+      try {
+        const list = await TVAppManager.scanWifiNetworks();
+        if (Array.isArray(list)) {
+          setWifiAgListesi(list);
+        }
+      } catch {}
+    }
+    setWifiTaraniyor(false);
+    wifiBilgisiGuncelle();
+  }, [wifiBilgisiGuncelle]);
+
+  useEffect(() => {
+    wifiBilgisiGuncelle();
+    const interval = setInterval(wifiBilgisiGuncelle, 15000);
+    return () => clearInterval(interval);
+  }, [wifiBilgisiGuncelle]);
+
   // Uygulama Seçenekleri (Uzun Basma Menüsü)
   const appAksiyonAc = (app: UygulamaItem) => {
     setSeciliAksiyonUygulama(app);
@@ -3459,18 +3593,17 @@ export default function App() {
     return () => clearInterval(slideTimer);
   }, [ekranKoruyucuAcik, yuklenenFotograflar.length]);
 
-  // Ekran Koruyucu Açıkken TV'nin Ayrı Uyku Moduna Düşmesini Engelle (Tek Uyku Modu)
+  // Ekran Koruyucu Açıkken TV'nin Ayrı Uyku Moduna Düşmesini Engelle (Tek Uyku Modu - Mi Box Sistem Koruyucusunu Engelle)
   useEffect(() => {
     if (Platform.OS === 'android' && TVAppManager && TVAppManager.setKeepScreenOn) {
-      if (ekranKoruyucuAcik && ekranKoruyucuModu === 'gs_foto') {
-        TVAppManager.setKeepScreenOn(true).catch(() => {});
-      } else if (ekranKoruyucuModu === 'kapali') {
+      if (ekranKoruyucuModu !== 'sistem_tv') {
+        // Mi Box / Android TV sistem daydream ekran koruyucusunu engelle, yalnızca GS Launcher'ın kendi şık koruyucusu çalışsın
         TVAppManager.setKeepScreenOn(true).catch(() => {});
       } else {
         TVAppManager.setKeepScreenOn(false).catch(() => {});
       }
     }
-  }, [ekranKoruyucuAcik, ekranKoruyucuModu]);
+  }, [ekranKoruyucuModu]);
 
   // Otomatik Hareketsizlik Ekran Koruyucusu (Kumanda Etkileşimine Duyarlı)
   useEffect(() => {
@@ -3948,27 +4081,26 @@ export default function App() {
               <Text style={styles.saatYazi}>{saat}</Text>
             </View>
 
-            {/* 10.a Canlı Wi-Fi Tuşu */}
+            {/* 10.a Canlı Wi-Fi Tuşu (Bağlı Ağ Adı & Uygulama İçi Arama) */}
             <FocusableItem
-              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
+              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)', maxWidth: 160 }]}
               focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
               onPress={() => {
-                if (Platform.OS === 'android' && TVAppManager && TVAppManager.openWifiSettings) {
-                  TVAppManager.openWifiSettings().catch(() => {});
-                }
+                setWifiModalAcik(true);
+                wifiAglariniTara();
               }}
             >
               {() => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>📶</Text>
-                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
-                    Wi-Fi
+                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]} numberOfLines={1}>
+                    {bagliWifiAdi || 'Wi-Fi'}
                   </Text>
                 </View>
               )}
             </FocusableItem>
 
-            {/* 10.b Canlı Hız Testi Tuşu */}
+            {/* 10.b Canlı Hız Testi Tuşu (Net Görünür Roket İkonu) */}
             <FocusableItem
               style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
               focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
@@ -3976,7 +4108,7 @@ export default function App() {
             >
               {() => (
                 <View style={styles.miniButonIcerik}>
-                  <Text style={{ fontSize: 13 }}>⚡</Text>
+                  <Text style={{ fontSize: 14 }}>🚀</Text>
                   <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
                     Hız
                   </Text>
@@ -4628,7 +4760,12 @@ export default function App() {
                         secili && { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' },
                       ]}
                       focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
-                      onPress={() => setKontrolSekmesi(s.id as any)}
+                      onPress={() => {
+                        setKontrolSekmesi(s.id as any);
+                        if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+                          TVAppManager.saveSetting('sonAyarlarSekmesi', s.id).catch(() => {});
+                        }
+                      }}
                     >
                       {() => (
                         <Text
@@ -5317,7 +5454,10 @@ export default function App() {
                         <FocusableItem
                           style={[styles.kategoriSecimPill, { backgroundColor: '#0284C7', borderColor: '#FFFFFF' }]}
                           focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
-                          onPress={() => setFotoYuklemeModalAcik(true)}
+                          onPress={() => {
+                            oncekiMenuRef.current = 'ayarlar';
+                            fotoYuklemePenceresiniAc();
+                          }}
                         >
                           {() => <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800' }}>📲 Telefondan Fotoğraf Yükle (QR Kod)</Text>}
                         </FocusableItem>
@@ -5543,6 +5683,7 @@ export default function App() {
                       style={[styles.kontrolTile, { borderColor: aktifTema.surface }]}
                       focusedStyle={[styles.kontrolTileOdak, { borderColor: aktifTema.border }]}
                       onPress={() => {
+                        oncekiMenuRef.current = 'ayarlar';
                         setKontrolMerkeziAcik(false);
                         setHizTestiAcik(true);
                         hizTestiBaslat();
@@ -5550,7 +5691,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>⚡</Text>
+                          <Text style={styles.tileIkon}>🚀</Text>
                           <Text style={styles.tileBaslik}>Hız Testi</Text>
                           <Text style={styles.tileAlt}>Canlı Ağ Ölçümü</Text>
                         </>
@@ -5690,6 +5831,7 @@ export default function App() {
                           style={[styles.modalKaydetKapatButon, { backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: aktifTema.border }]}
                           focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
                           onPress={() => {
+                            oncekiMenuRef.current = 'ayarlar';
                             setKontrolMerkeziAcik(false);
                             setTusAtamaModalAcik(true);
                           }}
@@ -5779,12 +5921,29 @@ export default function App() {
                       style={[styles.kontrolTile, { borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}
                       focusedStyle={[styles.kontrolTileOdak, { borderColor: '#FFFFFF' }]}
                       onPress={() => {
-                        setKontrolMerkeziAcik(false);
-                        setBildirimMetni('💡 Erişilebilirlik ekranında "GS Launcher" servisini Açık yapın!');
-                        setTimeout(() => setBildirimMetni(''), 6000);
-                        if (Platform.OS === 'android' && TVAppManager && TVAppManager.openAccessibilitySettings) {
-                          TVAppManager.openAccessibilitySettings().catch(() => {});
-                        }
+                        Alert.alert(
+                          '🔒 Sabit Başlatıcı (Asla Kapanmaz)',
+                          'Home tuşuna basıldığında veya TV açıldığında GS Launcher\'ın daima sabit kalmasını sağlar.\n\n⚠️ Mİ BOX & ANDROID 13/14 İPUCU:\nEğer "Açık" konuma getirdiğinizde sistem hemen kapatıyorsa:\n1. Aşağıdaki "Uygulama İzinleri" butonuna basarak GS Launcher ayarlarını açın.\n2. Varsa sağ üstteki menüden "Kısıtlı ayarlara izin ver"e basın veya Pil Tasarrufunu "Kısıtlamasız" yapın.\n3. Ardından "Erişilebilirliği Aç" butonuna basıp GS Launcher\'ı Açık yapın.',
+                          [
+                            { text: 'Kapat', style: 'cancel' },
+                            {
+                              text: '⚙️ Uygulama İzinleri',
+                              onPress: () => {
+                                if (Platform.OS === 'android' && TVAppManager && TVAppManager.openAppPermissionSettings) {
+                                  TVAppManager.openAppPermissionSettings().catch(() => {});
+                                }
+                              },
+                            },
+                            {
+                              text: '🔓 Erişilebilirliği Aç',
+                              onPress: () => {
+                                if (Platform.OS === 'android' && TVAppManager && TVAppManager.openAccessibilitySettings) {
+                                  TVAppManager.openAccessibilitySettings().catch(() => {});
+                                }
+                              },
+                            },
+                          ]
+                        );
                       }}
                     >
                       {() => (
@@ -5874,6 +6033,7 @@ export default function App() {
                       style={[styles.kontrolTile, { borderColor: '#7C3AED', backgroundColor: 'rgba(124, 58, 237, 0.15)' }]}
                       focusedStyle={[styles.kontrolTileOdak, { borderColor: '#FFFFFF' }]}
                       onPress={() => {
+                        oncekiMenuRef.current = 'ayarlar';
                         setKontrolMerkeziAcik(false);
                         setEklentiModalAcik(true);
                       }}
@@ -5892,6 +6052,7 @@ export default function App() {
                       style={[styles.kontrolTile, { borderColor: '#EAB308', backgroundColor: 'rgba(234, 179, 8, 0.12)' }]}
                       focusedStyle={[styles.kontrolTileOdak, { borderColor: '#FFFFFF' }]}
                       onPress={() => {
+                        oncekiMenuRef.current = 'ayarlar';
                         setKontrolMerkeziAcik(false);
                         setGuncellemeModalAcik(true);
                         surumDenetleVeBilgiAl(true);
@@ -7103,11 +7264,247 @@ export default function App() {
               <FocusableItem
                 style={[styles.modalKaydetKapatButon, { width: '100%', marginTop: 10, backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }]}
                 focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
-                onPress={() => setHizTestiAcik(false)}
+                onPress={() => {
+                  setHizTestiAcik(false);
+                  if (oncekiMenuRef.current === 'ayarlar') {
+                    setKontrolMerkeziAcik(true);
+                    oncekiMenuRef.current = null;
+                  }
+                }}
               >
                 {() => (
                   <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>
-                    ✔ Kapat ve Ana Ekrana Dön
+                    ✔ Kapat ve Dön
+                  </Text>
+                )}
+              </FocusableItem>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ================= MODAL: TRAKT CLIENT ID AYARLAMA ================= */}
+        <Modal
+          visible={traktClientIdModalAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setTraktClientIdModalAcik(false)}
+        >
+          <View style={styles.modalArkaplan}>
+            <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border, width: 560, maxWidth: '90%' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                <Text style={{ fontSize: 24, marginRight: 8 }}>🔑</Text>
+                <Text style={[styles.modalBaslik, { marginBottom: 0 }]}>Trakt.tv API Client ID</Text>
+              </View>
+              <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, lineHeight: 18, marginBottom: 16 }}>
+                Trakt API'sine bağlanabilmek için trakt.tv/oauth/applications adresinden oluşturduğunuz uygulamanın Client ID değerini buraya girin:
+              </Text>
+
+              <TextInput
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  borderColor: aktifTema.accent,
+                  borderWidth: 1,
+                  borderRadius: 10,
+                  color: '#FFFFFF',
+                  paddingHorizontal: 14,
+                  paddingVertical: 10,
+                  fontSize: 13,
+                  marginBottom: 16,
+                  fontFamily: Platform.OS === 'android' ? 'monospace' : 'Courier',
+                }}
+                value={girilenTraktClientId}
+                onChangeText={setGirilenTraktClientId}
+                placeholder="Trakt Client ID (64 karakterlik kod)"
+                placeholderTextColor="rgba(255,255,255,0.4)"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <FocusableItem
+                  style={[styles.modalKaydetKapatButon, { flex: 1, backgroundColor: aktifTema.accent }]}
+                  focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.02 }] }}
+                  onPress={() => {
+                    const yeniId = girilenTraktClientId.trim();
+                    setTraktClientId(yeniId);
+                    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+                      TVAppManager.saveSetting('trakt_client_id', yeniId).catch(() => {});
+                    }
+                    setTraktClientIdModalAcik(false);
+                    setBildirimMetni('✅ Trakt Client ID kaydedildi.');
+                  }}
+                >
+                  {() => (
+                    <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent, fontWeight: '800' }]}>
+                      💾 Kaydet
+                    </Text>
+                  )}
+                </FocusableItem>
+                <FocusableItem
+                  style={[styles.modalKaydetKapatButon, { flex: 1, backgroundColor: 'rgba(255,255,255,0.1)' }]}
+                  focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.02 }] }}
+                  onPress={() => setTraktClientIdModalAcik(false)}
+                >
+                  {() => (
+                    <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>
+                      Vazgeç
+                    </Text>
+                  )}
+                </FocusableItem>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ================= MODAL: UYGULAMA İÇİ WI-FI ARAMA & AĞ YÖNETİMİ ================= */}
+        <Modal
+          visible={wifiModalAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {
+            setWifiModalAcik(false);
+            if (oncekiMenuRef.current === 'ayarlar') {
+              setKontrolMerkeziAcik(true);
+              oncekiMenuRef.current = null;
+            }
+          }}
+        >
+          <View style={styles.modalArkaplan}>
+            <View style={[styles.modalPencere, { borderColor: aktifTema.border, width: 680, maxHeight: '88%' }]}>
+              <View style={styles.modalBaslikSatir}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 22, marginRight: 8 }}>📶</Text>
+                  <Text style={styles.modalBaslik}>Wi-Fi Ağları (Arama & Canlı Durum)</Text>
+                </View>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => {
+                    setWifiModalAcik(false);
+                    if (oncekiMenuRef.current === 'ayarlar') {
+                      setKontrolMerkeziAcik(true);
+                      oncekiMenuRef.current = null;
+                    }
+                  }}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
+              </View>
+
+              {/* Mevcut Bağlantı Durum Kartı */}
+              <View style={{
+                backgroundColor: bagliWifiAdi ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                padding: 14,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: bagliWifiAdi ? '#10B981' : '#EF4444',
+                marginBottom: 14,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: bagliWifiAdi ? '#10B981' : '#EF4444', fontSize: 14, fontWeight: '900' }}>
+                    {bagliWifiAdi ? `🟢 Bağlı Ağ: ${bagliWifiAdi}` : '🔴 Bağlı Ağ Yok'}
+                  </Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, marginTop: 2 }}>
+                    {bagliWifiAdi ? `Sinyal Seviyesi: ${wifiSinyalGucu > -65 ? 'Mükemmel 📶' : (wifiSinyalGucu > -75 ? 'İyi 📶' : 'Orta 📶')}` : 'Lütfen aşağıdaki listeden bir ağ seçin veya tarayın.'}
+                  </Text>
+                </View>
+                <FocusableItem
+                  style={{ backgroundColor: aktifTema.accent, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#FFFFFF' }}
+                  focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                  onPress={wifiAglariniTara}
+                >
+                  {() => <Text style={{ color: aktifTema.textOnAccent, fontSize: 11, fontWeight: '900' }}>{wifiTaraniyor ? '⏳ Aranıyor...' : '🔄 Ağları Tara'}</Text>}
+                </FocusableItem>
+              </View>
+
+              {/* Taranan Ağlar Listesi */}
+              <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>
+                📡 Çevredeki Kablosuz Ağlar ({wifiAgListesi.length}):
+              </Text>
+
+              <ScrollView style={{ maxHeight: 260, marginBottom: 12 }} showsVerticalScrollIndicator={false}>
+                {wifiAgListesi.length === 0 ? (
+                  <View style={{ padding: 20, alignItems: 'center' }}>
+                    <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>
+                      {wifiTaraniyor ? '📡 Yakındaki Wi-Fi ağları taranıyor...' : 'Ağ listesi boş. "Ağları Tara" butonuna basın.'}
+                    </Text>
+                  </View>
+                ) : (
+                  wifiAgListesi.map((ag, idx) => {
+                    const isConnected = ag.isConnected || (bagliWifiAdi && ag.ssid === bagliWifiAdi);
+                    return (
+                      <FocusableItem
+                        key={`${ag.ssid}_${idx}`}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          backgroundColor: isConnected ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                          padding: 12,
+                          borderRadius: 10,
+                          marginBottom: 6,
+                          borderWidth: 1,
+                          borderColor: isConnected ? '#10B981' : 'rgba(255, 255, 255, 0.12)',
+                        }}
+                        focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF', transform: [{ scale: 1.02 }] }}
+                        onPress={() => {
+                          Alert.alert(
+                            `📶 ${ag.ssid}`,
+                            `${isConnected ? 'Şu anda bu ağa bağlısınız.' : 'Bu ağa bağlanmak için TV sistem Wi-Fi menüsünü açmak ister misiniz?'}\n\nGüvenlik: ${ag.isSecure ? 'Korumalı (Şifreli 🔒)' : 'Açık Ağ (Şifresiz 🔓)'}`,
+                            [
+                              { text: 'Vazgeç', style: 'cancel' },
+                              {
+                                text: '⚙️ Sistem Wi-Fi Menüsünü Aç',
+                                onPress: () => {
+                                  if (Platform.OS === 'android' && TVAppManager && TVAppManager.openWifiSettings) {
+                                    TVAppManager.openWifiSettings().catch(() => {});
+                                  }
+                                },
+                              },
+                            ]
+                          );
+                        }}
+                      >
+                        {(isFocused) => (
+                          <>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                              <Text style={{ fontSize: 16, marginRight: 10 }}>{ag.isSecure ? '🔒' : '📶'}</Text>
+                              <View>
+                                <Text style={{ color: isFocused ? '#FFFFFF' : (isConnected ? '#10B981' : '#FFFFFF'), fontSize: 13, fontWeight: '800' }}>
+                                  {ag.ssid} {isConnected ? '✔ (Bağlı)' : ''}
+                                </Text>
+                                <Text style={{ color: isFocused ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)', fontSize: 10 }}>
+                                  {ag.frequency > 4000 ? '5 GHz Hızlı Ağ' : '2.4 GHz'} • {ag.level > -60 ? 'Güçlü Sinyal' : (ag.level > -75 ? 'İyi Sinyal' : 'Zayıf')}
+                                </Text>
+                              </View>
+                            </View>
+                            <Text style={{ color: isFocused ? '#FFFFFF' : 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: '700' }}>
+                              {isConnected ? 'Bağlı' : 'Bağlan >'}
+                            </Text>
+                          </>
+                        )}
+                      </FocusableItem>
+                    );
+                  })
+                )}
+              </ScrollView>
+
+              {/* Sistem Ayarlarına Git Butonu */}
+              <FocusableItem
+                style={[styles.modalKaydetKapatButon, { width: '100%', backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }]}
+                focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                onPress={() => {
+                  if (Platform.OS === 'android' && TVAppManager && TVAppManager.openWifiSettings) {
+                    TVAppManager.openWifiSettings().catch(() => {});
+                  }
+                }}
+              >
+                {() => (
+                  <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>
+                    ⚙️ Mi Box / Android TV Sistem Wi-Fi Menüsünü Aç
                   </Text>
                 )}
               </FocusableItem>
@@ -7270,7 +7667,13 @@ export default function App() {
           visible={fotoYuklemeModalAcik}
           transparent
           animationType="fade"
-          onRequestClose={() => setFotoYuklemeModalAcik(false)}
+          onRequestClose={() => {
+            setFotoYuklemeModalAcik(false);
+            if (oncekiMenuRef.current === 'ayarlar') {
+              setKontrolMerkeziAcik(true);
+              oncekiMenuRef.current = null;
+            }
+          }}
         >
           <View style={styles.modalArkaplan}>
             <View style={[styles.modalPencere, { borderColor: aktifTema.border, maxHeight: '90%', width: '75%' }]}>
@@ -7279,7 +7682,13 @@ export default function App() {
                 <FocusableItem
                   style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
                   focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
-                  onPress={() => setFotoYuklemeModalAcik(false)}
+                  onPress={() => {
+                    setFotoYuklemeModalAcik(false);
+                    if (oncekiMenuRef.current === 'ayarlar') {
+                      setKontrolMerkeziAcik(true);
+                      oncekiMenuRef.current = null;
+                    }
+                  }}
                 >
                   {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
                 </FocusableItem>
@@ -7290,7 +7699,7 @@ export default function App() {
                   {/* QR Kodu */}
                   <View style={{ alignItems: 'center', marginRight: 20 }}>
                     <Image
-                      source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=http://${tvIpAdresi}:8888` }}
+                      source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=2&data=${encodeURIComponent(`http://${tvIpAdresi}:8888`)}` }}
                       style={{ width: 140, height: 140, borderRadius: 12, backgroundColor: '#FFFFFF' }}
                       resizeMode="contain"
                     />
@@ -7305,10 +7714,26 @@ export default function App() {
                     <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 8 }}>
                       veya telefon tarayıcınıza doğrudan bu adresi yazın:
                     </Text>
-                    <View style={{ backgroundColor: '#0F172A', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: '#38BDF8', alignSelf: 'flex-start', marginBottom: 10 }}>
-                      <Text style={{ color: '#38BDF8', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 }}>
-                        http://{tvIpAdresi}:8888
-                      </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                      <View style={{ backgroundColor: '#0F172A', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: '#38BDF8' }}>
+                        <Text style={{ color: '#38BDF8', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 }}>
+                          http://{tvIpAdresi}:8888
+                        </Text>
+                      </View>
+                      <FocusableItem
+                        style={{ backgroundColor: 'rgba(56, 189, 248, 0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#38BDF8' }}
+                        focusedStyle={{ backgroundColor: '#38BDF8', borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                        onPress={async () => {
+                          if (Platform.OS === 'android' && TVAppManager) {
+                            const ip = await TVAppManager.getWifiIpAddress();
+                            if (ip && ip !== '127.0.0.1') setTvIpAdresi(ip);
+                            setBildirimMetni(`🔄 TV IP Adresi Güncellendi: http://${ip}:8888`);
+                            setTimeout(() => setBildirimMetni(''), 3000);
+                          }
+                        }}
+                      >
+                        {() => <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800' }}>🔄 IP Yenile</Text>}
+                      </FocusableItem>
                     </View>
                     <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, lineHeight: 17 }}>
                       • Telefonunuz ve TV aynı Wi-Fi ağına bağlı olmalıdır.{'\n'}
@@ -7987,6 +8412,20 @@ export default function App() {
                             {() => (
                               <Text style={[styles.tumunuGorYazi, { color: aktifTema.textOnAccent, fontWeight: '900', textAlign: 'center' }]}>
                                 {traktDogrulaniyor ? '⏳ Kod Bekleniyor...' : '🔑 Trakt Cihaz Kodu Al & Başlat'}
+                              </Text>
+                            )}
+                          </FocusableItem>
+                          <FocusableItem
+                            style={[styles.tumunuGorButon, { backgroundColor: 'rgba(255,255,255,0.1)', flex: 0.65, paddingVertical: 12 }]}
+                            focusedStyle={{ transform: [{ scale: 1.03 }], borderColor: '#FFFFFF' }}
+                            onPress={() => {
+                              setGirilenTraktClientId(traktClientId || '');
+                              setTraktClientIdModalAcik(true);
+                            }}
+                          >
+                            {() => (
+                              <Text style={[styles.tumunuGorYazi, { color: '#FFFFFF', fontWeight: '800', textAlign: 'center' }]}>
+                                {traktClientId ? '🔑 ID: ' + traktClientId.substring(0, 6) + '...' : '⚙️ Client ID Gir'}
                               </Text>
                             )}
                           </FocusableItem>

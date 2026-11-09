@@ -37,7 +37,7 @@ class TVPhotoServer(
                     try {
                         val client = serverSocket?.accept() ?: break
                         executor.execute { handleClient(client) }
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
                         break
                     }
                 }
@@ -53,7 +53,7 @@ class TVPhotoServer(
         isRunning = false
         try {
             serverSocket?.close()
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
         serverSocket = null
     }
 
@@ -111,11 +111,11 @@ class TVPhotoServer(
                     sendResponse(output, 404, "Not Found", "Sayfa bulunamadı.")
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
         } finally {
             try {
                 socket.close()
-            } catch (_: Exception) {}
+            } catch (e: Exception) {}
         }
     }
 

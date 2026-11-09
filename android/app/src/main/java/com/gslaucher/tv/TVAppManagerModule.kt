@@ -14,7 +14,10 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Environment
 import android.os.Handler
@@ -1133,26 +1136,151 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     fun getWifiIpAddress(promise: Promise) {
         try {
             var foundIp = "127.0.0.1"
-            val interfaces = java.net.NetworkInterface.getNetworkInterfaces()
-            while (interfaces.hasMoreElements()) {
-                val nInterface = interfaces.nextElement()
-                if (nInterface.isLoopback || !nInterface.isUp) continue
-                val addresses = nInterface.inetAddresses
-                while (addresses.hasMoreElements()) {
-                    val addr = addresses.nextElement()
-                    if (!addr.isLoopbackAddress && addr is java.net.Inet4Address) {
-                        val host = addr.hostAddress ?: ""
-                        if (!host.startsWith("127.")) {
-                            foundIp = host
-                            break
+
+            // 1. WifiManager Connection Info (en doğru Wi-Fi IP'si)
+            try {
+                val wifiManager = reactContext.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+                val ipInt = wifiManager?.connectionInfo?.ipAddress ?: 0
+                if (ipInt != 0) {
+                    foundIp = String.format(
+                        java.util.Locale.US,
+                        "%d.%d.%d.%d",
+                        ipInt and 0xff,
+                        ipInt shr 8 and 0xff,
+                        ipInt shr 16 and 0xff,
+                        ipInt shr 24 and 0xff
+                    )
+                }
+            } catch (e: Exception) {}
+
+            // 2. Eğer bulunamadıysa aktif ağ arayüzlerini tara (wlan, eth)
+            if (foundIp == "127.0.0.1" || foundIp.isEmpty()) {
+                val interfaces = java.net.NetworkInterface.getNetworkInterfaces()
+                while (interfaces.hasMoreElements()) {
+                    val nInterface = interfaces.nextElement()
+                    if (nInterface.isLoopback || !nInterface.isUp) continue
+                    val name = nInterface.name.lowercase()
+                    if (name.startsWith("wlan") || name.startsWith("eth") || name.startsWith("en")) {
+                        val addresses = nInterface.inetAddresses
+                        while (addresses.hasMoreElements()) {
+                            val addr = addresses.nextElement()
+                            if (!addr.isLoopbackAddress && addr is java.net.Inet4Address) {
+                                val host = addr.hostAddress ?: ""
+                                if (!host.startsWith("127.")) {
+                                    foundIp = host
+                                    break
+                                }
+                            }
                         }
                     }
+                    if (foundIp != "127.0.0.1") break
                 }
-                if (foundIp != "127.0.0.1") break
             }
+
             promise.resolve(foundIp)
         } catch (e: Exception) {
             promise.resolve("127.0.0.1")
+        }
+    }
+
+    @ReactMethod
+    fun getConnectedWifiInfo(promise: Promise) {
+        try {
+            val map = Arguments.createMap()
+            val wifiManager = reactContext.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+            val connManager = reactContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+
+            var ssid = ""
+            var isConnected = false
+            var rssi = -100
+
+            if (wifiManager != null) {
+                val info = wifiManager.connectionInfo
+                if (info != null && info.networkId != -1) {
+                    val rawSsid = info.ssid ?: ""
+                    val cleanSsid = rawSsid.replace("\"", "")
+                    if (cleanSsid != "<unknown ssid>" && cleanSsid.isNotEmpty()) {
+                        ssid = cleanSsid
+                        isConnected = true
+                        rssi = info.rssi
+                    }
+                }
+            }
+
+            if (!isConnected && connManager != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val net = connManager.activeNetwork
+                    val caps = connManager.getNetworkCapabilities(net)
+                    if (caps != null) {
+                        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                            isConnected = true
+                            if (ssid.isEmpty() || ssid == "<unknown ssid>") {
+                                ssid = "Wi-Fi"
+                            }
+                        } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                            isConnected = true
+                            ssid = "Ethernet (Kablolu)"
+                        }
+                    }
+                }
+            }
+
+            map.putBoolean("isConnected", isConnected)
+            map.putString("ssid", ssid)
+            map.putInt("rssi", rssi)
+            promise.resolve(map)
+        } catch (e: Exception) {
+            val map = Arguments.createMap()
+            map.putBoolean("isConnected", false)
+            map.putString("ssid", "")
+            map.putInt("rssi", -100)
+            promise.resolve(map)
+        }
+    }
+
+    @ReactMethod
+    fun scanWifiNetworks(promise: Promise) {
+        try {
+            val wifiManager = reactContext.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+            val result = Arguments.createArray()
+
+            if (wifiManager != null) {
+                try {
+                    wifiManager.startScan()
+                } catch (e: Exception) {}
+
+                val connectedSsid = wifiManager.connectionInfo?.ssid?.replace("\"", "") ?: ""
+                val scanResults = wifiManager.scanResults ?: emptyList()
+
+                // Benzersiz SSID'leri grupla (en güçlü sinyali al)
+                val uniqueNetworks = mutableMapOf<String, android.net.wifi.ScanResult>()
+                for (scan in scanResults) {
+                    val s = scan.SSID ?: ""
+                    if (s.isEmpty()) continue
+                    val existing = uniqueNetworks[s]
+                    if (existing == null || scan.level > existing.level) {
+                        uniqueNetworks[s] = scan
+                    }
+                }
+
+                val sorted = uniqueNetworks.values.sortedByDescending { it.level }
+
+                for (scan in sorted) {
+                    val item = Arguments.createMap()
+                    val s = scan.SSID ?: ""
+                    item.putString("ssid", s)
+                    item.putInt("level", scan.level)
+                    item.putInt("frequency", scan.frequency)
+                    item.putString("capabilities", scan.capabilities ?: "")
+                    item.putBoolean("isConnected", s == connectedSsid && connectedSsid.isNotEmpty() && connectedSsid != "<unknown ssid>")
+                    val isSecure = scan.capabilities?.contains("WPA") == true || scan.capabilities?.contains("WEP") == true
+                    item.putBoolean("isSecure", isSecure)
+                    result.pushMap(item)
+                }
+            }
+            promise.resolve(result)
+        } catch (e: Exception) {
+            promise.resolve(Arguments.createArray())
         }
     }
 

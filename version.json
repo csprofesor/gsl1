@@ -1,7 +1,7 @@
 {
-  "version": "3.2.10",
-  "versionCode": 36,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.10/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gs3210tv",
-  "changelog": "v3.2.10 (Build 36): Üst panel görünürlük optimizasyonu: 1) Üst paneldeki 'Hız' yazısının siyah gölge nedeniyle kararması ve okunmaması sorunu düzeltildi; saf beyaz (#FFFFFF), yüksek kontrastlı ve keskin yazı tipi uygulandı. 2) Üst bar butonlarındaki ('Wi-Fi', 'Hız', 'Güncelle', 'TV', 'Bildirim') etiketler sürekli görünür hale getirilerek kumanda navigasyonu kolaylaştırıldı."
+  "version": "3.2.11",
+  "versionCode": 37,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.11/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gs3211tv",
+  "changelog": "v3.2.11 (Build 37): Sistem ve Başlatıcı Kararlılık Güncellemesi: 1) Sabit Başlatıcı & Erişilebilirlik Servisi Android 13/14 Kısıtlı Ayarlar akıllı rehberi ve otomatik izin butonu eklendi. 2) Trakt.tv Client ID ayarı eklendi, cihaz kodu alma hatası çözüldü. 3) Aile Fotoğrafı QR kod ve yönlendirme bağlantısı düzeltildi, IP yenileme eklendi. 4) Ayarlar alt menülerinden geri basıldığında son kalınan ayarlar sekmesine geri dönme hafızası eklendi. 5) Wi-Fi doğrudan uygulama içinden taranır hale getirildi ve üst barda bağlı Wi-Fi adı canlı gösterildi. 6) Hız ikonu yüksek kontrastlı roket (🚀) olarak güncellendi. 7) Ekran koruyucuda sistem daydream çakışması engellendi, yalnızca uygulama ekran koruyucusu çalıştırıldı."
 }
