@@ -34,11 +34,11 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.7';
-const CURRENT_BUILD = 33;
+const CURRENT_VERSION = '3.2.8';
+const CURRENT_BUILD = 34;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gs327apk';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gs328apk';
 
 // ================= 18 MADDELİK GELİŞMİŞ TV ÖZELLEŞTİRME TİPLERİ =================
 export type IconShapeType = 'rounded' | 'circle' | 'squircle' | 'rectangle';
@@ -941,6 +941,8 @@ export interface KaldiginYerdenDevamEtItem {
   title: string;
   subtitle: string;
   backdropUrl: string;
+  posterUrl?: string;
+  imdbId?: string;
   platform: string;
   platformIcon: string;
   pkg: string;
@@ -2136,19 +2138,33 @@ export default function App() {
   };
 
   // İzleme Geçmişine Kaydet Yardımcısı (Film & Dizi)
-  const filmGecmiseEkle = (title: string, platform: string, pkg: string, backdropUrl?: string, subtitle?: string) => {
+  const filmGecmiseEkle = (
+    title: string,
+    platform: string,
+    pkg: string,
+    backdropUrl?: string,
+    subtitle?: string,
+    posterUrl?: string,
+    imdbId?: string
+  ) => {
     // Sadece gerçek film eklenir. Asla platform="Uygulama" kabul edilmez!
     if (platform === 'Uygulama' || !title) return;
-    const guvenli = guvenliGorselUrl(backdropUrl);
+
+    // Yüksek kaliteli afiş garantisi (boş ya da kırık afişleri önle)
+    const safeBackdrop = guvenliGorselUrl(backdropUrl || posterUrl) || 'https://images.metahub.space/background/medium/tt15398776/img';
+    const safePoster = guvenliGorselUrl(posterUrl || backdropUrl) || 'https://images.metahub.space/poster/medium/tt15398776/img';
+
     const yeniDevam: KaldiginYerdenDevamEtItem = {
-      id: `cont_${(title || 'film').replace(/\s+/g, '_')}_${Date.now()}`,
+      id: `cont_${title.replace(/\s+/g, '_')}_${Date.now()}`,
       title,
-      subtitle: subtitle || 'IMDb • 4K UHD',
-      backdropUrl: guvenli || 'https://images.metahub.space/background/medium/tt15398776/img',
-      platform: platform || 'IMDb',
-      platformIcon: '🍿',
+      subtitle: subtitle || `${platform} • Kaldığın Yerden`,
+      backdropUrl: safeBackdrop,
+      posterUrl: safePoster,
+      imdbId,
+      platform: platform || 'Film & Dizi',
+      platformIcon: '▶',
       pkg: pkg || '',
-      kaldigiDk: 15,
+      kaldigiDk: 24,
       toplamDk: 120,
       sonIzlemeZamani: 'Bugün',
     };
@@ -2161,6 +2177,11 @@ export default function App() {
       }
       return guncel;
     });
+
+    // Android TV sistem TvProvider veritabanına da eş zamanlı yaz
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.insertWatchNextProgram) {
+      TVAppManager.insertWatchNextProgram(title, subtitle || 'Kaldığın Yerden', pkg, safeBackdrop, safePoster).catch(() => {});
+    }
   };
 
   // TV İzleme İzni Durumunu Denetle
@@ -2199,17 +2220,21 @@ export default function App() {
   // TV İzleme Geçmişi Gerçek Test İçeriği Oluştur
   const tvIzlemeTestiYap = async () => {
     try {
+      setTvTestAktif(true);
+      filmGecmiseEkle(
+        'Interstellar (Yıldızlararası)',
+        'Stremio 4K',
+        'com.stremio.one',
+        'https://images.metahub.space/background/medium/tt0816692/img',
+        '4K UHD • Bilim Kurgu • 54. Dk',
+        'https://images.metahub.space/poster/medium/tt0816692/img',
+        'tt0816692'
+      );
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.createTestWatchNextProgram) {
-        setBildirimMetni('🧪 Android TV Sistemine Test Yayını Yazılıyor...');
-        const ok = await TVAppManager.createTestWatchNextProgram();
-        if (ok) {
-          setTvTestAktif(true);
-          setBildirimMetni('✅ Test filmi (Interstellar) sisteme başarıyla yazıldı! Ekranda görünüyor.');
-          setTimeout(() => sistemSonIzlenenleriGetir(), 400);
-        } else {
-          setBildirimMetni('⚠️ Test içeriği eklenemedi.');
-        }
+        TVAppManager.createTestWatchNextProgram().catch(() => {});
       }
+      setBildirimMetni('✅ Test filmi (Interstellar) eklendi! Kartı kumandayla tıklayıp test edebilirsiniz.');
+      setTimeout(() => setBildirimMetni(''), 4500);
     } catch (e: any) {
       setBildirimMetni(`⚠️ Test Hatası: ${e?.message || 'Bilinmeyen hata'}`);
     }
@@ -2218,13 +2243,19 @@ export default function App() {
   // TV İzleme Geçmişi Test İçeriklerini Temizle
   const tvIzlemeTestiTemizle = async () => {
     try {
+      setTvTestAktif(false);
+      setDevamEdenIcerikler((prev) => {
+        const temiz = prev.filter((x) => !x.title.toLowerCase().includes('interstellar'));
+        if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+          TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(temiz)).catch(() => {});
+        }
+        return temiz;
+      });
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.clearAllTestWatchNextPrograms) {
-        setBildirimMetni('🧹 Test içerikleri temizleniyor...');
-        await TVAppManager.clearAllTestWatchNextPrograms();
-        setTvTestAktif(false);
-        setBildirimMetni('✅ Test filmleri sistemden tamamen silindi.');
-        setTimeout(() => sistemSonIzlenenleriGetir(), 400);
+        TVAppManager.clearAllTestWatchNextPrograms().catch(() => {});
       }
+      setBildirimMetni('✅ Test filmleri temizlendi.');
+      setTimeout(() => setBildirimMetni(''), 3000);
     } catch {}
   };
 
@@ -2272,8 +2303,8 @@ export default function App() {
 
   // Kaldığın Yerden Devam Et Tıklama Eylemi (Doğrudan Başlatma & Sıfır Bekleme)
   const devamEdenIcerikBaslat = async (item: KaldiginYerdenDevamEtItem) => {
-    // 1. Android TV Sistem Watch Next Programı ise (Netflix, YouTube, Stremio, VLC vb.)
-    if (item.isSystemWatchNext || item.intentUri) {
+    // 1. Android TV Sistem Watch Next Programı ise (intentUri varsa doğrudan oynat)
+    if (item.intentUri) {
       try {
         if (Platform.OS === 'android' && TVAppManager && TVAppManager.launchWatchNextProgram) {
           const ok = await TVAppManager.launchWatchNextProgram(
@@ -2288,16 +2319,24 @@ export default function App() {
 
     // 2. Uygulama paketi biliniyorsa doğrudan o uygulamayı o içerikle aç! ASLA tekrar "Uygulama Seç" açma!
     if (item.pkg) {
-      filmOynatOzelUygulama(item.title, item.pkg, undefined, item.backdropUrl, false);
+      filmOynatOzelUygulama(item.title, item.pkg, item.imdbId, item.backdropUrl, item.posterUrl, false);
       return;
     }
 
-    // 3. Hiçbir hedef paket yoksa detay penceresini aç
+    // 3. Paket ismi bilinmiyorsa ama TV'de medya oynatıcı varsa ilkini seç ve doğrudan başlat
+    const otoMedyaApp = kuruluOynaticiListesi[0];
+    if (otoMedyaApp) {
+      filmOynatOzelUygulama(item.title, otoMedyaApp.packageName, item.imdbId, item.backdropUrl, item.posterUrl, false);
+      return;
+    }
+
+    // 4. Son çare olarak detay penceresini aç
     filmDetayAc({
       title: item.title,
       platform: item.platform,
       pkg: item.pkg,
       backdropUrl: item.backdropUrl,
+      posterUrl: item.posterUrl,
       genre: item.subtitle,
     });
   };
@@ -2472,7 +2511,7 @@ export default function App() {
   };
 
   // Film Oynatma Eylemleri
-  const filmOynatCloudstream = async (title: string, backdropUrl?: string) => {
+  const filmOynatCloudstream = async (title: string, backdropUrl?: string, posterUrl?: string, imdbId?: string) => {
     try {
       if (TVAppManager && TVAppManager.copyToClipboard) {
         await TVAppManager.copyToClipboard(title);
@@ -2481,7 +2520,7 @@ export default function App() {
     setBildirimMetni(`📋 "${title}" kopyalandı! Cloudstream içinde aranıyor...`);
     setTimeout(() => setBildirimMetni(''), 4500);
     setFilmDetayModalAcik(false);
-    filmGecmiseEkle(title, 'IMDb', 'com.lagradost.cloudstream3', backdropUrl);
+    filmGecmiseEkle(title, 'Cloudstream', 'com.lagradost.cloudstream3', backdropUrl, undefined, posterUrl, imdbId);
     const csApp = uygulamalar.find(
       (u) => u.packageName.toLowerCase().includes('cloudstream') || u.name.toLowerCase().includes('cloudstream')
     );
@@ -2496,7 +2535,7 @@ export default function App() {
     uygulamaBaslat(pkg, 'Cloudstream');
   };
 
-  const filmOynatStremio = async (title: string, imdbId?: string, backdropUrl?: string) => {
+  const filmOynatStremio = async (title: string, imdbId?: string, backdropUrl?: string, posterUrl?: string) => {
     try {
       if (TVAppManager && TVAppManager.copyToClipboard) {
         await TVAppManager.copyToClipboard(title);
@@ -2505,7 +2544,7 @@ export default function App() {
     setBildirimMetni(`🍿 "${title}" kopyalandı! Stremio'da açılıyor...`);
     setTimeout(() => setBildirimMetni(''), 3500);
     setFilmDetayModalAcik(false);
-    filmGecmiseEkle(title, 'IMDb', 'com.stremio.one', backdropUrl);
+    filmGecmiseEkle(title, 'Stremio', 'com.stremio.one', backdropUrl, undefined, posterUrl, imdbId);
     if (Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
       try {
         const streamUri = imdbId ? `stremio:///detail/movie/${imdbId}` : `stremio:///search?search=${encodeURIComponent(title)}`;
@@ -2516,7 +2555,7 @@ export default function App() {
     uygulamaBaslat('com.stremio.one', 'Stremio');
   };
 
-  const filmOynatYouTube = async (title: string) => {
+  const filmOynatYouTube = async (title: string, backdropUrl?: string, posterUrl?: string) => {
     try {
       if (TVAppManager && TVAppManager.copyToClipboard) {
         await TVAppManager.copyToClipboard(title);
@@ -2525,7 +2564,7 @@ export default function App() {
     setBildirimMetni(`▶ "${title}" YouTube'da aranıyor...`);
     setTimeout(() => setBildirimMetni(''), 3000);
     setFilmDetayModalAcik(false);
-    filmGecmiseEkle(title, 'IMDb', 'com.google.android.youtube.tv');
+    filmGecmiseEkle(title, 'YouTube', 'com.google.android.youtube.tv', backdropUrl, undefined, posterUrl);
     const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title)}`;
     if (Platform.OS === 'android' && TVAppManager && TVAppManager.launchMediaContent) {
       try {
@@ -2542,6 +2581,7 @@ export default function App() {
     pkg: string,
     imdbId?: string,
     backdropUrl?: string,
+    posterUrl?: string,
     kaydet: boolean = true
   ) => {
     const app = uygulamalar.find((u) => u.packageName === pkg) || { name: 'Uygulama', packageName: pkg };
@@ -2557,7 +2597,7 @@ export default function App() {
     
     // İzleme geçmişine gerçek film kartı olarak kaydet (tekrar oynatmalarda çift kayıt açılmaz)
     if (kaydet) {
-      filmGecmiseEkle(title, app.name || 'IMDb', pkg, backdropUrl);
+      filmGecmiseEkle(title, app.name || 'IMDb', pkg, backdropUrl, undefined, posterUrl, imdbId);
     }
 
     const pkgLower = pkg.toLowerCase();
@@ -4109,7 +4149,7 @@ export default function App() {
                         }}
                       >
                         {(isFocused) => {
-                          const safeBackdrop = guvenliGorselUrl(item.backdropUrl);
+                          const safeBackdrop = guvenliGorselUrl(item.backdropUrl || item.posterUrl);
                           return (
                             <View style={styles.devamEtIcerik}>
                               {safeBackdrop ? (
@@ -4163,7 +4203,7 @@ export default function App() {
                                   </View>
                                   {isFocused && (
                                     <Text style={[styles.devamEtOynatMetin, { color: aktifTema.border }]}>
-                                      ▶ Kaldığın Yerden Oynat
+                                      {item.platform ? `▶ ${item.platform} ile Oynat` : '▶ Kaldığın Yerden Oynat'}
                                     </Text>
                                   )}
                                 </View>
@@ -7146,7 +7186,8 @@ export default function App() {
                               seciliFilmDetay!.title,
                               app.packageName,
                               seciliFilmDetay!.imdbId,
-                              seciliFilmDetay!.backdropUrl
+                              seciliFilmDetay!.backdropUrl,
+                              seciliFilmDetay!.posterUrl
                             )
                           }
                         >

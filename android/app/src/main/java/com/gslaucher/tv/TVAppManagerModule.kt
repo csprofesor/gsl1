@@ -1516,6 +1516,37 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun insertWatchNextProgram(
+        title: String,
+        subtitle: String,
+        pkg: String,
+        backdropUrl: String,
+        posterUrl: String,
+        promise: Promise
+    ) {
+        try {
+            val uri = Uri.parse("content://android.media.tv/watch_next_program")
+            val values = ContentValues().apply {
+                put("package_name", if (pkg.isNotEmpty()) pkg else reactContext.packageName)
+                put("title", title)
+                put("episode_title", subtitle)
+                put("short_description", "$title • Kaldığın Yerden")
+                put("poster_art_uri", posterUrl)
+                put("thumbnail_uri", backdropUrl)
+                put("watch_next_type", 0) // WATCH_NEXT_TYPE_CONTINUE
+                put("last_playback_position_millis", 25 * 60 * 1000L)
+                put("duration_millis", 120 * 60 * 1000L)
+                put("last_engagement_time_utc_millis", System.currentTimeMillis())
+                put("searchable", 1)
+            }
+            val res = reactContext.contentResolver.insert(uri, values)
+            promise.resolve(res != null)
+        } catch (e: Exception) {
+            promise.resolve(false)
+        }
+    }
+
+    @ReactMethod
     fun createTestWatchNextProgram(promise: Promise) {
         try {
             val uri = Uri.parse("content://android.media.tv/watch_next_program")
