@@ -2,6 +2,6 @@
   "version": "3.2.0",
   "versionCode": 26,
   "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.0/app-release.apk",
-  "shortUrl": "https://tinyurl.com/2cgqos3e",
+  "shortUrl": "https://tinyurl.com/gslaunch320",
   "changelog": "v3.2.0 (Build 26): Son izlenenler ve kaldığın yerden devam et onarıldı, Tüm Uygulamalar başa alındı, özel fotoğraf/arka plan yükleme (kedi, aile, özel URL ve QR ile telefondan) eklendi, Cinemeta ile canlı ve değişken IMDb film vitrini getirildi, Mi Box için sabit başlatıcı ve evrensel Home seçici intentleri ve TV açılışında otomatik başlatma (BootReceiver) entegre edildi."
 }
