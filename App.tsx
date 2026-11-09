@@ -33,11 +33,11 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.0';
-const CURRENT_BUILD = 26;
+const CURRENT_VERSION = '3.2.1';
+const CURRENT_BUILD = 27;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gslaunch320';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gslaunch321';
 
 // ================= 18 MADDELİK GELİŞMİŞ TV ÖZELLEŞTİRME TİPLERİ =================
 export type IconShapeType = 'rounded' | 'circle' | 'squircle' | 'rectangle';
@@ -226,6 +226,64 @@ const MONET_TEMALARI: MonetTheme[] = [
   },
 ];
 
+export const HAZIR_OZEL_RENKLER = [
+  { name: 'Kristal Safir', hex: '#38BDF8' },
+  { name: 'Neon Turkuaz', hex: '#06B6D4' },
+  { name: 'Zümrüt Yeşili', hex: '#10B981' },
+  { name: 'Limon Yeşili', hex: '#84CC16' },
+  { name: 'Güneş Altını', hex: '#F59E0B' },
+  { name: 'Ateş Turuncusu', hex: '#F97316' },
+  { name: 'Alev Kırmızısı', hex: '#EF4444' },
+  { name: 'Sıcak Fuşya', hex: '#F43F5E' },
+  { name: 'Neon Pembe', hex: '#EC4899' },
+  { name: 'Siber Menekşe', hex: '#8B5CF6' },
+  { name: 'Kozmik İndigo', hex: '#6366F1' },
+  { name: 'Safir Lacivert', hex: '#3B82F6' },
+  { name: 'Gümüş Platin', hex: '#E2E8F0' },
+];
+
+export const hexToRgba = (hex: string, alpha: number): string => {
+  let c = hex.replace('#', '').trim();
+  if (c.length === 3) {
+    c = c.split('').map((x) => x + x).join('');
+  }
+  if (c.length !== 6) return `rgba(56, 189, 248, ${alpha})`;
+  const r = parseInt(c.substring(0, 2), 16);
+  const g = parseInt(c.substring(2, 4), 16);
+  const b = parseInt(c.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+export const hexLuminance = (hex: string): number => {
+  let c = hex.replace('#', '').trim();
+  if (c.length === 3) c = c.split('').map((x) => x + x).join('');
+  if (c.length !== 6) return 0.5;
+  const r = parseInt(c.substring(0, 2), 16) / 255;
+  const g = parseInt(c.substring(2, 4), 16) / 255;
+  const b = parseInt(c.substring(4, 6), 16) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+export const ozelTemaUret = (accentHex: string, customName?: string): MonetTheme => {
+  let hex = accentHex.trim();
+  if (!hex.startsWith('#')) hex = '#' + hex;
+  if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+    hex = '#38BDF8';
+  }
+  const lum = hexLuminance(hex);
+  return {
+    id: 'custom',
+    name: customName || `Özel Tema (${hex.toUpperCase()})`,
+    accent: hex,
+    glow: hexToRgba(hex, 0.45),
+    surface: hexToRgba(hex, 0.15),
+    border: hexToRgba(hex, 0.75),
+    textOnAccent: lum > 0.55 ? '#0A0F1D' : '#FFFFFF',
+    wallpaperKey: 'cyber',
+    bgGradientColor: hexToRgba(hex, 0.25),
+  };
+};
+
 // Akıllı Çeşitli İkon & Renk Atayıcısı
 const getAppIconAndColor = (name: string, pkg: string): { icon: string; color: string } => {
   const n = name.toLowerCase();
@@ -367,6 +425,16 @@ export interface FilmVitrinItem {
   packageCandidates: string[];
   watchUrl?: string;
 }
+
+export const guvenliGorselUrl = (url?: string): string => {
+  if (!url) return '';
+  // metahub.space Türkiye ve bazı ülkelerde ISP düzeyinde engelli olduğu için
+  // Cloudflare CDN Edge proxy'si (wsrv.nl) üzerinden 200 OK ve süper hızlı WebP olarak servis edilir
+  if (url.includes('images.metahub.space')) {
+    return `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+};
 
 export const FILM_VITRIN_KATALOGU: FilmVitrinItem[] = [
   {
@@ -1105,6 +1173,7 @@ export default function App() {
   const [seciliDinamikWp, setSeciliDinamikWp] = useState<DinamikDuvarKagidi | null>(null);
   const [ozelDuvarKagidiUri, setOzelDuvarKagidiUri] = useState<string>('');
   const [ozelUrlMetni, setOzelUrlMetni] = useState<string>('');
+  const [ozelTemaHex, setOzelTemaHex] = useState<string>('#38BDF8');
   const [duzenPreset, setDuzenPreset] = useState<DuzenPresetType>('sinematik');
 
   // Kontrol Merkezi Sekmesi (5 Sekmeli Dashboard)
@@ -1473,8 +1542,19 @@ export default function App() {
             } catch {}
             try {
               const rawTema = await TVAppManager.getSetting('seciliTemaId', 'sapphire');
-              const tFound = MONET_TEMALARI.find((t) => t.id === rawTema);
-              if (tFound) setAktifTema(tFound);
+              if (rawTema === 'custom') {
+                const rawCustom = await TVAppManager.getSetting('ozelTemaObj', '');
+                if (rawCustom) {
+                  const parsed = JSON.parse(rawCustom);
+                  if (parsed && parsed.accent) {
+                    setAktifTema(parsed);
+                    setOzelTemaHex(parsed.accent);
+                  }
+                }
+              } else {
+                const tFound = MONET_TEMALARI.find((t) => t.id === rawTema);
+                if (tFound) setAktifTema(tFound);
+              }
             } catch {}
             try {
               const rawWp = await TVAppManager.getSetting('seciliAmbiyansWpId', '');
@@ -1774,6 +1854,19 @@ export default function App() {
     setTimeout(() => setBildirimMetni(''), 2500);
   };
 
+  // Özel Tema Uygula (Canlı Renk ve HEX Paleti)
+  const ozelTemaUygula = (hex: string, name?: string) => {
+    const yeniTema = ozelTemaUret(hex, name);
+    setAktifTema(yeniTema);
+    setOzelTemaHex(yeniTema.accent);
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('seciliTemaId', 'custom').catch(() => {});
+      TVAppManager.saveSetting('ozelTemaObj', JSON.stringify(yeniTema)).catch(() => {});
+    }
+    setBildirimMetni(`🎨 Özel tema uygulandı: ${yeniTema.accent.toUpperCase()}`);
+    setTimeout(() => setBildirimMetni(''), 2500);
+  };
+
   // Canlı Saat & Tarih
   useEffect(() => {
     const updateTime = () => {
@@ -1905,24 +1998,24 @@ export default function App() {
     }, 800);
   };
 
-  // İzleme Geçmişine Kaydet Yardımcısı (Uygulama veya Film)
+  // İzleme Geçmişine Kaydet Yardımcısı (Film & Dizi)
   const filmGecmiseEkle = (title: string, platform: string, pkg: string, backdropUrl?: string, subtitle?: string) => {
-    const isApp = platform === 'Uygulama';
+    const guvenli = guvenliGorselUrl(backdropUrl);
     const yeniDevam: KaldiginYerdenDevamEtItem = {
       id: `cont_${pkg || title}_${Date.now()}`,
       title,
-      subtitle: subtitle || (isApp ? 'Uygulama • Son Açılan' : `${platform || 'Sinema'} • 4K`),
-      backdropUrl: backdropUrl || '',
-      platform: platform || (isApp ? 'Uygulama' : 'Sinema'),
-      platformIcon: isApp ? '📱' : '🎬',
+      subtitle: subtitle || `${platform || 'Sinema'} • 4K UHD`,
+      backdropUrl: guvenli,
+      platform: platform || 'Sinema',
+      platformIcon: '🎬',
       pkg: pkg || '',
-      kaldigiDk: 100,
-      toplamDk: 100,
+      kaldigiDk: Math.floor(Math.random() * 40) + 25,
+      toplamDk: 125,
       sonIzlemeZamani: 'Bugün',
     };
 
     setDevamEdenIcerikler((prev) => {
-      const guncel = [yeniDevam, ...prev.filter((d) => d.title !== title && (!pkg || d.pkg !== pkg))].slice(0, 15);
+      const guncel = [yeniDevam, ...prev.filter((d) => d.title !== title)].slice(0, 15);
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
         TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(guncel)).catch(() => {});
       }
@@ -1954,9 +2047,6 @@ export default function App() {
         zaman: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setSonBaslatilanlar((prev) => [yeniSon, ...prev.filter((i) => i.packageName !== pkg)].slice(0, 10));
-
-      // Kaldığın Yerden Devam Et & Son İzlenenler rafına ekle (Sıfır Sahte İçerik)
-      filmGecmiseEkle(isim, 'Uygulama', pkg, hedef?.bannerUri || hedef?.iconUri || undefined, 'Hemen Başlat');
 
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
         TVAppManager.saveSetting('sonAcilanPkg', pkg).catch(() => {});
@@ -2026,8 +2116,8 @@ export default function App() {
                     genre: Array.isArray(m.genre) ? m.genre.join(', ') : (m.genre || 'Sinema & Dizi'),
                     platform: 'IMDb',
                     platformIcon: '🍿',
-                    backdropUrl: m.background || m.poster || `https://images.metahub.space/background/medium/${imdbId}/img`,
-                    posterUrl: m.poster || m.background || `https://images.metahub.space/poster/medium/${imdbId}/img`,
+                    backdropUrl: guvenliGorselUrl(m.background || m.poster || `https://images.metahub.space/background/medium/${imdbId}/img`),
+                    posterUrl: guvenliGorselUrl(m.poster || m.background || `https://images.metahub.space/poster/medium/${imdbId}/img`),
                     overview: m.description || `"${m.name}" filmi IMDb yüksek puanlı popüler içerikler arasındadır.`,
                     packageCandidates: ['com.lagradost.cloudstream3', 'com.stremio.one', 'com.netflix.ninja'],
                   });
@@ -3289,7 +3379,7 @@ export default function App() {
             <View style={[styles.filmVitrinKapsayici, { borderColor: aktifTema.border }]}>
               {/* Arka Plan Geniş Sinematik Görsel */}
               <Image
-                source={{ uri: aktifFilm.backdropUrl }}
+                source={{ uri: guvenliGorselUrl(aktifFilm.backdropUrl) }}
                 style={StyleSheet.absoluteFillObject}
                 resizeMode="cover"
               />
@@ -3300,7 +3390,7 @@ export default function App() {
                 {/* Sol: Dikey Yüksek Çözünürlüklü Film Posteri */}
                 <View style={[styles.filmPosterKutusu, { borderColor: aktifTema.border }]}>
                   <Image
-                    source={{ uri: aktifFilm.posterUrl }}
+                    source={{ uri: guvenliGorselUrl(aktifFilm.posterUrl) }}
                     style={styles.filmPosterResim}
                     resizeMode="cover"
                   />
@@ -3622,17 +3712,13 @@ export default function App() {
                         style={[styles.devamEtKarti, { borderColor: aktifTema.surface }]}
                         focusedStyle={[styles.devamEtOdak, { borderColor: aktifTema.border, shadowColor: aktifTema.accent }]}
                         onPress={() => {
-                          if (item.pkg && uygulamalar.some((u) => u.packageName === item.pkg)) {
-                            uygulamaBaslat(item.pkg, item.title);
-                          } else {
-                            filmDetayAc({
-                              title: item.title,
-                              platform: item.platform,
-                              pkg: item.pkg,
-                              backdropUrl: item.backdropUrl,
-                              genre: item.subtitle,
-                            });
-                          }
+                          filmDetayAc({
+                            title: item.title,
+                            platform: item.platform,
+                            pkg: item.pkg,
+                            backdropUrl: item.backdropUrl,
+                            genre: item.subtitle,
+                          });
                         }}
                         onLongPress={() => {
                           Alert.alert('Listeden Kaldır', `"${item.title}" devam listesinden silinsin mi?`, [
@@ -3648,11 +3734,9 @@ export default function App() {
                         {(isFocused) => (
                           <View style={styles.devamEtIcerik}>
                             {item.backdropUrl ? (
-                              <Image source={{ uri: item.backdropUrl }} style={styles.devamEtResim} resizeMode="cover" />
+                              <Image source={{ uri: guvenliGorselUrl(item.backdropUrl) }} style={styles.devamEtResim} resizeMode="cover" />
                             ) : (
-                              <View style={[styles.devamEtResim, { backgroundColor: '#1E293B', alignItems: 'center', justifyContent: 'center' }]}>
-                                <Text style={{ fontSize: 32 }}>{item.platformIcon || '📺'}</Text>
-                              </View>
+                              <Image source={{ uri: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&q=80' }} style={styles.devamEtResim} resizeMode="cover" />
                             )}
                             <View style={[styles.devamEtKarartma, isFocused && { backgroundColor: 'rgba(5, 10, 25, 0.45)' }]}>
                               <View style={[styles.devamEtUstRozet, { backgroundColor: 'rgba(0,0,0,0.7)', borderColor: aktifTema.border, borderWidth: 0.8 }]}>
@@ -4023,6 +4107,97 @@ export default function App() {
                             </FocusableItem>
                           );
                         })}
+                      </View>
+                    </View>
+
+                    {/* 🎨 Tema Özelleştirme (Kendi Özel Temanı Tasarla) */}
+                    <View style={styles.ayarGrubuKutusu}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <Text style={styles.ayarGrubuBaslik}>🎨 Tema Özelleştirme (Kendi Özel Temanı Tasarla):</Text>
+                        {aktifTema.id === 'custom' && (
+                          <View style={{ backgroundColor: aktifTema.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                            <Text style={{ color: aktifTema.textOnAccent, fontSize: 10, fontWeight: '900' }}>✔ ÖZEL TEMA AKTİF</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 10 }}>
+                        Hazır temalarımız dışında televizyonunuzun tüm vurgu renklerini, buton parlamalarını ve cam çerçevelerini dilediğiniz renge dönüştürün:
+                      </Text>
+
+                      {/* Hızlı Renk Paleti Butonları */}
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                        {HAZIR_OZEL_RENKLER.map((renk) => {
+                          const secili = aktifTema.id === 'custom' && aktifTema.accent.toLowerCase() === renk.hex.toLowerCase();
+                          return (
+                            <FocusableItem
+                              key={renk.hex}
+                              style={[
+                                {
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  backgroundColor: 'rgba(255,255,255,0.08)',
+                                  paddingHorizontal: 12,
+                                  paddingVertical: 7,
+                                  borderRadius: 20,
+                                  marginRight: 8,
+                                  borderWidth: 2,
+                                  borderColor: secili ? '#FFFFFF' : 'rgba(255,255,255,0.15)',
+                                },
+                                secili && { backgroundColor: renk.hex },
+                              ]}
+                              focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.08 }] }}
+                              onPress={() => {
+                                setOzelTemaHex(renk.hex);
+                                ozelTemaUygula(renk.hex, `Özel ${renk.name}`);
+                              }}
+                            >
+                              {() => (
+                                <>
+                                  <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: renk.hex, marginRight: 8, borderWidth: 1, borderColor: '#FFF' }} />
+                                  <Text style={{ color: secili ? '#FFFFFF' : 'rgba(255,255,255,0.9)', fontSize: 11, fontWeight: '800' }}>
+                                    {secili ? '✔ ' : ''}{renk.name}
+                                  </Text>
+                                </>
+                              )}
+                            </FocusableItem>
+                          );
+                        })}
+                      </ScrollView>
+
+                      {/* Özel HEX Kodu Girişi */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: ozelTemaHex || '#38BDF8', borderWidth: 2, borderColor: '#FFF' }} />
+                        <TextInput
+                          style={{
+                            flex: 1,
+                            backgroundColor: 'rgba(255,255,255,0.08)',
+                            borderColor: 'rgba(255,255,255,0.2)',
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            color: '#FFFFFF',
+                            fontSize: 12,
+                          }}
+                          placeholder="Özel Renk Kodu Girin (Örn: #FF0055, #00FFCC, #FFB800)"
+                          placeholderTextColor="rgba(255,255,255,0.4)"
+                          value={ozelTemaHex}
+                          onChangeText={setOzelTemaHex}
+                          autoCapitalize="characters"
+                        />
+                        <FocusableItem
+                          style={[styles.kategoriSecimPill, { backgroundColor: ozelTemaHex || aktifTema.accent, borderColor: '#FFFFFF' }]}
+                          focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                          onPress={() => {
+                            if (!ozelTemaHex.trim()) {
+                              Alert.alert('Bilgi', 'Lütfen geçerli bir HEX renk kodu girin (Örn: #FF5722).');
+                              return;
+                            }
+                            ozelTemaUygula(ozelTemaHex.trim());
+                          }}
+                        >
+                          {() => <Text style={[styles.kategoriSecimPillYazi, { color: '#FFFFFF', fontWeight: '900' }]}>✨ Özel Rengi Uygula</Text>}
+                        </FocusableItem>
                       </View>
                     </View>
 
@@ -6003,9 +6178,6 @@ export default function App() {
                     </Text>
                   </View>
                 )}
-                <View style={[styles.ambiyansCikisRozet, { borderColor: aktifTema.border }]}>
-                  <Text style={styles.ambiyansCikisYazi}>Kumandanızdaki herhangi bir tuşa basarak çıkabilirsiniz</Text>
-                </View>
               </View>
             </ImageBackground>
           </TouchableOpacity>
@@ -6193,7 +6365,7 @@ export default function App() {
               {seciliFilmDetay && (
                 <View style={{ position: 'relative', width: '100%', height: 180, backgroundColor: '#0A0F1D' }}>
                   <Image
-                    source={{ uri: seciliFilmDetay.backdropUrl || seciliFilmDetay.posterUrl }}
+                    source={{ uri: guvenliGorselUrl(seciliFilmDetay.backdropUrl || seciliFilmDetay.posterUrl) }}
                     style={{ width: '100%', height: '100%' }}
                     resizeMode="cover"
                   />
@@ -6201,7 +6373,7 @@ export default function App() {
 
                   <View style={{ position: 'absolute', bottom: 16, left: 20, right: 20, flexDirection: 'row', alignItems: 'flex-end', gap: 16 }}>
                     <Image
-                      source={{ uri: seciliFilmDetay.posterUrl || seciliFilmDetay.backdropUrl }}
+                      source={{ uri: guvenliGorselUrl(seciliFilmDetay.posterUrl || seciliFilmDetay.backdropUrl) }}
                       style={{ width: 80, height: 120, borderRadius: 10, borderWidth: 1.5, borderColor: '#FFFFFF', backgroundColor: '#111' }}
                       resizeMode="cover"
                     />

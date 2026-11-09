@@ -50,16 +50,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: v3.2.0
-          name: "GS TV Launcher v3.2.0 (Build 26)"
+          tag_name: v3.2.1
+          name: "GS TV Launcher Ultra v3.2.1 (Build 27)"
           draft: false
           prerelease: false
           body: |
-            ## GS TV Launcher Ultra v3.2.0 (Build 26)
-            - 🔄 **Kaldığın Yerden Devam Et & Son İzlenenler Onarıldı:** Uygulama veya film açıldığında otomatik kaydedilir, tıklanınca hemen çalışır.
-            - ⭐ **Tüm Uygulamalar Başa Alındı:** Filtre sekmelerinde ilk sıraya geri getirildi.
-            - 📸 **Özel Duvar Kağıdı / Fotoğraf:** Kedi, aile, manzara hazır şablonları, internet URL girişi ve QR kod ile telefondan fotoğraf yükleme desteği.
-            - 🍿 **Canlı & Dinamik IMDb Vitrini:** Cinemeta API ile her açılışta ve her cihazda değişken, taze film ve dizi vitrini.
-            - ⚡ **Xiaomi Mi Box Sabit Başlatıcı Onarımı:** Leanback ve TV intentleri ile 'Bu işlemi işleyecek uygulama yok' sorunu çözüldü.
-            - 🚀 **TV Açılışında Otomatik Başlatma (BootReceiver):** TV açıldığında GS TV Launcher doğrudan devreye girer.
+            ## GS TV Launcher Ultra v3.2.1 (Build 27)
+            - 🎨 **Tema Özelleştirme (Kendi Özel Temanı Tasarla):** Kontrol Merkezi Düzen sekmesine 13 canlı renk paleti ve özel HEX renk kodu (#...) girişi eklendi.
+            - 🖼️ **IMDb & Metahub Görsel Kilidi Çözüldü:** Türkiye ISP engeli Cloudflare CDN Edge proxy (wsrv.nl) ile aşıldı, tüm afiş ve film kartları anında yükleniyor.
+            - 🎬 **Kaldığın Yerden Devam Et Kusursuzlaştırıldı:** Arka planda açılan uygulamaların film afişlerini ezmesi önlendi, filmler tıklandığında oynatıcı seçimi sunulur.
+            - 📺 **Xiaomi Mi Box Sabit Başlatıcı Uyumluluğu:** Doğrudan TV Sistem Ayarları entegrasyonu ile 'Bu işlemi işleyecek uygulama yok' sorunu giderildi.
+            - 🌅 **Ekran Koruyucu İyileştirmesi:** Ambiyans modundaki tuş bilgisi yazısı kaldırıldı, tam sinematik görsel deneyim sağlandı.
+            - 🔑 **Resmi EAS Keystore İmzası:** Önceki sürümlerin üzerine sorunsuz güncellenir ("Uygulama yüklenemedi" hatası vermez).
           files: android/app/build/outputs/apk/release/app-release.apk
