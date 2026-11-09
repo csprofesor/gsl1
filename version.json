@@ -1,7 +1,7 @@
 {
-  "version": "3.2.8",
-  "versionCode": 34,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.8/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gs328apk",
-  "changelog": "v3.2.8 (Build 34): Kaldığın Yerden Devam Et hibrit sistemle baştan inşa edildi: 1) Başlatıcıdan veya aramadan açılan filmler hem dahili izleme geçmişine hem Android TV TvProvider veritabanına çift yönlü yazılıyor. 2) Tıklandığında asla tekrar uygulama seçici açılmaz, seçilen medya oynatıcıyı (Stremio, CloudStream vb.) doğrudan başlatır. 3) Görüntüsüz/kırık afişler engellendi, 4K afiş & poster yedeklemesi sağlandı. 4) '🧪 Test Et' butonu anında canlı görsel test kartı (Interstellar 4K) ekleyip kaldırarak TV'de test imkanı sunar."
+  "version": "3.2.9",
+  "versionCode": 35,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.9/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gs329apk",
+  "changelog": "v3.2.9 (Build 35): Eklentiler & Senkronizasyon (Trakt.tv, Stremio, Android TV Kanalları): 1) Trakt.tv Device Code OAuth entegrasyonu (trakt.tv/activate) ile Stremio, Kodi, VLC, Plex vb. izleme geçmişini tek tıkla çekme. 2) Stremio yerel HTTP motoru (127.0.0.1:11470) kontrolü ve eşleşme. 3) Android TV TvContract.Channels sağlayıcılarından kurulu uygulamaların kanallarını içe aktarma. 4) Google Play Store ve Apple App Store mağaza politikalarına %100 uyumlu, telifsiz saf metaveri mimarisi."
 }

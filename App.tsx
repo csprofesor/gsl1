@@ -34,11 +34,15 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.8';
-const CURRENT_BUILD = 34;
+const CURRENT_VERSION = '3.2.9';
+const CURRENT_BUILD = 35;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gs328apk';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gs329apk';
+
+// Trakt.tv Açık API & Scrobbler Kimlikleri (Google Play & Apple App Store %100 Uyumlu)
+const TRAKT_CLIENT_ID = 'db7483669be745d448651a141b71192e21e05a8f4c2c54ec8360d2cf34d28f8f';
+const TRAKT_CLIENT_SECRET = 'c123f8510a7b45dbfa9f4ca36125c1103c14c599bcbb13bcff74f9d0c2e68cbb';
 
 // ================= 18 MADDELİK GELİŞMİŞ TV ÖZELLEŞTİRME TİPLERİ =================
 export type IconShapeType = 'rounded' | 'circle' | 'squircle' | 'rectangle';
@@ -514,6 +518,7 @@ export interface FilmVitrinItem {
 
 export const guvenliGorselUrl = (url?: string): string => {
   if (!url) return '';
+  if (url.startsWith('content://')) return url;
   // Eğer zaten wsrv.nl proxy'sinden geçirilmişse tekrar geçirme (çift encode hatasını önle)
   if (url.startsWith('https://wsrv.nl/')) return url;
   if (url.includes('images.metahub.space')) {
@@ -1350,6 +1355,22 @@ export default function App() {
   const [fotoYuklemeModalAcik, setFotoYuklemeModalAcik] = useState(false);
   const [tvIpAdresi, setTvIpAdresi] = useState<string>('192.168.1.1');
 
+  // Eklentiler & Senkronizasyon (Trakt.tv, Stremio, Android TV Kanalları)
+  const [eklentiModalAcik, setEklentiModalAcik] = useState(false);
+  const [eklentiSekmesi, setEklentiSekmesi] = useState<'trakt' | 'stremio' | 'kanallar' | 'bilgi'>('trakt');
+  const [traktBagli, setTraktBagli] = useState(false);
+  const [traktKullanici, setTraktKullanici] = useState('');
+  const [traktToken, setTraktToken] = useState('');
+  const [traktDeviceCode, setTraktDeviceCode] = useState('');
+  const [traktUserCode, setTraktUserCode] = useState('');
+  const [traktDogrulaniyor, setTraktDogrulaniyor] = useState(false);
+  const [traktSenkronizeEdiliyor, setTraktSenkronizeEdiliyor] = useState(false);
+  const [stremioDurum, setStremioDurum] = useState<'bilinmiyor' | 'bagli' | 'baglanamadi'>('bilinmiyor');
+  const [stremioKontrolEdiliyor, setStremioKontrolEdiliyor] = useState(false);
+  const [tvAppKanallari, setTvAppKanallari] = useState<Array<{ id: number; pkg: string; appName: string; displayName: string; description: string }>>([]);
+  const [tvKanallariYukleniyor, setTvKanallariYukleniyor] = useState(false);
+  const traktTokenPollerRef = useRef<any>(null);
+
   const etkilesimSifirla = useCallback(() => {
     sonEtkilesimZamani.current = Date.now();
   }, []);
@@ -1611,7 +1632,7 @@ export default function App() {
                   ) {
                     return false;
                   }
-                  if (!item.backdropUrl || (!item.backdropUrl.startsWith('http') && !item.backdropUrl.includes('metahub') && !item.backdropUrl.includes('wsrv.nl') && !item.backdropUrl.includes('unsplash'))) return false;
+                  if (!item.backdropUrl || (!item.backdropUrl.startsWith('http') && !item.backdropUrl.startsWith('content://') && !item.backdropUrl.includes('metahub') && !item.backdropUrl.includes('wsrv.nl') && !item.backdropUrl.includes('unsplash'))) return false;
                   return true;
                 });
                 setDevamEdenIcerikler(temizFilmler);
@@ -1749,6 +1770,15 @@ export default function App() {
             try {
               const rawOtoApp = await TVAppManager.getSetting('otoBaslatmaAppName', '');
               if (rawOtoApp) setOtoBaslatmaAppName(rawOtoApp);
+            } catch {}
+            try {
+              const rawTraktToken = await TVAppManager.getSetting('trakt_token', '');
+              if (rawTraktToken) {
+                setTraktToken(rawTraktToken);
+                setTraktBagli(true);
+              }
+              const rawTraktUser = await TVAppManager.getSetting('trakt_username', '');
+              if (rawTraktUser) setTraktKullanici(rawTraktUser);
             } catch {}
           }
 
@@ -2278,6 +2308,283 @@ export default function App() {
     } catch {}
   }, []);
 
+  // Trakt Cihaz Kodu Al (OAuth Device Flow)
+  const traktCihazKoduAl = async () => {
+    try {
+      setTraktDogrulaniyor(true);
+      setBildirimMetni('⏳ Trakt.tv cihaz kodu alınıyor...');
+      const res = await fetch('https://api.trakt.tv/oauth/device/code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: TRAKT_CLIENT_ID }),
+      });
+      const data = await res.json();
+      if (data && data.user_code && data.device_code) {
+        setTraktUserCode(data.user_code);
+        setTraktDeviceCode(data.device_code);
+        setBildirimMetni(`🔑 Kod: ${data.user_code} (trakt.tv/activate adresine girin)`);
+        traktTokenPoller(data.device_code, data.interval || 5);
+      } else {
+        setTraktDogrulaniyor(false);
+        setBildirimMetni('❌ Trakt kodu alınamadı.');
+      }
+    } catch (e: any) {
+      setTraktDogrulaniyor(false);
+      setBildirimMetni('❌ Trakt bağlantı hatası: ' + (e?.message || 'Bilinmiyor'));
+    }
+  };
+
+  // Trakt Cihaz Tokenı İçin Arka Planda Polling
+  const traktTokenPoller = (deviceCode: string, intervalSeconds: number) => {
+    if (traktTokenPollerRef.current) clearInterval(traktTokenPollerRef.current);
+    const pollInterval = Math.max(intervalSeconds, 5) * 1000;
+    let elapsed = 0;
+
+    traktTokenPollerRef.current = setInterval(async () => {
+      elapsed += pollInterval / 1000;
+      try {
+        const res = await fetch('https://api.trakt.tv/oauth/device/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: deviceCode,
+            client_id: TRAKT_CLIENT_ID,
+            client_secret: TRAKT_CLIENT_SECRET,
+          }),
+        });
+
+        if (res.status === 200) {
+          const data = await res.json();
+          if (data && data.access_token) {
+            if (traktTokenPollerRef.current) clearInterval(traktTokenPollerRef.current);
+            setTraktToken(data.access_token);
+            setTraktBagli(true);
+            setTraktDogrulaniyor(false);
+            setTraktUserCode('');
+            if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+              TVAppManager.saveSetting('trakt_token', data.access_token).catch(() => {});
+            }
+            setBildirimMetni('🎉 Trakt.tv başarıyla bağlandı!');
+
+            // Kullanıcı profilini çek
+            try {
+              const uRes = await fetch('https://api.trakt.tv/users/me', {
+                headers: {
+                  'Content-Type': 'application/json',
+                  'trakt-api-version': '2',
+                  'trakt-api-key': TRAKT_CLIENT_ID,
+                  Authorization: `Bearer ${data.access_token}`,
+                },
+              });
+              if (uRes.ok) {
+                const uData = await uRes.json();
+                if (uData?.username) {
+                  setTraktKullanici(uData.username);
+                  if (TVAppManager && TVAppManager.saveSetting) {
+                    TVAppManager.saveSetting('trakt_username', uData.username).catch(() => {});
+                  }
+                }
+              }
+            } catch {}
+
+            traktPlaybackCek(data.access_token);
+          }
+        } else if (res.status === 404 || res.status === 410 || res.status === 418) {
+          if (traktTokenPollerRef.current) clearInterval(traktTokenPollerRef.current);
+          setTraktDogrulaniyor(false);
+          setBildirimMetni('⌛ Trakt oturum kodu süresi doldu.');
+        }
+      } catch {}
+
+      if (elapsed >= 600) {
+        if (traktTokenPollerRef.current) clearInterval(traktTokenPollerRef.current);
+        setTraktDogrulaniyor(false);
+      }
+    }, pollInterval);
+  };
+
+  // Trakt İzleme Geçmişini Getir (/sync/playback)
+  const traktPlaybackCek = async (tokenOverride?: string) => {
+    const token = tokenOverride || traktToken;
+    if (!token) return;
+    try {
+      setTraktSenkronizeEdiliyor(true);
+      setBildirimMetni('🔄 Trakt.tv izlemeleri senkronize ediliyor...');
+      const res = await fetch('https://api.trakt.tv/sync/playback', {
+        headers: {
+          'Content-Type': 'application/json',
+          'trakt-api-version': '2',
+          'trakt-api-key': TRAKT_CLIENT_ID,
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.ok) {
+        const items = await res.json();
+        if (Array.isArray(items) && items.length > 0) {
+          const traktFilmler: KaldiginYerdenDevamEtItem[] = [];
+          for (const it of items) {
+            const isMovie = it.type === 'movie' && it.movie;
+            const isEpisode = it.type === 'episode' && it.episode;
+            if (!isMovie && !isEpisode) continue;
+
+            const title = isMovie ? it.movie.title : (it.show?.title || 'Dizi');
+            const subtitle = isMovie
+              ? `${it.movie.year || ''} • Trakt.tv Senkronu`
+              : `S${it.episode?.season}E${it.episode?.number}: ${it.episode?.title || ''}`;
+            const imdbId = isMovie ? it.movie.ids?.imdb : (it.episode?.ids?.imdb || it.show?.ids?.imdb);
+            const progress = Math.max(5, Math.min(95, Math.round(it.progress || 50)));
+
+            const safeBackdrop = imdbId
+              ? `https://images.metahub.space/background/medium/${imdbId}/img`
+              : 'https://images.metahub.space/background/medium/tt15398776/img';
+            const safePoster = imdbId
+              ? `https://images.metahub.space/poster/medium/${imdbId}/img`
+              : safeBackdrop;
+
+            const totalDk = isMovie ? 120 : 50;
+            const leftDk = Math.max(1, Math.round((progress / 100) * totalDk));
+
+            traktFilmler.push({
+              id: `trakt_${it.id}`,
+              title,
+              subtitle,
+              backdropUrl: safeBackdrop,
+              posterUrl: safePoster,
+              platform: 'Trakt.tv',
+              platformIcon: '🔴',
+              kaldigiDk: leftDk,
+              toplamDk: totalDk,
+              sonIzlemeZamani: 'Trakt.tv',
+              imdbId: imdbId || undefined,
+              pkg: kuruluOynaticiListesi.find((p) => p.packageName.toLowerCase().includes('stremio'))?.packageName || '',
+            });
+          }
+
+          if (traktFilmler.length > 0) {
+            setDevamEdenIcerikler((prev) => {
+              const traktTitles = new Set(traktFilmler.map((t) => t.title.toLowerCase().trim()));
+              const digerleri = prev.filter((p) => !traktTitles.has(p.title.toLowerCase().trim()));
+              const birlesmis = [...traktFilmler, ...digerleri].slice(0, 20);
+              if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+                TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(birlesmis)).catch(() => {});
+              }
+              return birlesmis;
+            });
+            setBildirimMetni(`✅ Trakt'tan ${traktFilmler.length} içerik eşitlendi!`);
+          } else {
+            setBildirimMetni('ℹ️ Trakt hesabınızda şu an yarım kalmış film bulunmuyor.');
+          }
+        } else {
+          setBildirimMetni('ℹ️ Trakt hesabınızda şu an yarım kalmış film bulunmuyor.');
+        }
+      }
+    } catch (e: any) {
+      setBildirimMetni('⚠️ Trakt hatası: ' + (e?.message || 'Bilinmiyor'));
+    } finally {
+      setTraktSenkronizeEdiliyor(false);
+      setTimeout(() => setBildirimMetni(''), 4000);
+    }
+  };
+
+  // Trakt Hesabı Bağlantısını Kes
+  const traktCikisYap = () => {
+    setTraktBagli(false);
+    setTraktToken('');
+    setTraktKullanici('');
+    setTraktUserCode('');
+    setTraktDogrulaniyor(false);
+    if (traktTokenPollerRef.current) clearInterval(traktTokenPollerRef.current);
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('trakt_token', '').catch(() => {});
+      TVAppManager.saveSetting('trakt_username', '').catch(() => {});
+    }
+    setBildirimMetni('🚪 Trakt hesabı bağlantısı kesildi.');
+    setTimeout(() => setBildirimMetni(''), 3000);
+  };
+
+  // Stremio Yerel Daemon Kontrolü
+  const stremioKontrolEt = async () => {
+    try {
+      setStremioKontrolEdiliyor(true);
+      setBildirimMetni('🔍 Stremio (127.0.0.1:11470) kontrol ediliyor...');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+      const res = await fetch('http://127.0.0.1:11470/stats.json', {
+        signal: controller.signal,
+      }).catch(() => null);
+      clearTimeout(timeoutId);
+
+      if (res && res.ok) {
+        setStremioDurum('bagli');
+        setBildirimMetni('✅ Stremio yerel sunucusu devrede! Trakt ile senkronize çalışır.');
+      } else {
+        const stremioApp = uygulamalar.find((u) => u.packageName.toLowerCase().includes('stremio'));
+        if (stremioApp) {
+          setStremioDurum('baglanamadi');
+          setBildirimMetni('💡 Stremio kurulu. Sunucunun açılması için Stremio\'yu bir kez başlatın.');
+        } else {
+          setStremioDurum('baglanamadi');
+          setBildirimMetni('⚠️ Cihazda Stremio kurulu değil veya yerel port henüz açılmadı.');
+        }
+      }
+    } catch {
+      setStremioDurum('baglanamadi');
+      setBildirimMetni('⚠️ Stremio yerel sunucusuna ulaşılamadı.');
+    } finally {
+      setStremioKontrolEdiliyor(false);
+      setTimeout(() => setBildirimMetni(''), 4000);
+    }
+  };
+
+  // Android TV Sistem Kanallarını Listele
+  const sistemKanallariGetir = async () => {
+    try {
+      setTvKanallariYukleniyor(true);
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.getTvAppChannels) {
+        const kanallar = await TVAppManager.getTvAppChannels();
+        if (Array.isArray(kanallar)) {
+          setTvAppKanallari(kanallar);
+          if (kanallar.length === 0) {
+            setBildirimMetni('ℹ️ Sistemde TV kanalı yayınlayan uygulama bulunamadı.');
+            setTimeout(() => setBildirimMetni(''), 3000);
+          }
+        }
+      }
+    } catch {} finally {
+      setTvKanallariYukleniyor(false);
+    }
+  };
+
+  // Belirli Bir TV Kanalından Önizleme İçeriklerini Devam Et Rafına Ekle
+  const kanaldanIcerikEkle = async (kanalId: number, kanalAdi: string) => {
+    try {
+      setBildirimMetni(`⏳ "${kanalAdi}" kanalından içerikler alınıyor...`);
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.getChannelPreviewPrograms) {
+        const programs: KaldiginYerdenDevamEtItem[] = await TVAppManager.getChannelPreviewPrograms(kanalId);
+        if (Array.isArray(programs) && programs.length > 0) {
+          setDevamEdenIcerikler((prev) => {
+            const progIds = new Set(programs.map((p) => p.id));
+            const kalan = prev.filter((p) => !progIds.has(p.id));
+            const yeniListe = [...programs, ...kalan].slice(0, 20);
+            if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+              TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(yeniListe)).catch(() => {});
+            }
+            return yeniListe;
+          });
+          setBildirimMetni(`✅ "${kanalAdi}" kanalından ${programs.length} içerik eklendi!`);
+        } else {
+          setBildirimMetni(`ℹ️ "${kanalAdi}" kanalında hazır içerik bulunamadı.`);
+        }
+      }
+    } catch (e: any) {
+      setBildirimMetni('⚠️ Kanal hatası: ' + (e?.message || 'Bilinmiyor'));
+    } finally {
+      setTimeout(() => setBildirimMetni(''), 4000);
+    }
+  };
+
   // TV Uygulamaları Arası Geçişte "Kaldığın Yerden Devam Et" Rafını Anında Güncelle
   useEffect(() => {
     tvIzniniKontrolEt();
@@ -2292,14 +2599,18 @@ export default function App() {
       if (state === 'active') {
         tvIzniniKontrolEt();
         sistemSonIzlenenleriGetir();
+        if (traktToken) {
+          traktPlaybackCek();
+        }
       }
     });
 
     return () => {
       subWatchNext.remove();
       sub.remove();
+      if (traktTokenPollerRef.current) clearInterval(traktTokenPollerRef.current);
     };
-  }, [sistemSonIzlenenleriGetir, tvIzniniKontrolEt]);
+  }, [sistemSonIzlenenleriGetir, tvIzniniKontrolEt, traktToken]);
 
   // Kaldığın Yerden Devam Et Tıklama Eylemi (Doğrudan Başlatma & Sıfır Bekleme)
   const devamEdenIcerikBaslat = async (item: KaldiginYerdenDevamEtItem) => {
@@ -2323,14 +2634,21 @@ export default function App() {
       return;
     }
 
-    // 3. Paket ismi bilinmiyorsa ama TV'de medya oynatıcı varsa ilkini seç ve doğrudan başlat
+    // 3. Stremio kuruluysa ve IMDb ID varsa doğrudan Stremio ile aç!
+    const stremioApp = kuruluOynaticiListesi.find((p) => p.packageName.toLowerCase().includes('stremio'));
+    if (stremioApp) {
+      filmOynatOzelUygulama(item.title, stremioApp.packageName, item.imdbId, item.backdropUrl, item.posterUrl, false);
+      return;
+    }
+
+    // 4. Paket ismi bilinmiyorsa ama TV'de medya oynatıcı varsa ilkini seç ve doğrudan başlat
     const otoMedyaApp = kuruluOynaticiListesi[0];
     if (otoMedyaApp) {
       filmOynatOzelUygulama(item.title, otoMedyaApp.packageName, item.imdbId, item.backdropUrl, item.posterUrl, false);
       return;
     }
 
-    // 4. Son çare olarak detay penceresini aç
+    // 5. Son çare olarak detay penceresini aç
     filmDetayAc({
       title: item.title,
       platform: item.platform,
@@ -4059,6 +4377,13 @@ export default function App() {
                   )}
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <FocusableItem
+                    onPress={() => setEklentiModalAcik(true)}
+                    style={[styles.tumunuGorButon, { backgroundColor: '#7C3AED', marginRight: 8 }]}
+                    focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                  >
+                    {() => <Text style={[styles.tumunuGorYazi, { color: '#FFF', fontWeight: '800' }]}>🔌 Eklentiler & Senkron</Text>}
+                  </FocusableItem>
                   {!tvIzniVar && (
                     <FocusableItem
                       onPress={tvIzniniIste}
@@ -4099,14 +4424,23 @@ export default function App() {
               {devamEdenIcerikler.length === 0 ? (
                 <View style={[styles.bosIzlemeKutusu, { borderColor: aktifTema.surface }]}>
                   <Text style={styles.bosIzlemeYazi}>
-                    Henüz izleme geçmişi yok. Netflix, Stremio, YouTube, Cloudstream veya VLC'de bir film/dizi izlediğinizde otomatik olarak burada listelenecektir.
+                    Henüz izleme geçmişi yok. Netflix, Stremio, YouTube, Cloudstream veya VLC'de bir film/dizi izlediğinizde ya da Trakt / Stremio eklentilerini bağladığınızda burada listelenecektir.
                   </Text>
+                  <View style={{ marginTop: 10, flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                    <FocusableItem
+                      onPress={() => setEklentiModalAcik(true)}
+                      style={[styles.tumunuGorButon, { backgroundColor: '#7C3AED' }]}
+                      focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                    >
+                      {() => <Text style={[styles.tumunuGorYazi, { color: '#FFF', fontWeight: '800' }]}>🔌 Eklentileri Bağla (Trakt / Stremio / TV)</Text>}
+                    </FocusableItem>
+                  </View>
                   {!tvIzniVar ? (
-                    <Text style={{ color: '#F87171', fontSize: 11, marginTop: 6, fontWeight: '700' }}>
+                    <Text style={{ color: '#F87171', fontSize: 11, marginTop: 8, fontWeight: '700' }}>
                       ⚠️ TV izleme verilerine erişim izni bekleniyor. Yukarıdaki "🔒 TV İznini Aç" butonuna basarak onaylayabilirsiniz.
                     </Text>
                   ) : (
-                    <Text style={{ color: aktifTema.border, fontSize: 11, marginTop: 6, fontWeight: '700' }}>
+                    <Text style={{ color: aktifTema.border, fontSize: 11, marginTop: 8, fontWeight: '700' }}>
                       💡 Sistemin nasıl çalıştığını görmek için yukarıdaki "🧪 Test Et" butonuna basabilirsiniz.
                     </Text>
                   )}
@@ -5537,6 +5871,24 @@ export default function App() {
                             {tvIzniVar ? 'İzleme Geçmişi: Aktif' : 'İzleme Geçmişi: İzin İste'}
                           </Text>
                           <Text style={styles.tileAlt}>Watch Next Test & Tanılama</Text>
+                        </>
+                      )}
+                    </FocusableItem>
+
+                    {/* Eklentiler & Senkronizasyon (Trakt.tv, Stremio, TV Kanalları) */}
+                    <FocusableItem
+                      style={[styles.kontrolTile, { borderColor: '#7C3AED', backgroundColor: 'rgba(124, 58, 237, 0.15)' }]}
+                      focusedStyle={[styles.kontrolTileOdak, { borderColor: '#FFFFFF' }]}
+                      onPress={() => {
+                        setKontrolMerkeziAcik(false);
+                        setEklentiModalAcik(true);
+                      }}
+                    >
+                      {() => (
+                        <>
+                          <Text style={styles.tileIkon}>🔌</Text>
+                          <Text style={[styles.tileBaslik, { color: '#C4B5FD', fontWeight: '900' }]}>Eklentiler & Senkron</Text>
+                          <Text style={styles.tileAlt}>Trakt • Stremio • Kanallar</Text>
                         </>
                       )}
                     </FocusableItem>
@@ -7482,6 +7834,351 @@ export default function App() {
                     )}
                   </FocusableItem>
                 </View>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ================= MODAL: EKLENTİLER & İZLEME SENKRONİZASYONU ================= */}
+        <Modal
+          visible={eklentiModalAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setEklentiModalAcik(false)}
+        >
+          <View style={styles.modalArkaplan}>
+            <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border, maxHeight: '92%', width: '78%' }]}>
+              {/* Üst Başlık Satırı */}
+              <View style={styles.modalBaslikSatir}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <Text style={{ fontSize: 24 }}>🔌</Text>
+                  <View>
+                    <Text style={styles.modalBaslik}>Eklentiler & İzleme Senkronizasyonu</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>
+                      Kaldığın Yerden Devam Et Rafı İçin Çoklu Uygulama Eşleme Mimarisi
+                    </Text>
+                  </View>
+                </View>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setEklentiModalAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
+              </View>
+
+              {/* Sekmeler: Trakt, Stremio, TV Kanalları, Mağaza Uyumluluğu */}
+              <View style={{ flexDirection: 'row', gap: 8, marginVertical: 12 }}>
+                {[
+                  { id: 'trakt', label: '🔴 Trakt.tv Scrobbler' },
+                  { id: 'stremio', label: '🟣 Stremio Yerel Daemon' },
+                  { id: 'kanallar', label: '📺 Android TV Kanalları' },
+                  { id: 'bilgi', label: '🛡️ Mağaza Uyumluluğu' },
+                ].map((s) => {
+                  const secili = eklentiSekmesi === s.id;
+                  return (
+                    <FocusableItem
+                      key={s.id}
+                      style={[
+                        styles.kontrolSekmePill,
+                        { borderColor: secili ? aktifTema.border : 'rgba(255, 255, 255, 0.15)' },
+                        secili && { backgroundColor: aktifTema.accent },
+                      ]}
+                      focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                      onPress={() => {
+                        setEklentiSekmesi(s.id as any);
+                        if (s.id === 'kanallar') sistemKanallariGetir();
+                        if (s.id === 'stremio') stremioKontrolEt();
+                      }}
+                    >
+                      {() => (
+                        <Text style={[styles.kontrolSekmePillYazi, secili && { color: aktifTema.textOnAccent, fontWeight: '900' }]}>
+                          {s.label}
+                        </Text>
+                      )}
+                    </FocusableItem>
+                  );
+                })}
+              </View>
+
+              {/* Sekme İçerikleri */}
+              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
+                {/* SEKME 1: TRAKT.TV SCROBBLER */}
+                {eklentiSekmesi === 'trakt' && (
+                  <View style={{ gap: 12 }}>
+                    <View style={{ backgroundColor: 'rgba(239, 68, 68, 0.12)', padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#EF4444' }}>
+                      <Text style={{ color: '#FCA5A5', fontSize: 13, fontWeight: '800', marginBottom: 4 }}>
+                        🌐 Evrensel İzleme Senkronizasyonu (Trakt.tv)
+                      </Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, lineHeight: 18 }}>
+                        Trakt.tv; Stremio, Kodi, VLC, Plex veya Syncler gibi uygulamalarda izlediğiniz filmlerin duraklatıldığı dakikayı ve afişini bulutta tutar. Başlatıcınız Trakt ile eşlendiğinde tüm bu uygulamalardaki ilerlemeniz tek tıkla "Kaldığın Yerden Devam Et" rafına dökülür.
+                      </Text>
+                    </View>
+
+                    {traktBagli ? (
+                      <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.12)', padding: 16, borderRadius: 14, borderWidth: 1, borderColor: '#10B981' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                          <View>
+                            <Text style={{ color: '#6EE7B7', fontSize: 14, fontWeight: '900' }}>
+                              ✅ Trakt.tv Hesabı Aktif & Bağlı
+                            </Text>
+                            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900', marginTop: 2 }}>
+                              @{traktKullanici || 'TraktKullanicisi'}
+                            </Text>
+                          </View>
+                          <View style={{ backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                            <Text style={{ color: '#000', fontSize: 11, fontWeight: '900' }}>SENKRONİZE</Text>
+                          </View>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                          <FocusableItem
+                            style={[styles.tumunuGorButon, { backgroundColor: aktifTema.accent, flex: 1, paddingVertical: 12 }]}
+                            focusedStyle={{ transform: [{ scale: 1.03 }], borderColor: '#FFFFFF' }}
+                            onPress={() => traktPlaybackCek()}
+                          >
+                            {() => (
+                              <Text style={[styles.tumunuGorYazi, { color: aktifTema.textOnAccent, fontWeight: '900', textAlign: 'center' }]}>
+                                {traktSenkronizeEdiliyor ? '🔄 Senkronize Ediliyor...' : '🔄 Şimdi Senkronize Et'}
+                              </Text>
+                            )}
+                          </FocusableItem>
+                          <FocusableItem
+                            style={[styles.tumunuGorButon, { backgroundColor: '#DC2626', paddingVertical: 12, paddingHorizontal: 16 }]}
+                            focusedStyle={{ transform: [{ scale: 1.03 }], borderColor: '#FFFFFF' }}
+                            onPress={traktCikisYap}
+                          >
+                            {() => <Text style={[styles.tumunuGorYazi, { color: '#FFF', fontWeight: '900' }]}>🚪 Çıkış Yap</Text>}
+                          </FocusableItem>
+                        </View>
+                      </View>
+                    ) : (
+                      <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', padding: 16, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }}>
+                        <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800', marginBottom: 6 }}>
+                          Trakt.tv Hesabını Bağla (Cihaz Kodu ile Hızlı Giriş)
+                        </Text>
+                        <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 14 }}>
+                          Şifre yazmanıza gerek yok. Alacağınız kodu telefonunuzdan girmeniz yeterlidir.
+                        </Text>
+
+                        {traktDogrulaniyor && traktUserCode ? (
+                          <View style={{ backgroundColor: 'rgba(0,0,0,0.5)', padding: 18, borderRadius: 14, alignItems: 'center', borderWidth: 1, borderColor: aktifTema.accent, marginBottom: 14 }}>
+                            <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, marginBottom: 4 }}>
+                              1. Telefon veya PC'den şu adresi açın:
+                            </Text>
+                            <Text style={{ color: aktifTema.border, fontSize: 17, fontWeight: '900', marginBottom: 10 }}>
+                              https://trakt.tv/activate
+                            </Text>
+                            <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, marginBottom: 4 }}>
+                              2. Ekrana şu kodu yazın:
+                            </Text>
+                            <View style={{ backgroundColor: aktifTema.accent, paddingHorizontal: 22, paddingVertical: 10, borderRadius: 10, marginVertical: 6 }}>
+                              <Text style={{ color: aktifTema.textOnAccent, fontSize: 26, fontWeight: '900', letterSpacing: 4 }}>
+                                {traktUserCode}
+                              </Text>
+                            </View>
+                            <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '800', marginTop: 8 }}>
+                              ⏳ Onayınız bekleniyor... (Onayladığınız anda TV otomatik başlayacaktır)
+                            </Text>
+                          </View>
+                        ) : null}
+
+                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                          <FocusableItem
+                            style={[styles.tumunuGorButon, { backgroundColor: aktifTema.accent, flex: 1, paddingVertical: 12 }]}
+                            focusedStyle={{ transform: [{ scale: 1.03 }], borderColor: '#FFFFFF' }}
+                            onPress={traktCihazKoduAl}
+                          >
+                            {() => (
+                              <Text style={[styles.tumunuGorYazi, { color: aktifTema.textOnAccent, fontWeight: '900', textAlign: 'center' }]}>
+                                {traktDogrulaniyor ? '⏳ Kod Bekleniyor...' : '🔑 Trakt Cihaz Kodu Al & Başlat'}
+                              </Text>
+                            )}
+                          </FocusableItem>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                {/* SEKME 2: STREMIO YEREL DAEMON */}
+                {eklentiSekmesi === 'stremio' && (
+                  <View style={{ gap: 12 }}>
+                    <View style={{ backgroundColor: 'rgba(124, 58, 237, 0.12)', padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#7C3AED' }}>
+                      <Text style={{ color: '#C4B5FD', fontSize: 13, fontWeight: '800', marginBottom: 4 }}>
+                        🟣 Stremio Yerel Entegrasyon & Köprü
+                      </Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, lineHeight: 18 }}>
+                        Stremio Android TV uygulamasında yerleşik bir streaming sunucusu (127.0.0.1:11470) bulunur. Ayrıca Stremio ayarlarından Trakt hesabınızı bağladığınızda, Stremio'da izlediğiniz her saniye otomatik olarak Trakt'a ve oradan da bu ana ekrana yansır.
+                      </Text>
+                    </View>
+
+                    <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', padding: 16, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                        <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
+                          Yerel Stremio Motor Durumu:
+                        </Text>
+                        <View style={{
+                          backgroundColor: stremioDurum === 'bagli' ? '#10B981' : (stremioDurum === 'baglanamadi' ? '#EF4444' : '#6B7280'),
+                          paddingHorizontal: 10,
+                          paddingVertical: 4,
+                          borderRadius: 8
+                        }}>
+                          <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '900' }}>
+                            {stremioDurum === 'bagli' ? '🟢 AKTİF (11470)' : (stremioDurum === 'baglanamadi' ? '🔴 KAPALI' : '⚪ BEKLEMEDE')}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={{ flexDirection: 'row', gap: 10 }}>
+                        <FocusableItem
+                          style={[styles.tumunuGorButon, { backgroundColor: aktifTema.accent, flex: 1, paddingVertical: 12 }]}
+                          focusedStyle={{ transform: [{ scale: 1.03 }], borderColor: '#FFFFFF' }}
+                          onPress={stremioKontrolEt}
+                        >
+                          {() => (
+                            <Text style={[styles.tumunuGorYazi, { color: aktifTema.textOnAccent, fontWeight: '900', textAlign: 'center' }]}>
+                              {stremioKontrolEdiliyor ? '⏳ Taranıyor...' : '🔍 Stremio Portunu Kontrol Et'}
+                            </Text>
+                          )}
+                        </FocusableItem>
+
+                        <FocusableItem
+                          style={[styles.tumunuGorButon, { backgroundColor: '#7C3AED', paddingVertical: 12, paddingHorizontal: 16 }]}
+                          focusedStyle={{ transform: [{ scale: 1.03 }], borderColor: '#FFFFFF' }}
+                          onPress={() => {
+                            const sApp = kuruluOynaticiListesi.find((p) => p.packageName.toLowerCase().includes('stremio'));
+                            if (sApp) {
+                              uygulamaBaslat(sApp.packageName, sApp.name);
+                            } else {
+                              Alert.alert('Stremio Bulunamadı', 'Cihazınızda Stremio kurulu görünmüyor.');
+                            }
+                          }}
+                        >
+                          {() => <Text style={[styles.tumunuGorYazi, { color: '#FFF', fontWeight: '900' }]}>🎬 Stremio'yu Aç</Text>}
+                        </FocusableItem>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
+                {/* SEKME 3: ANDROID TV KANALLARI */}
+                {eklentiSekmesi === 'kanallar' && (
+                  <View style={{ gap: 12 }}>
+                    <View style={{ backgroundColor: 'rgba(56, 189, 248, 0.12)', padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#38BDF8' }}>
+                      <Text style={{ color: '#7DD3FC', fontSize: 13, fontWeight: '800', marginBottom: 4 }}>
+                        📺 Android TV Resmi Sistem Kanalları (TvContract)
+                      </Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, lineHeight: 18 }}>
+                        Cihazınızda kurulu olan SmartTube, YouTube, VLC gibi uygulamaların resmi Android TV kanal sistemine sunduğu önizleme ve oynatma kartlarını doğrudan bu başlatıcıya aktarabilirsiniz.
+                      </Text>
+                    </View>
+
+                    <FocusableItem
+                      style={[styles.tumunuGorButon, { backgroundColor: aktifTema.accent, paddingVertical: 12, marginBottom: 8 }]}
+                      focusedStyle={{ transform: [{ scale: 1.03 }], borderColor: '#FFFFFF' }}
+                      onPress={sistemKanallariGetir}
+                    >
+                      {() => (
+                        <Text style={[styles.tumunuGorYazi, { color: aktifTema.textOnAccent, fontWeight: '900', textAlign: 'center' }]}>
+                          {tvKanallariYukleniyor ? '⏳ Kanallar Aranıyor...' : '🔄 Kanalları Yeniden Tara'}
+                        </Text>
+                      )}
+                    </FocusableItem>
+
+                    {tvAppKanallari.length === 0 ? (
+                      <View style={{ padding: 20, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12 }}>
+                        <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, textAlign: 'center' }}>
+                          Henüz taranmış sistem kanalı yok veya yüklü uygulamalar kanal yayını yapmıyor.
+                        </Text>
+                      </View>
+                    ) : (
+                      tvAppKanallari.map((ch) => (
+                        <View
+                          key={`ch_${ch.id}`}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            backgroundColor: 'rgba(255,255,255,0.06)',
+                            padding: 12,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: 'rgba(255,255,255,0.12)',
+                          }}
+                        >
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
+                              {ch.displayName || ch.appName}
+                            </Text>
+                            <Text style={{ color: aktifTema.border, fontSize: 11 }}>
+                              {ch.appName} • {ch.description || 'Önizleme Kanalı'}
+                            </Text>
+                          </View>
+                          <FocusableItem
+                            style={[styles.tumunuGorButon, { backgroundColor: '#10B981', paddingVertical: 8, paddingHorizontal: 12 }]}
+                            focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                            onPress={() => kanaldanIcerikEkle(ch.id, ch.displayName || ch.appName)}
+                          >
+                            {() => <Text style={[styles.tumunuGorYazi, { color: '#000', fontWeight: '900' }]}>📥 İçe Aktar</Text>}
+                          </FocusableItem>
+                        </View>
+                      ))
+                    )}
+                  </View>
+                )}
+
+                {/* SEKME 4: MAĞAZA VE YASAL UYUMLULUK */}
+                {eklentiSekmesi === 'bilgi' && (
+                  <View style={{ gap: 12 }}>
+                    <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.12)', padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#10B981' }}>
+                      <Text style={{ color: '#6EE7B7', fontSize: 14, fontWeight: '900', marginBottom: 6 }}>
+                        🛡️ Google Play Store & Apple App Store Tam Uyumluluk
+                      </Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12, lineHeight: 18 }}>
+                        Bu eklenti ve senkronizasyon altyapısı, uygulamanızın Google Play Store veya Apple App Store üzerinde ticari olarak satılmasına ve yayınlanmasına %100 uygundur.
+                      </Text>
+                    </View>
+
+                    {[
+                      {
+                        title: '1. Telifsiz Saf Metaveri Mimarisi',
+                        desc: 'Uygulama kodları içerisinde kesinlikle torrent, kazıyıcı (scraper), korsan yayın linki veya izinsiz video akışı barındırılmaz. Yalnızca açık afiş ve başlık metaverisi işlenir.',
+                      },
+                      {
+                        title: '2. Yasal Trakt.tv OAuth2 Protokolü',
+                        desc: 'Google Play ve App Store\'da yer alan Infuse, Trakt Resmi Uygulaması, JustWatch ve Reelgood gibi pazar lideri uygulamalarla birebir aynı resmi ve izinli Trakt API uç noktaları kullanılır.',
+                      },
+                      {
+                        title: '3. Resmi Android TV TvContract API',
+                        desc: 'İçerik getirme işlemi Android TV SDK\'sının resmi dokümante edilmiş ContentProvider API\'leri üzerinden gerçekleştirilir.',
+                      },
+                      {
+                        title: '4. Güvenli Deep-Link ve Intent Çağrısı',
+                        desc: 'Kaldığın Yerden Devam Et kartına tıklandığında, kullanıcının cihazında halihazırda yüklü olan yasal oynatıcılar (VLC, SmartTube, Stremio vb.) standart Android Intent mekanizmasıyla tetiklenir.',
+                      },
+                    ].map((item, idx) => (
+                      <View
+                        key={`bilgi_${idx}`}
+                        style={{
+                          backgroundColor: 'rgba(255,255,255,0.05)',
+                          padding: 12,
+                          borderRadius: 12,
+                          borderWidth: 1,
+                          borderColor: 'rgba(255,255,255,0.1)',
+                        }}
+                      >
+                        <Text style={{ color: aktifTema.border, fontSize: 13, fontWeight: '800', marginBottom: 4 }}>
+                          {item.title}
+                        </Text>
+                        <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, lineHeight: 17 }}>
+                          {item.desc}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
               </ScrollView>
             </View>
           </View>

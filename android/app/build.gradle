@@ -82,8 +82,8 @@ android {
         applicationId "com.gslaucher.tv"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 34
-        versionName "3.2.8"
+        versionCode 35
+        versionName "3.2.9"
     }
     signingConfigs {
         debug {

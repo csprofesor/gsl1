@@ -1584,4 +1584,125 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             promise.resolve(false)
         }
     }
+
+    @ReactMethod
+    fun getTvAppChannels(promise: Promise) {
+        val result = Arguments.createArray()
+        val pm = reactContext.packageManager
+        try {
+            val uri = Uri.parse("content://android.media.tv/channel")
+            val cursor = reactContext.contentResolver.query(uri, null, null, null, null)
+            if (cursor != null) {
+                try {
+                    val idCol = cursor.getColumnIndex("_id")
+                    val pkgCol = cursor.getColumnIndex("package_name")
+                    val nameCol = cursor.getColumnIndex("display_name")
+                    val descCol = cursor.getColumnIndex("description")
+                    val typeCol = cursor.getColumnIndex("type")
+
+                    while (cursor.moveToNext()) {
+                        val id = if (idCol >= 0) cursor.getLong(idCol) else 0L
+                        val pkg = if (pkgCol >= 0) cursor.getString(pkgCol) ?: "" else ""
+                        val displayName = if (nameCol >= 0) cursor.getString(nameCol) ?: "" else ""
+                        val desc = if (descCol >= 0) cursor.getString(descCol) ?: "" else ""
+                        val type = if (typeCol >= 0) cursor.getString(typeCol) ?: "" else ""
+
+                        var appName = pkg
+                        try {
+                            val appInfo = pm.getApplicationInfo(pkg, 0)
+                            appName = pm.getApplicationLabel(appInfo).toString()
+                        } catch (_: Exception) {}
+
+                        val channelMap = Arguments.createMap()
+                        channelMap.putDouble("id", id.toDouble())
+                        channelMap.putString("pkg", pkg)
+                        channelMap.putString("appName", appName)
+                        channelMap.putString("displayName", if (displayName.isNotEmpty()) displayName else appName)
+                        channelMap.putString("description", desc)
+                        channelMap.putString("type", type)
+                        result.pushMap(channelMap)
+                    }
+                } finally {
+                    cursor.close()
+                }
+            }
+        } catch (_: Exception) {}
+        promise.resolve(result)
+    }
+
+    @ReactMethod
+    fun getChannelPreviewPrograms(channelId: Double, promise: Promise) {
+        val result = Arguments.createArray()
+        val pm = reactContext.packageManager
+        try {
+            val uri = Uri.parse("content://android.media.tv/preview_program")
+            val cursor = reactContext.contentResolver.query(
+                uri,
+                null,
+                "channel_id = ?",
+                arrayOf(channelId.toLong().toString()),
+                null
+            )
+            if (cursor != null) {
+                try {
+                    val idCol = cursor.getColumnIndex("_id")
+                    val pkgCol = cursor.getColumnIndex("package_name")
+                    val titleCol = cursor.getColumnIndex("title")
+                    val epTitleCol = cursor.getColumnIndex("episode_title")
+                    val descCol = cursor.getColumnIndex("short_description")
+                    val posterCol = cursor.getColumnIndex("poster_art_uri")
+                    val thumbCol = cursor.getColumnIndex("thumbnail_uri")
+                    val intentCol = cursor.getColumnIndex("intent_uri")
+                    val posCol = cursor.getColumnIndex("last_playback_position_millis")
+                    val durCol = cursor.getColumnIndex("duration_millis")
+
+                    var count = 0
+                    while (cursor.moveToNext() && count < 20) {
+                        val id = if (idCol >= 0) cursor.getLong(idCol) else 0L
+                        val pkg = if (pkgCol >= 0) cursor.getString(pkgCol) ?: "" else ""
+                        val title = if (titleCol >= 0) cursor.getString(titleCol) ?: "" else ""
+                        val epTitle = if (epTitleCol >= 0) cursor.getString(epTitleCol) ?: "" else ""
+                        val desc = if (descCol >= 0) cursor.getString(descCol) ?: "" else ""
+                        val poster = if (posterCol >= 0) cursor.getString(posterCol) ?: "" else ""
+                        val thumb = if (thumbCol >= 0) cursor.getString(thumbCol) ?: "" else ""
+                        val intentUri = if (intentCol >= 0) cursor.getString(intentCol) ?: "" else ""
+                        val posMs = if (posCol >= 0) cursor.getLong(posCol) else 0L
+                        val durMs = if (durCol >= 0) cursor.getLong(durCol) else 0L
+
+                        val displayTitle = if (title.isNotEmpty()) title else epTitle
+                        if (displayTitle.isEmpty()) continue
+
+                        var appName = pkg
+                        try {
+                            val appInfo = pm.getApplicationInfo(pkg, 0)
+                            appName = pm.getApplicationLabel(appInfo).toString()
+                        } catch (_: Exception) {}
+
+                        val item = Arguments.createMap()
+                        item.putString("id", "prev_${id}")
+                        item.putDouble("systemProgramId", id.toDouble())
+                        item.putString("pkg", pkg)
+                        item.putString("platform", appName)
+                        item.putString("platformIcon", "📺")
+                        item.putString("title", displayTitle)
+                        item.putString("subtitle", if (epTitle.isNotEmpty()) epTitle else desc)
+                        item.putString("backdropUrl", if (poster.isNotEmpty()) poster else thumb)
+                        item.putString("intentUri", intentUri)
+                        val kaldigiDk = if (posMs > 0) (posMs / 60000).toInt() else 10
+                        val toplamDk = if (durMs > 0) (durMs / 60000).toInt() else 100
+                        item.putInt("kaldigiDk", kaldigiDk)
+                        item.putInt("toplamDk", toplamDk)
+                        item.putString("sonIzlemeZamani", "Kanal İçeriği")
+                        item.putBoolean("isSystemWatchNext", true)
+
+                        result.pushMap(item)
+                        count++
+                    }
+                } finally {
+                    cursor.close()
+                }
+            }
+        } catch (_: Exception) {}
+        promise.resolve(result)
+    }
 }
