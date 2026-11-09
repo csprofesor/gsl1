@@ -18,6 +18,7 @@ import {
   BackHandler,
   Image,
   DeviceEventEmitter,
+  AppState,
 } from 'react-native';
 
 const { TVAppManager } = NativeModules;
@@ -33,8 +34,8 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.3';
-const CURRENT_BUILD = 28;
+const CURRENT_VERSION = '3.2.4';
+const CURRENT_BUILD = 30;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/gsultra322';
@@ -936,15 +937,18 @@ export const TURKIYE_SEHIRLERI: SehirKonum[] = [
 // Kaldığın Yerden Devam Et (Film & Dizi Karesi, İlerleme Çubuğu ve Doğrudan Oynat)
 export interface KaldiginYerdenDevamEtItem {
   id: string;
+  systemProgramId?: number;
   title: string;
   subtitle: string;
   backdropUrl: string;
   platform: string;
   platformIcon: string;
   pkg: string;
+  intentUri?: string;
   kaldigiDk: number;
   toplamDk: number;
   sonIzlemeZamani: string;
+  isSystemWatchNext?: boolean;
 }
 
 export const VARSAYILAN_DEVAM_ET: KaldiginYerdenDevamEtItem[] = [];
@@ -2132,29 +2136,90 @@ export default function App() {
   // İzleme Geçmişine Kaydet Yardımcısı (Film & Dizi)
   const filmGecmiseEkle = (title: string, platform: string, pkg: string, backdropUrl?: string, subtitle?: string) => {
     // Sadece gerçek film eklenir. Asla platform="Uygulama" kabul edilmez!
-    if (platform === 'Uygulama') return;
+    if (platform === 'Uygulama' || !title) return;
     const guvenli = guvenliGorselUrl(backdropUrl);
     const yeniDevam: KaldiginYerdenDevamEtItem = {
       id: `cont_${(title || 'film').replace(/\s+/g, '_')}_${Date.now()}`,
       title,
       subtitle: subtitle || 'IMDb • 4K UHD',
       backdropUrl: guvenli || 'https://images.metahub.space/background/medium/tt15398776/img',
-      platform: 'IMDb',
+      platform: platform || 'IMDb',
       platformIcon: '🍿',
       pkg: pkg || '',
-      kaldigiDk: Math.floor(Math.random() * 40) + 25,
-      toplamDk: 125,
+      kaldigiDk: 15,
+      toplamDk: 120,
       sonIzlemeZamani: 'Bugün',
     };
 
     setDevamEdenIcerikler((prev) => {
-      // Eski uygulama kartlarını da aradan temizle
-      const temiz = prev.filter((d) => d.title !== title && d.platform !== 'Uygulama');
+      const temiz = prev.filter((d) => d.title.toLowerCase() !== title.toLowerCase() && d.platform !== 'Uygulama');
       const guncel = [yeniDevam, ...temiz].slice(0, 15);
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
-        TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(guncel)).catch(() => {});
+        TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(guncel.filter((x) => !x.isSystemWatchNext))).catch(() => {});
       }
       return guncel;
+    });
+  };
+
+  // Android TV Sistem "Watch Next" / "Play Next" İçeriklerini Getir (Netflix, YouTube, Stremio, VLC vb.)
+  const sistemSonIzlenenleriGetir = useCallback(async () => {
+    try {
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.getSystemWatchNextPrograms) {
+        const sysPrograms: KaldiginYerdenDevamEtItem[] = await TVAppManager.getSystemWatchNextPrograms();
+        if (Array.isArray(sysPrograms) && sysPrograms.length > 0) {
+          setDevamEdenIcerikler((prev) => {
+            const sysTitles = new Set(sysPrograms.map((s) => s.title.toLowerCase().trim()));
+            const localKalanlar = prev.filter(
+              (p) => !p.isSystemWatchNext && !sysTitles.has(p.title.toLowerCase().trim())
+            );
+            return [...sysPrograms, ...localKalanlar].slice(0, 20);
+          });
+          return;
+        }
+      }
+    } catch {}
+  }, []);
+
+  // TV Uygulamaları Arası Geçişte "Kaldığın Yerden Devam Et" Rafını Anında Güncelle
+  useEffect(() => {
+    sistemSonIzlenenleriGetir();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        sistemSonIzlenenleriGetir();
+      }
+    });
+    return () => sub.remove();
+  }, [sistemSonIzlenenleriGetir]);
+
+  // Kaldığın Yerden Devam Et Tıklama Eylemi (Doğrudan Başlatma & Sıfır Bekleme)
+  const devamEdenIcerikBaslat = async (item: KaldiginYerdenDevamEtItem) => {
+    // 1. Android TV Sistem Watch Next Programı ise (Netflix, YouTube, Stremio, VLC vb.)
+    if (item.isSystemWatchNext || item.intentUri) {
+      try {
+        if (Platform.OS === 'android' && TVAppManager && TVAppManager.launchWatchNextProgram) {
+          const ok = await TVAppManager.launchWatchNextProgram(
+            item.systemProgramId || 0,
+            item.intentUri,
+            item.pkg
+          );
+          if (ok) return;
+        }
+      } catch {}
+    }
+
+    // 2. Uygulama paketi biliniyorsa doğrudan o uygulamayı o içerikle aç! ASLA tekrar "Uygulama Seç" açma!
+    if (item.pkg) {
+      filmOynatOzelUygulama(item.title, item.pkg, undefined, item.backdropUrl, false);
+      return;
+    }
+
+    // 3. Hiçbir hedef paket yoksa detay penceresini aç
+    filmDetayAc({
+      title: item.title,
+      platform: item.platform,
+      pkg: item.pkg,
+      backdropUrl: item.backdropUrl,
+      genre: item.subtitle,
     });
   };
 
@@ -2397,7 +2462,8 @@ export default function App() {
     title: string,
     pkg: string,
     imdbId?: string,
-    backdropUrl?: string
+    backdropUrl?: string,
+    kaydet: boolean = true
   ) => {
     const app = uygulamalar.find((u) => u.packageName === pkg) || { name: 'Uygulama', packageName: pkg };
     try {
@@ -2410,8 +2476,10 @@ export default function App() {
     setTimeout(() => setBildirimMetni(''), 4500);
     setFilmDetayModalAcik(false);
     
-    // İzleme geçmişine gerçek film kartı olarak kaydet
-    filmGecmiseEkle(title, 'IMDb', pkg, backdropUrl);
+    // İzleme geçmişine gerçek film kartı olarak kaydet (tekrar oynatmalarda çift kayıt açılmaz)
+    if (kaydet) {
+      filmGecmiseEkle(title, app.name || 'IMDb', pkg, backdropUrl);
+    }
 
     const pkgLower = pkg.toLowerCase();
 
@@ -3240,15 +3308,20 @@ export default function App() {
     };
   };
 
-  const devamEtListesindenSil = (id: string) => {
+  const devamEtListesindenSil = async (id: string, systemProgramId?: number) => {
+    if (systemProgramId && Platform.OS === 'android' && TVAppManager && TVAppManager.removeSystemWatchNextProgram) {
+      try {
+        await TVAppManager.removeSystemWatchNextProgram(systemProgramId);
+      } catch {}
+    }
     setDevamEdenIcerikler((prev) => {
       const guncel = prev.filter((s) => s.id !== id);
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
-        TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(guncel)).catch(() => {});
+        TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(guncel.filter((x) => !x.isSystemWatchNext))).catch(() => {});
       }
       return guncel;
     });
-    setBildirimMetni('🗑️ Öğe izleme listesinden silindi');
+    setBildirimMetni('🗑️ İçerik devam listesinden kaldırıldı.');
     setTimeout(() => setBildirimMetni(''), 2500);
   };
 
@@ -3890,43 +3963,80 @@ export default function App() {
               ) : (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
                   {devamEdenIcerikler.map((item) => {
-                    const yuzde = Math.round((item.kaldigiDk / item.toplamDk) * 100);
+                    const yuzde = Math.min(100, Math.max(5, Math.round((item.kaldigiDk / item.toplamDk) * 100)));
                     return (
                       <FocusableItem
                         key={item.id}
                         style={[styles.devamEtKarti, { borderColor: aktifTema.surface }]}
                         focusedStyle={[styles.devamEtOdak, { borderColor: aktifTema.border, shadowColor: aktifTema.accent }]}
-                        onPress={() => {
-                          filmDetayAc({
-                            title: item.title,
-                            platform: item.platform,
-                            pkg: item.pkg,
-                            backdropUrl: item.backdropUrl,
-                            genre: item.subtitle,
-                          });
-                        }}
+                        onPress={() => devamEdenIcerikBaslat(item)}
                         onLongPress={() => {
-                          Alert.alert('Listeden Kaldır', `"${item.title}" devam listesinden silinsin mi?`, [
-                            { text: 'Vazgeç', style: 'cancel' },
-                            {
-                              text: 'Sil',
-                              style: 'destructive',
-                              onPress: () => devamEtListesindenSil(item.id),
-                            },
-                          ]);
+                          Alert.alert(
+                            item.title,
+                            'Bu içerik için yapmak istediğiniz işlemi seçin:',
+                            [
+                              { text: 'Vazgeç', style: 'cancel' },
+                              {
+                                text: '🔄 Farklı Uygulamayla Aç',
+                                onPress: () => {
+                                  filmDetayAc({
+                                    title: item.title,
+                                    platform: item.platform,
+                                    pkg: item.pkg,
+                                    backdropUrl: item.backdropUrl,
+                                    genre: item.subtitle,
+                                  });
+                                },
+                              },
+                              {
+                                text: '🗑️ Listeden Kaldır',
+                                style: 'destructive',
+                                onPress: () => devamEtListesindenSil(item.id, item.systemProgramId),
+                              },
+                            ]
+                          );
                         }}
                       >
                         {(isFocused) => {
-                          const safeBackdrop = (item.backdropUrl && !item.backdropUrl.startsWith('content://') && !item.backdropUrl.includes('icon'))
-                            ? guvenliGorselUrl(item.backdropUrl)
-                            : guvenliGorselUrl('https://images.metahub.space/background/medium/tt15398776/img');
+                          const safeBackdrop = guvenliGorselUrl(item.backdropUrl);
                           return (
                             <View style={styles.devamEtIcerik}>
-                              <Image source={{ uri: safeBackdrop }} style={styles.devamEtResim} resizeMode="cover" />
+                              {safeBackdrop ? (
+                                <Image
+                                  source={{ uri: safeBackdrop }}
+                                  style={styles.devamEtResim}
+                                  resizeMode="cover"
+                                />
+                              ) : (
+                                <View
+                                  style={[
+                                    styles.devamEtResim,
+                                    {
+                                      backgroundColor: '#0F172A',
+                                      justifyContent: 'center',
+                                      alignItems: 'center',
+                                      padding: 10,
+                                    },
+                                  ]}
+                                >
+                                  <Text style={{ fontSize: 32, marginBottom: 4 }}>🎬</Text>
+                                  <Text
+                                    style={{
+                                      color: '#FFFFFF',
+                                      fontSize: 12,
+                                      fontWeight: '800',
+                                      textAlign: 'center',
+                                    }}
+                                    numberOfLines={1}
+                                  >
+                                    {item.title}
+                                  </Text>
+                                </View>
+                              )}
                               <View style={[styles.devamEtKarartma, isFocused && { backgroundColor: 'rgba(5, 10, 25, 0.45)' }]}>
-                                <View style={[styles.devamEtUstRozet, { backgroundColor: 'rgba(0,0,0,0.75)', borderColor: '#EAB308', borderWidth: 1 }]}>
+                                <View style={[styles.devamEtUstRozet, { backgroundColor: 'rgba(0,0,0,0.80)', borderColor: aktifTema.border, borderWidth: 1 }]}>
                                   <Text style={{ color: '#FACC15', fontSize: 10, fontWeight: '900' }}>
-                                    ⭐ IMDb • Kaldığın Yerden
+                                    {item.platform ? `▶ ${item.platform}` : '⭐ Kaldığın Yerden'}
                                   </Text>
                                 </View>
                                 <View style={styles.devamEtAltBilgi}>
@@ -3934,7 +4044,7 @@ export default function App() {
                                     {item.title}
                                   </Text>
                                   <Text style={styles.devamEtAltBaslik}>
-                                    {item.subtitle || 'IMDb • 4K UHD'}
+                                    {item.subtitle || 'Kaldığın Yerden Devam Et'}
                                   </Text>
                                   {/* İlerleme Çubuğu */}
                                   <View style={styles.devamEtIlerlemeArka}>
@@ -3942,7 +4052,7 @@ export default function App() {
                                   </View>
                                   {isFocused && (
                                     <Text style={[styles.devamEtOynatMetin, { color: aktifTema.border }]}>
-                                      ▶ Başlat & Devam Et
+                                      ▶ Kaldığın Yerden Oynat
                                     </Text>
                                   )}
                                 </View>

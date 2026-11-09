@@ -1,7 +1,7 @@
 {
-  "version": "3.2.3",
-  "versionCode": 29,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.3/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gs29apk",
-  "changelog": "v3.2.3 (Build 29): Kaldığın Yerden Devam Et rafındaki sahte/mock filmler tamamen kaldırıldı (artık liste 0'dan başlar ve sadece kullanıcının bilfiil başlattığı gerçek filmler eklenir), Kontrol Merkezi Düzen sekmesine 36 renkli kategorize Renk Kartelası, Parlama Yoğunluğu, Cam Saydamlığı ve Kenarlık Çerçeve ayarlayıcısı ile Canlı Tema Stüdyosu eklendi."
+  "version": "3.2.4",
+  "versionCode": 30,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.4/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gs324apk",
+  "changelog": "v3.2.4 (Build 30): Android TV resmi TvProvider (Watch Next / Play Next) entegrasyonu sağlandı (harici platformlarda - YouTube, Stremio, Netflix, VLC vb. - izlenen içerikler ana ekrana anında gelir), Kaldığın Yerden Devam Et kartına tıklandığında tekrar uygulama seçtirmeden doğrudan içeriğe kaldığı yerden başlama özelliği ve eksik afişler için şık arkaplan koruması eklendi."
 }

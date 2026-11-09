@@ -1235,4 +1235,136 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             promise.reject("ERROR_DREAM", e.message, e)
         }
     }
+
+    @ReactMethod
+    fun getSystemWatchNextPrograms(promise: Promise) {
+        try {
+            val uri = Uri.parse("content://android.media.tv/watch_next_program")
+            val projection = arrayOf(
+                "_id",
+                "package_name",
+                "title",
+                "episode_title",
+                "short_description",
+                "poster_art_uri",
+                "thumbnail_uri",
+                "intent_uri",
+                "last_playback_position_millis",
+                "duration_millis",
+                "last_engagement_time_utc_millis"
+            )
+            val cursor = reactContext.contentResolver.query(
+                uri,
+                projection,
+                null,
+                null,
+                "last_engagement_time_utc_millis DESC LIMIT 20"
+            )
+            val result = Arguments.createArray()
+            if (cursor != null) {
+                val pm = reactContext.packageManager
+                val idCol = cursor.getColumnIndex("_id")
+                val pkgCol = cursor.getColumnIndex("package_name")
+                val titleCol = cursor.getColumnIndex("title")
+                val epTitleCol = cursor.getColumnIndex("episode_title")
+                val descCol = cursor.getColumnIndex("short_description")
+                val posterCol = cursor.getColumnIndex("poster_art_uri")
+                val thumbCol = cursor.getColumnIndex("thumbnail_uri")
+                val intentCol = cursor.getColumnIndex("intent_uri")
+                val posCol = cursor.getColumnIndex("last_playback_position_millis")
+                val durCol = cursor.getColumnIndex("duration_millis")
+
+                while (cursor.moveToNext()) {
+                    val item = Arguments.createMap()
+                    val id = if (idCol >= 0) cursor.getLong(idCol) else 0L
+                    val pkg = if (pkgCol >= 0) cursor.getString(pkgCol) ?: "" else ""
+                    val title = if (titleCol >= 0) cursor.getString(titleCol) ?: "" else ""
+                    val epTitle = if (epTitleCol >= 0) cursor.getString(epTitleCol) ?: "" else ""
+                    val desc = if (descCol >= 0) cursor.getString(descCol) ?: "" else ""
+                    val poster = if (posterCol >= 0) cursor.getString(posterCol) ?: "" else ""
+                    val thumb = if (thumbCol >= 0) cursor.getString(thumbCol) ?: "" else ""
+                    val intentUri = if (intentCol >= 0) cursor.getString(intentCol) ?: "" else ""
+                    val posMs = if (posCol >= 0) cursor.getLong(posCol) else 0L
+                    val durMs = if (durCol >= 0) cursor.getLong(durCol) else 0L
+
+                    var appName = pkg
+                    try {
+                        val appInfo = pm.getApplicationInfo(pkg, 0)
+                        appName = pm.getApplicationLabel(appInfo).toString()
+                    } catch (_: Exception) {}
+
+                    val displayTitle = if (title.isNotEmpty()) title else epTitle
+                    if (displayTitle.isEmpty()) continue
+
+                    item.putString("id", "sys_${id}")
+                    item.putDouble("systemProgramId", id.toDouble())
+                    item.putString("pkg", pkg)
+                    item.putString("platform", appName)
+                    item.putString("platformIcon", "▶")
+                    item.putString("title", displayTitle)
+                    val subtitle = if (epTitle.isNotEmpty() && epTitle != title) epTitle else if (desc.isNotEmpty()) desc else "${appName} • Kaldığın Yerden"
+                    item.putString("subtitle", subtitle)
+                    
+                    val backdrop = if (poster.isNotEmpty()) poster else thumb
+                    item.putString("backdropUrl", backdrop)
+                    item.putString("intentUri", intentUri)
+
+                    val kaldigiDk = if (posMs > 0) (posMs / 60000).toInt() else 10
+                    val toplamDk = if (durMs > 0) (durMs / 60000).toInt() else 100
+                    item.putInt("kaldigiDk", kaldigiDk)
+                    item.putInt("toplamDk", if (toplamDk > 0) toplamDk else 100)
+                    item.putString("sonIzlemeZamani", "Kaldığın Yerden")
+                    item.putBoolean("isSystemWatchNext", true)
+
+                    result.pushMap(item)
+                }
+                cursor.close()
+            }
+            promise.resolve(result)
+        } catch (e: Exception) {
+            promise.resolve(Arguments.createArray())
+        }
+    }
+
+    @ReactMethod
+    fun launchWatchNextProgram(programId: Double, intentUri: String?, packageName: String?, promise: Promise) {
+        try {
+            val pm = reactContext.packageManager
+            var launched = false
+            if (!intentUri.isNullOrEmpty()) {
+                try {
+                    val intent = Intent.parseUri(intentUri, Intent.URI_INTENT_SCHEME).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    if (intent.resolveActivity(pm) != null) {
+                        reactContext.startActivity(intent)
+                        launched = true
+                    }
+                } catch (_: Exception) {}
+            }
+            if (!launched && !packageName.isNullOrEmpty()) {
+                val launchIntent = pm.getLaunchIntentForPackage(packageName)?.apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                if (launchIntent != null) {
+                    reactContext.startActivity(launchIntent)
+                    launched = true
+                }
+            }
+            promise.resolve(launched)
+        } catch (e: Exception) {
+            promise.reject("LAUNCH_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun removeSystemWatchNextProgram(programId: Double, promise: Promise) {
+        try {
+            val uri = Uri.parse("content://android.media.tv/watch_next_program/${programId.toLong()}")
+            val count = reactContext.contentResolver.delete(uri, null, null)
+            promise.resolve(count > 0)
+        } catch (e: Exception) {
+            promise.resolve(false)
+        }
+    }
 }
