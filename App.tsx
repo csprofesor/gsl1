@@ -33,7 +33,7 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.2';
+const CURRENT_VERSION = '3.2.3';
 const CURRENT_BUILD = 28;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
@@ -123,6 +123,10 @@ export const REDDIT_GOOGLE_DUVAR_KAGITLARI: DinamikDuvarKagidi[] = [
 ];
 
 // ================= MONET MATERIAL YOU RENK PALETLERİ =================
+export type ParlamaYogunluguType = 'none' | 'subtle' | 'medium' | 'intense';
+export type CamSaydamligiType = 'glass_light' | 'glass_medium' | 'glass_dark' | 'solid';
+export type KenarlikTarziType = 'thin' | 'standard' | 'neon';
+
 export interface MonetTheme {
   id: string;
   name: string;
@@ -133,6 +137,9 @@ export interface MonetTheme {
   textOnAccent: string;
   wallpaperKey: 'lake' | 'cosmic' | 'cyber' | 'forest' | 'oled';
   bgGradientColor: string;
+  glowLevel?: ParlamaYogunluguType;
+  glassLevel?: CamSaydamligiType;
+  borderLevel?: KenarlikTarziType;
 }
 
 const MONET_TEMALARI: MonetTheme[] = [
@@ -226,21 +233,64 @@ const MONET_TEMALARI: MonetTheme[] = [
   },
 ];
 
-export const HAZIR_OZEL_RENKLER = [
-  { name: 'Kristal Safir', hex: '#38BDF8' },
-  { name: 'Neon Turkuaz', hex: '#06B6D4' },
-  { name: 'Zümrüt Yeşili', hex: '#10B981' },
-  { name: 'Limon Yeşili', hex: '#84CC16' },
-  { name: 'Güneş Altını', hex: '#F59E0B' },
-  { name: 'Ateş Turuncusu', hex: '#F97316' },
-  { name: 'Alev Kırmızısı', hex: '#EF4444' },
-  { name: 'Sıcak Fuşya', hex: '#F43F5E' },
-  { name: 'Neon Pembe', hex: '#EC4899' },
-  { name: 'Siber Menekşe', hex: '#8B5CF6' },
-  { name: 'Kozmik İndigo', hex: '#6366F1' },
-  { name: 'Safir Lacivert', hex: '#3B82F6' },
-  { name: 'Gümüş Platin', hex: '#E2E8F0' },
+export interface KartelaRengi {
+  id: string;
+  name: string;
+  hex: string;
+  category: 'mavi' | 'yesil' | 'turuncu' | 'kirmizi' | 'mor' | 'platin';
+}
+
+export const RENK_KARTELASI: KartelaRengi[] = [
+  // 🔵 Mavi & Turkuaz
+  { id: 'm1', name: 'Kristal Safir', hex: '#38BDF8', category: 'mavi' },
+  { id: 'm2', name: 'Neon Turkuaz', hex: '#06B6D4', category: 'mavi' },
+  { id: 'm3', name: 'Elektrik Mavisi', hex: '#00D2FF', category: 'mavi' },
+  { id: 'm4', name: 'Okyanus Derinliği', hex: '#0284C7', category: 'mavi' },
+  { id: 'm5', name: 'Arktik Buzul', hex: '#0EA5E9', category: 'mavi' },
+  { id: 'm6', name: 'Gece Mavisi', hex: '#2563EB', category: 'mavi' },
+
+  // 🟢 Yeşil & Zümrüt
+  { id: 'y1', name: 'Canlı Zümrüt', hex: '#10B981', category: 'yesil' },
+  { id: 'y2', name: 'Limon Yeşili', hex: '#84CC16', category: 'yesil' },
+  { id: 'y3', name: 'Neon Nane', hex: '#14B8A6', category: 'yesil' },
+  { id: 'y4', name: 'Parlak Çim', hex: '#22C55E', category: 'yesil' },
+  { id: 'y5', name: 'Cyber Lime', hex: '#A3E635', category: 'yesil' },
+  { id: 'y6', name: 'Orman Yeşili', hex: '#059669', category: 'yesil' },
+
+  // 🟠 Turuncu & Altın
+  { id: 't1', name: 'Güneş Altını', hex: '#F59E0B', category: 'turuncu' },
+  { id: 't2', name: 'Ateş Turuncusu', hex: '#F97316', category: 'turuncu' },
+  { id: 't3', name: 'Sıcak Kehribar', hex: '#D97706', category: 'turuncu' },
+  { id: 't4', name: 'Neon Mandalina', hex: '#FB923C', category: 'turuncu' },
+  { id: 't5', name: 'Parlak Sarı', hex: '#EAB308', category: 'turuncu' },
+  { id: 't6', name: 'Lava Kor', hex: '#EA580C', category: 'turuncu' },
+
+  // 🔴 Kırmızı & Mercan
+  { id: 'k1', name: 'Alev Kırmızısı', hex: '#EF4444', category: 'kirmizi' },
+  { id: 'k2', name: 'Yakut Kırmızısı', hex: '#DC2626', category: 'kirmizi' },
+  { id: 'k3', name: 'Neon Mercan', hex: '#FF5A5F', category: 'kirmizi' },
+  { id: 'k4', name: 'Gül Kurusu', hex: '#E11D48', category: 'kirmizi' },
+  { id: 'k5', name: 'Vişne Çürüğü', hex: '#BE123C', category: 'kirmizi' },
+  { id: 'k6', name: 'Siber Kızıl', hex: '#FF1744', category: 'kirmizi' },
+
+  // 🟣 Mor & Pembe
+  { id: 'p1', name: 'Siber Menekşe', hex: '#8B5CF6', category: 'mor' },
+  { id: 'p2', name: 'Kozmik İndigo', hex: '#6366F1', category: 'mor' },
+  { id: 'p3', name: 'Neon Pembe', hex: '#EC4899', category: 'mor' },
+  { id: 'p4', name: 'Sıcak Fuşya', hex: '#F43F5E', category: 'mor' },
+  { id: 'p5', name: 'Derin Mor', hex: '#7C3AED', category: 'mor' },
+  { id: 'p6', name: 'Lavanta Rüyası', hex: '#C084FC', category: 'mor' },
+
+  // ⚪ Platin & Nötr
+  { id: 'l1', name: 'Gümüş Platin', hex: '#E2E8F0', category: 'platin' },
+  { id: 'l2', name: 'Titanyum Grisi', hex: '#94A3B8', category: 'platin' },
+  { id: 'l3', name: 'Saf Kristal Beyaz', hex: '#F8FAFC', category: 'platin' },
+  { id: 'l4', name: 'Füme Çelik', hex: '#64748B', category: 'platin' },
+  { id: 'l5', name: 'Grafit Metal', hex: '#475569', category: 'platin' },
+  { id: 'l6', name: 'Buz Mavisi Gri', hex: '#CBD5E1', category: 'platin' },
 ];
+
+export const HAZIR_OZEL_RENKLER = RENK_KARTELASI;
 
 export const hexToRgba = (hex: string, alpha: number): string => {
   let c = hex.replace('#', '').trim();
@@ -264,23 +314,58 @@ export const hexLuminance = (hex: string): number => {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
 
-export const ozelTemaUret = (accentHex: string, customName?: string): MonetTheme => {
+export const ozelTemaUret = (
+  accentHex: string,
+  customName?: string,
+  options?: {
+    glowLevel?: ParlamaYogunluguType;
+    glassLevel?: CamSaydamligiType;
+    borderLevel?: KenarlikTarziType;
+  }
+): MonetTheme => {
   let hex = accentHex.trim();
   if (!hex.startsWith('#')) hex = '#' + hex;
   if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) {
     hex = '#38BDF8';
   }
   const lum = hexLuminance(hex);
+
+  // Parlama Yoğunluğu
+  const glowLevel: ParlamaYogunluguType = options?.glowLevel || 'medium';
+  let glowAlpha = 0.48;
+  if (glowLevel === 'none') glowAlpha = 0;
+  else if (glowLevel === 'subtle') glowAlpha = 0.22;
+  else if (glowLevel === 'medium') glowAlpha = 0.48;
+  else if (glowLevel === 'intense') glowAlpha = 0.75;
+
+  // Cam Saydamlığı & Yüzey
+  const glassLevel: CamSaydamligiType = options?.glassLevel || 'glass_medium';
+  let surfaceAlpha = 0.16;
+  if (glassLevel === 'glass_light') surfaceAlpha = 0.08;
+  else if (glassLevel === 'glass_medium') surfaceAlpha = 0.18;
+  else if (glassLevel === 'glass_dark') surfaceAlpha = 0.32;
+  else if (glassLevel === 'solid') surfaceAlpha = 0.55;
+
+  // Kenarlık & Çerçeve
+  const borderLevel: KenarlikTarziType = options?.borderLevel || 'standard';
+  let borderAlpha = 0.80;
+  if (borderLevel === 'thin') borderAlpha = 0.50;
+  else if (borderLevel === 'standard') borderAlpha = 0.80;
+  else if (borderLevel === 'neon') borderAlpha = 1.0;
+
   return {
     id: 'custom',
     name: customName || `Özel Tema (${hex.toUpperCase()})`,
     accent: hex,
-    glow: hexToRgba(hex, 0.45),
-    surface: hexToRgba(hex, 0.15),
-    border: hexToRgba(hex, 0.75),
+    glow: hexToRgba(hex, glowAlpha),
+    surface: hexToRgba(hex, surfaceAlpha),
+    border: hexToRgba(hex, borderAlpha),
     textOnAccent: lum > 0.55 ? '#0A0F1D' : '#FFFFFF',
     wallpaperKey: 'cyber',
-    bgGradientColor: hexToRgba(hex, 0.25),
+    bgGradientColor: hexToRgba(hex, Math.min(surfaceAlpha + 0.15, 0.45)),
+    glowLevel,
+    glassLevel,
+    borderLevel,
   };
 };
 
@@ -862,68 +947,7 @@ export interface KaldiginYerdenDevamEtItem {
   sonIzlemeZamani: string;
 }
 
-export const VARSAYILAN_DEVAM_ET: KaldiginYerdenDevamEtItem[] = [
-  {
-    id: 'cont_oppenheimer',
-    title: 'Oppenheimer',
-    subtitle: 'IMDb 8.9 • 4K UHD',
-    backdropUrl: 'https://images.metahub.space/background/medium/tt15398776/img',
-    platform: 'IMDb',
-    platformIcon: '🍿',
-    pkg: '',
-    kaldigiDk: 85,
-    toplamDk: 180,
-    sonIzlemeZamani: 'Bugün',
-  },
-  {
-    id: 'cont_dune2',
-    title: 'Dune: Çöl Gezegeni Bölüm İki',
-    subtitle: 'IMDb 8.6 • 4K UHD',
-    backdropUrl: 'https://images.metahub.space/background/medium/tt15239678/img',
-    platform: 'IMDb',
-    platformIcon: '🍿',
-    pkg: '',
-    kaldigiDk: 110,
-    toplamDk: 166,
-    sonIzlemeZamani: 'Dün',
-  },
-  {
-    id: 'cont_penguin',
-    title: 'The Penguin',
-    subtitle: 'IMDb 8.8 • 4K UHD',
-    backdropUrl: 'https://images.metahub.space/background/medium/tt15474916/img',
-    platform: 'IMDb',
-    platformIcon: '⭐',
-    pkg: '',
-    kaldigiDk: 45,
-    toplamDk: 60,
-    sonIzlemeZamani: 'Bugün',
-  },
-  {
-    id: 'cont_interstellar',
-    title: 'Yıldızlararası (Interstellar)',
-    subtitle: 'IMDb 8.7 • 4K UHD',
-    backdropUrl: 'https://images.metahub.space/background/medium/tt0816692/img',
-    platform: 'IMDb',
-    platformIcon: '🍿',
-    pkg: '',
-    kaldigiDk: 95,
-    toplamDk: 169,
-    sonIzlemeZamani: '2 gün önce',
-  },
-  {
-    id: 'cont_gladiator2',
-    title: 'Gladyatör II',
-    subtitle: 'IMDb 7.8 • 4K UHD',
-    backdropUrl: 'https://images.metahub.space/background/medium/tt9218128/img',
-    platform: 'IMDb',
-    platformIcon: '🍿',
-    pkg: '',
-    kaldigiDk: 60,
-    toplamDk: 148,
-    sonIzlemeZamani: 'Bugün',
-  },
-];
+export const VARSAYILAN_DEVAM_ET: KaldiginYerdenDevamEtItem[] = [];
 
 // Uygulama Film & Dizi Şeridi Afiş Modeli
 export interface SeritAfisItem {
@@ -1202,7 +1226,7 @@ export default function App() {
   // Ambiyans Ekran Koruyucu Duvar Kağıdı ve Şehir Durumu
   const [seciliAmbiyansWp, setSeciliAmbiyansWp] = useState<AmbiyansDuvarKagidi>(AMBIYANS_DUVAR_KAGITLARI[0]);
   const [seciliSehir, setSeciliSehir] = useState<string>('📍 Otomatik (Konum Tespiti)');
-  const [devamEdenIcerikler, setDevamEdenIcerikler] = useState<KaldiginYerdenDevamEtItem[]>(VARSAYILAN_DEVAM_ET);
+  const [devamEdenIcerikler, setDevamEdenIcerikler] = useState<KaldiginYerdenDevamEtItem[]>([]);
 
   // 7. Arama & Formlar
   const [aramaMetni, setAramaMetni] = useState('');
@@ -1235,6 +1259,10 @@ export default function App() {
   const [ozelDuvarKagidiUri, setOzelDuvarKagidiUri] = useState<string>('');
   const [ozelUrlMetni, setOzelUrlMetni] = useState<string>('');
   const [ozelTemaHex, setOzelTemaHex] = useState<string>('#38BDF8');
+  const [kartelaKategori, setKartelaKategori] = useState<'tum' | 'mavi' | 'yesil' | 'turuncu' | 'kirmizi' | 'mor' | 'platin'>('tum');
+  const [temaParlamaYogunlugu, setTemaParlamaYogunlugu] = useState<ParlamaYogunluguType>('medium');
+  const [temaCamSaydamligi, setTemaCamSaydamligi] = useState<CamSaydamligiType>('glass_medium');
+  const [temaKenarlikTarzi, setTemaKenarlikTarzi] = useState<KenarlikTarziType>('standard');
   const [duzenPreset, setDuzenPreset] = useState<DuzenPresetType>('sinematik');
 
   // Kontrol Merkezi Sekmesi (5 Sekmeli Dashboard)
@@ -1562,24 +1590,31 @@ export default function App() {
               const rawDevam = await TVAppManager.getSetting('devamEdenIcerikler', '[]');
               const parsedDevam = JSON.parse(rawDevam);
               if (Array.isArray(parsedDevam) && parsedDevam.length > 0) {
-                // SADECE ve SADECE gerçek film ve dizileri tut; eski sürümlerden kalma uygulama kartlarını tamamen temizle
+                // SADECE ve SADECE kullanıcının gerçekten açtığı gerçek filmleri tut; eski mock filmleri ve uygulama ikonlarını sil
                 const temizFilmler = parsedDevam.filter((item) => {
                   if (!item || !item.title) return false;
                   if (item.platform === 'Uygulama') return false;
+                  if (
+                    item.id === 'cont_oppenheimer' ||
+                    item.id === 'cont_dune2' ||
+                    item.id === 'cont_penguin' ||
+                    item.id === 'cont_interstellar' ||
+                    item.id === 'cont_gladiator2'
+                  ) {
+                    return false;
+                  }
                   if (!item.backdropUrl || (!item.backdropUrl.startsWith('http') && !item.backdropUrl.includes('metahub') && !item.backdropUrl.includes('wsrv.nl') && !item.backdropUrl.includes('unsplash'))) return false;
                   return true;
                 });
-                if (temizFilmler.length > 0) {
-                  setDevamEdenIcerikler(temizFilmler);
-                } else {
-                  setDevamEdenIcerikler(VARSAYILAN_DEVAM_ET);
-                  TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(VARSAYILAN_DEVAM_ET)).catch(() => {});
+                setDevamEdenIcerikler(temizFilmler);
+                if (temizFilmler.length !== parsedDevam.length) {
+                  TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(temizFilmler)).catch(() => {});
                 }
               } else {
-                setDevamEdenIcerikler(VARSAYILAN_DEVAM_ET);
+                setDevamEdenIcerikler([]);
               }
             } catch {
-              setDevamEdenIcerikler(VARSAYILAN_DEVAM_ET);
+              setDevamEdenIcerikler([]);
             }
             try {
               const rawSize = await TVAppManager.getSetting('kartBoyutu', 'standard');
@@ -1626,6 +1661,9 @@ export default function App() {
                   if (parsed && parsed.accent) {
                     setAktifTema(parsed);
                     setOzelTemaHex(parsed.accent);
+                    if (parsed.glowLevel) setTemaParlamaYogunlugu(parsed.glowLevel);
+                    if (parsed.glassLevel) setTemaCamSaydamligi(parsed.glassLevel);
+                    if (parsed.borderLevel) setTemaKenarlikTarzi(parsed.borderLevel);
                   }
                 }
               } else {
@@ -1931,9 +1969,25 @@ export default function App() {
     setTimeout(() => setBildirimMetni(''), 2500);
   };
 
-  // Özel Tema Uygula (Canlı Renk ve HEX Paleti)
-  const ozelTemaUygula = (hex: string, name?: string) => {
-    const yeniTema = ozelTemaUret(hex, name);
+  // Özel Tema Uygula (Canlı Renk ve Çok Parametreli Tasarımcı)
+  const ozelTemaUygula = (
+    hex: string,
+    name?: string,
+    options?: {
+      glowLevel?: ParlamaYogunluguType;
+      glassLevel?: CamSaydamligiType;
+      borderLevel?: KenarlikTarziType;
+    }
+  ) => {
+    const gLevel = options?.glowLevel ?? temaParlamaYogunlugu;
+    const sLevel = options?.glassLevel ?? temaCamSaydamligi;
+    const bLevel = options?.borderLevel ?? temaKenarlikTarzi;
+
+    const yeniTema = ozelTemaUret(hex, name, {
+      glowLevel: gLevel,
+      glassLevel: sLevel,
+      borderLevel: bLevel,
+    });
     setAktifTema(yeniTema);
     setOzelTemaHex(yeniTema.accent);
     if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
@@ -3808,25 +3862,29 @@ export default function App() {
                 <View style={styles.bolumBaslikIkonlu}>
                   <Text style={styles.saatGecmisIkon}>▶</Text>
                   <Text style={styles.bolumBaslik}>Kaldığın Yerden Devam Et & Son İzlenenler</Text>
-                  <Text style={styles.appSayiRozet}>({devamEdenIcerikler.length})</Text>
+                  {devamEdenIcerikler.length > 0 && (
+                    <Text style={styles.appSayiRozet}>({devamEdenIcerikler.length})</Text>
+                  )}
                 </View>
-                <FocusableItem
-                  onPress={() => {
-                    Alert.alert('Geçmişi Sıfırla', 'Son izlenenler listesi temizlensin mi?', [
-                      { text: 'Vazgeç', style: 'cancel' },
-                      { text: 'Temizle', onPress: devamEtListesiniSifirla },
-                    ]);
-                  }}
-                  style={styles.tumunuGorButon}
-                >
-                  {() => <Text style={styles.tumunuGorYazi}>🗑️ Listeyi Temizle</Text>}
-                </FocusableItem>
+                {devamEdenIcerikler.length > 0 && (
+                  <FocusableItem
+                    onPress={() => {
+                      Alert.alert('Geçmişi Sıfırla', 'Son izlenenler listesi temizlensin mi?', [
+                        { text: 'Vazgeç', style: 'cancel' },
+                        { text: 'Temizle', onPress: devamEtListesiniSifirla },
+                      ]);
+                    }}
+                    style={styles.tumunuGorButon}
+                  >
+                    {() => <Text style={styles.tumunuGorYazi}>🗑️ Listeyi Temizle</Text>}
+                  </FocusableItem>
+                )}
               </View>
 
               {devamEdenIcerikler.length === 0 ? (
                 <View style={[styles.bosIzlemeKutusu, { borderColor: aktifTema.surface }]}>
                   <Text style={styles.bosIzlemeYazi}>
-                    Henüz izleme geçmişi yok. Filmlerden birine tıkladığınızda kaldığınız yer burada görünecektir.
+                    Henüz izleme geçmişi yok. Yukarıdaki IMDb vitrininden veya film aramasından bir yapım başlattığınızda izleme geçmişiniz burada görünecektir.
                   </Text>
                 </View>
               ) : (
@@ -4238,62 +4296,290 @@ export default function App() {
                       </View>
                     </View>
 
-                    {/* 🎨 Tema Özelleştirme (Kendi Özel Temanı Tasarla) */}
+                    {/* 🎨 Tema Özelleştirme & Kişisel Renk Kartelası Stüdyosu */}
                     <View style={styles.ayarGrubuKutusu}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                        <Text style={styles.ayarGrubuBaslik}>🎨 Tema Özelleştirme (Kendi Özel Temanı Tasarla):</Text>
-                        {aktifTema.id === 'custom' && (
-                          <View style={{ backgroundColor: aktifTema.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
-                            <Text style={{ color: aktifTema.textOnAccent, fontSize: 10, fontWeight: '900' }}>✔ ÖZEL TEMA AKTİF</Text>
-                          </View>
-                        )}
+                        <Text style={styles.ayarGrubuBaslik}>🎨 Kişisel Tema Stüdyosu & Geniş Renk Kartelası:</Text>
+                        <View style={{ backgroundColor: aktifTema.accent, paddingHorizontal: 9, paddingVertical: 3, borderRadius: 6 }}>
+                          <Text style={{ color: aktifTema.textOnAccent, fontSize: 10, fontWeight: '900' }}>
+                            {aktifTema.id === 'custom' ? `✔ ÖZEL TEMA: ${aktifTema.accent.toUpperCase()}` : `✔ AKTİF: ${aktifTema.name}`}
+                          </Text>
+                        </View>
                       </View>
-                      <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 10 }}>
-                        Hazır temalarımız dışında televizyonunuzun tüm vurgu renklerini, buton parlamalarını ve cam çerçevelerini dilediğiniz renge dönüştürün:
+                      <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 12 }}>
+                        Televizyonunuzun renk paletini 36 zengin renk kartelasından seçin; parlama, cam saydamlığı ve kenarlık kalınlığını dilediğiniz gibi özelleştirin:
                       </Text>
 
-                      {/* Hızlı Renk Paleti Butonları */}
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                        {HAZIR_OZEL_RENKLER.map((renk) => {
-                          const secili = aktifTema.id === 'custom' && aktifTema.accent.toLowerCase() === renk.hex.toLowerCase();
+                      {/* 1. Canlı Tema Önizleme Kutusu */}
+                      <View
+                        style={{
+                          backgroundColor: aktifTema.surface,
+                          borderColor: aktifTema.border,
+                          borderWidth: (aktifTema.borderLevel || temaKenarlikTarzi) === 'neon' ? 2.5 : (aktifTema.borderLevel || temaKenarlikTarzi) === 'thin' ? 1 : 1.5,
+                          borderRadius: 14,
+                          padding: 14,
+                          marginBottom: 14,
+                          shadowColor: aktifTema.accent,
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: (aktifTema.glowLevel || temaParlamaYogunlugu) === 'none' ? 0 : (aktifTema.glowLevel || temaParlamaYogunlugu) === 'intense' ? 0.9 : 0.6,
+                          shadowRadius: (aktifTema.glowLevel || temaParlamaYogunlugu) === 'intense' ? 16 : 8,
+                          elevation: 6,
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: aktifTema.accent, borderWidth: 1.5, borderColor: '#FFFFFF' }} />
+                            <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
+                              🎯 Canlı Tema Önizlemesi
+                            </Text>
+                          </View>
+                          <View style={{ backgroundColor: aktifTema.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                            <Text style={{ color: aktifTema.textOnAccent, fontSize: 10, fontWeight: '900' }}>
+                              ⭐ IMDb En İyiler
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                          {/* Mini Örnek Kart */}
+                          <View
+                            style={{
+                              width: 70,
+                              height: 70,
+                              borderRadius: 14,
+                              backgroundColor: 'rgba(255,255,255,0.06)',
+                              borderColor: aktifTema.border,
+                              borderWidth: 2,
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              shadowColor: aktifTema.accent,
+                              shadowRadius: 10,
+                              shadowOpacity: 0.8,
+                            }}
+                          >
+                            <Text style={{ fontSize: 26 }}>🎬</Text>
+                            <Text style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '800', marginTop: 2 }}>Örnek Kart</Text>
+                          </View>
+
+                          <View style={{ flex: 1, gap: 4 }}>
+                            <Text style={{ color: 'rgba(255,255,255,0.95)', fontSize: 12, fontWeight: '700' }}>
+                              Vurgu Rengi: <Text style={{ color: aktifTema.accent, fontWeight: '900' }}>{aktifTema.accent.toUpperCase()}</Text>
+                            </Text>
+                            <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>
+                              Parlama: <Text style={{ color: '#FFFFFF' }}>{(aktifTema.glowLevel || temaParlamaYogunlugu) === 'none' ? 'Kapalı' : (aktifTema.glowLevel || temaParlamaYogunlugu) === 'subtle' ? 'Zarif (%22)' : (aktifTema.glowLevel || temaParlamaYogunlugu) === 'medium' ? 'Dengeli Neon (%48)' : 'Güçlü Işıltı (%75)'}</Text>
+                              {' • '}
+                              Cam: <Text style={{ color: '#FFFFFF' }}>{(aktifTema.glassLevel || temaCamSaydamligi) === 'glass_light' ? '%8 Şeffaf' : (aktifTema.glassLevel || temaCamSaydamligi) === 'glass_medium' ? '%18 Buzlu' : (aktifTema.glassLevel || temaCamSaydamligi) === 'glass_dark' ? '%32 Koyu' : '%55 Katı'}</Text>
+                            </Text>
+                            <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>
+                              Kenarlık: <Text style={{ color: '#FFFFFF' }}>{(aktifTema.borderLevel || temaKenarlikTarzi) === 'thin' ? 'İnce' : (aktifTema.borderLevel || temaKenarlikTarzi) === 'standard' ? 'Standart' : 'Kalın Neon'}</Text>
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* 2. Renk Kartelası Kategori Filtresi */}
+                      <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '800', marginBottom: 6 }}>
+                        🎨 Renk Kartelası Kategorisi:
+                      </Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+                        {[
+                          { id: 'tum', label: '🌟 Tümü (36 Renk)' },
+                          { id: 'mavi', label: '🔵 Mavi & Turkuaz' },
+                          { id: 'yesil', label: '🟢 Yeşil & Zümrüt' },
+                          { id: 'turuncu', label: '🟠 Turuncu & Altın' },
+                          { id: 'kirmizi', label: '🔴 Kırmızı & Mercan' },
+                          { id: 'mor', label: '🟣 Mor & Pembe' },
+                          { id: 'platin', label: '⚪ Platin & Nötr' },
+                        ].map((kat) => {
+                          const secili = kartelaKategori === kat.id;
                           return (
                             <FocusableItem
-                              key={renk.hex}
+                              key={kat.id}
                               style={[
-                                {
-                                  flexDirection: 'row',
-                                  alignItems: 'center',
-                                  backgroundColor: 'rgba(255,255,255,0.08)',
-                                  paddingHorizontal: 12,
-                                  paddingVertical: 7,
-                                  borderRadius: 20,
-                                  marginRight: 8,
-                                  borderWidth: 2,
-                                  borderColor: secili ? '#FFFFFF' : 'rgba(255,255,255,0.15)',
-                                },
-                                secili && { backgroundColor: renk.hex },
+                                styles.kategoriSecimPill,
+                                secili && { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' },
                               ]}
                               focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.08 }] }}
-                              onPress={() => {
-                                setOzelTemaHex(renk.hex);
-                                ozelTemaUygula(renk.hex, `Özel ${renk.name}`);
-                              }}
+                              onPress={() => setKartelaKategori(kat.id as any)}
                             >
                               {() => (
-                                <>
-                                  <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: renk.hex, marginRight: 8, borderWidth: 1, borderColor: '#FFF' }} />
-                                  <Text style={{ color: secili ? '#FFFFFF' : 'rgba(255,255,255,0.9)', fontSize: 11, fontWeight: '800' }}>
-                                    {secili ? '✔ ' : ''}{renk.name}
-                                  </Text>
-                                </>
+                                <Text style={[styles.kategoriSecimPillYazi, secili && { color: aktifTema.textOnAccent, fontWeight: '900' }]}>
+                                  {secili ? '✔ ' : ''}{kat.label}
+                                </Text>
                               )}
                             </FocusableItem>
                           );
                         })}
                       </ScrollView>
 
-                      {/* Özel HEX Kodu Girişi */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      {/* 3. Renk Kartelası Izgarası */}
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+                        {RENK_KARTELASI.filter((k) => kartelaKategori === 'tum' || k.category === kartelaKategori).map((renk) => {
+                          const secili = aktifTema.accent.toLowerCase() === renk.hex.toLowerCase();
+                          return (
+                            <FocusableItem
+                              key={renk.id}
+                              style={[
+                                {
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  backgroundColor: secili ? hexToRgba(renk.hex, 0.28) : 'rgba(255,255,255,0.06)',
+                                  borderColor: secili ? '#FFFFFF' : 'rgba(255,255,255,0.14)',
+                                  borderWidth: secili ? 2 : 1,
+                                  borderRadius: 10,
+                                  paddingHorizontal: 11,
+                                  paddingVertical: 7,
+                                  minWidth: 135,
+                                },
+                                secili && { shadowColor: renk.hex, shadowRadius: 10, shadowOpacity: 0.9 },
+                              ]}
+                              focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.06 }] }}
+                              onPress={() => {
+                                setOzelTemaHex(renk.hex);
+                                ozelTemaUygula(renk.hex, renk.name);
+                              }}
+                            >
+                              {() => (
+                                <>
+                                  <View
+                                    style={{
+                                      width: 18,
+                                      height: 18,
+                                      borderRadius: 9,
+                                      backgroundColor: renk.hex,
+                                      marginRight: 8,
+                                      borderWidth: 1.5,
+                                      borderColor: '#FFFFFF',
+                                    }}
+                                  />
+                                  <View>
+                                    <Text style={{ color: secili ? '#FFFFFF' : 'rgba(255,255,255,0.95)', fontSize: 11, fontWeight: '800' }}>
+                                      {secili ? '✔ ' : ''}{renk.name}
+                                    </Text>
+                                    <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9 }}>
+                                      {renk.hex}
+                                    </Text>
+                                  </View>
+                                </>
+                              )}
+                            </FocusableItem>
+                          );
+                        })}
+                      </View>
+
+                      {/* 4. Tema Parametreleri (Gelişmiş Seçenekler) */}
+                      {/* a) Parlama Yoğunluğu */}
+                      <View style={{ marginBottom: 12 }}>
+                        <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700', marginBottom: 6 }}>
+                          ✨ Parlama & Neon Işıltısı:
+                        </Text>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                          {[
+                            { id: 'none', label: 'Kapalı / Mat' },
+                            { id: 'subtle', label: 'Zarif (%22)' },
+                            { id: 'medium', label: 'Dengeli Neon (%48)' },
+                            { id: 'intense', label: 'Güçlü Işıltı (%75)' },
+                          ].map((p) => {
+                            const sec = (aktifTema.glowLevel || temaParlamaYogunlugu) === p.id;
+                            return (
+                              <FocusableItem
+                                key={p.id}
+                                style={[
+                                  styles.kategoriSecimPill,
+                                  sec && { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' },
+                                ]}
+                                focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                                onPress={() => {
+                                  setTemaParlamaYogunlugu(p.id as ParlamaYogunluguType);
+                                  ozelTemaUygula(aktifTema.accent, undefined, { glowLevel: p.id as ParlamaYogunluguType });
+                                }}
+                              >
+                                {() => (
+                                  <Text style={[styles.kategoriSecimPillYazi, sec && { color: aktifTema.textOnAccent, fontWeight: '900' }]}>
+                                    {sec ? '✔ ' : ''}{p.label}
+                                  </Text>
+                                )}
+                              </FocusableItem>
+                            );
+                          })}
+                        </View>
+                      </View>
+
+                      {/* b) Cam Saydamlığı */}
+                      <View style={{ marginBottom: 12 }}>
+                        <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700', marginBottom: 6 }}>
+                          🪟 Cam Saydamlığı (Glassmorphism):
+                        </Text>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                          {[
+                            { id: 'glass_light', label: 'Kristal Şeffaf (%8)' },
+                            { id: 'glass_medium', label: 'Buzlu Cam (%18)' },
+                            { id: 'glass_dark', label: 'Koyu Cam (%32)' },
+                            { id: 'solid', label: 'Opak Katı (%55)' },
+                          ].map((c) => {
+                            const sec = (aktifTema.glassLevel || temaCamSaydamligi) === c.id;
+                            return (
+                              <FocusableItem
+                                key={c.id}
+                                style={[
+                                  styles.kategoriSecimPill,
+                                  sec && { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' },
+                                ]}
+                                focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                                onPress={() => {
+                                  setTemaCamSaydamligi(c.id as CamSaydamligiType);
+                                  ozelTemaUygula(aktifTema.accent, undefined, { glassLevel: c.id as CamSaydamligiType });
+                                }}
+                              >
+                                {() => (
+                                  <Text style={[styles.kategoriSecimPillYazi, sec && { color: aktifTema.textOnAccent, fontWeight: '900' }]}>
+                                    {sec ? '✔ ' : ''}{c.label}
+                                  </Text>
+                                )}
+                              </FocusableItem>
+                            );
+                          })}
+                        </View>
+                      </View>
+
+                      {/* c) Kenarlık Çerçeve Tarzı */}
+                      <View style={{ marginBottom: 14 }}>
+                        <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700', marginBottom: 6 }}>
+                          🖼️ Kenarlık & Çerçeve Belirginliği:
+                        </Text>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                          {[
+                            { id: 'thin', label: 'İnce & Zarif' },
+                            { id: 'standard', label: 'Standart Neon' },
+                            { id: 'neon', label: 'Kalın & Belirgin' },
+                          ].map((k) => {
+                            const sec = (aktifTema.borderLevel || temaKenarlikTarzi) === k.id;
+                            return (
+                              <FocusableItem
+                                key={k.id}
+                                style={[
+                                  styles.kategoriSecimPill,
+                                  sec && { backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' },
+                                ]}
+                                focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                                onPress={() => {
+                                  setTemaKenarlikTarzi(k.id as KenarlikTarziType);
+                                  ozelTemaUygula(aktifTema.accent, undefined, { borderLevel: k.id as KenarlikTarziType });
+                                }}
+                              >
+                                {() => (
+                                  <Text style={[styles.kategoriSecimPillYazi, sec && { color: aktifTema.textOnAccent, fontWeight: '900' }]}>
+                                    {sec ? '✔ ' : ''}{k.label}
+                                  </Text>
+                                )}
+                              </FocusableItem>
+                            );
+                          })}
+                        </View>
+                      </View>
+
+                      {/* 5. Özel HEX Kodu Girişi ve Hızlı Eylemler */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                         <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: ozelTemaHex || '#38BDF8', borderWidth: 2, borderColor: '#FFF' }} />
                         <TextInput
                           style={{
@@ -4324,7 +4610,31 @@ export default function App() {
                             ozelTemaUygula(ozelTemaHex.trim());
                           }}
                         >
-                          {() => <Text style={[styles.kategoriSecimPillYazi, { color: '#FFFFFF', fontWeight: '900' }]}>✨ Özel Rengi Uygula</Text>}
+                          {() => <Text style={[styles.kategoriSecimPillYazi, { color: '#FFFFFF', fontWeight: '900' }]}>✨ Canlı Uygula</Text>}
+                        </FocusableItem>
+                      </View>
+
+                      {/* Sıfırlama ve Varsayılana Dönüş */}
+                      <View style={{ flexDirection: 'row', gap: 10 }}>
+                        <FocusableItem
+                          style={[styles.kategoriSecimPill, { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }]}
+                          focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                          onPress={() => {
+                            const safir = MONET_TEMALARI[0];
+                            setAktifTema(safir);
+                            setOzelTemaHex(safir.accent);
+                            setTemaParlamaYogunlugu('medium');
+                            setTemaCamSaydamligi('glass_medium');
+                            setTemaKenarlikTarzi('standard');
+                            if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+                              TVAppManager.saveSetting('seciliTemaId', safir.id).catch(() => {});
+                              TVAppManager.saveSetting('ozelTemaObj', '').catch(() => {});
+                            }
+                            setBildirimMetni('↺ Varsayılan Kristal Safir temasına dönüldü.');
+                            setTimeout(() => setBildirimMetni(''), 2500);
+                          }}
+                        >
+                          {() => <Text style={[styles.kategoriSecimPillYazi, { color: 'rgba(255,255,255,0.8)' }]}>↺ Orijinal Safir Temaya Sıfırla</Text>}
                         </FocusableItem>
                       </View>
                     </View>

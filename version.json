@@ -1,7 +1,7 @@
 {
-  "version": "3.2.2",
-  "versionCode": 28,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.2/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gsultra322",
-  "changelog": "v3.2.2 (Build 28): Kaldığın Yerden Devam Et rafı tamamen film içerikleriyle yenilendi (eski uygulama kartları temizlendi), tüm film vitrin kartları ve öneriler saf IMDb olarak sabitlendi, seçilen her oynatıcıda (Cloudstream, Stremio, YouTube vb.) film ismini panoya kopyalayıp doğrudan arama intenti ile açma özelliği entegre edildi."
+  "version": "3.2.3",
+  "versionCode": 29,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.3/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gsultra323",
+  "changelog": "v3.2.3 (Build 29): Kaldığın Yerden Devam Et rafındaki sahte/mock filmler tamamen kaldırıldı (artık liste 0'dan başlar ve sadece kullanıcının bilfiil başlattığı gerçek filmler eklenir), Kontrol Merkezi Düzen sekmesine 36 renkli kategorize Renk Kartelası, Parlama Yoğunluğu, Cam Saydamlığı ve Kenarlık Çerçeve ayarlayıcısı ile Canlı Tema Stüdyosu eklendi."
 }
