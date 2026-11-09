@@ -32,19 +32,21 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Build Android Release APK
+      - name: Build Android Release APK & AAB (Play Store)
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleRelease bundleRelease --no-daemon
 
-      - name: Upload APK artifact
+      - name: Upload APK & AAB artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: android/app/build/outputs/apk/release/app-release.apk
+          name: app-release-binaries
+          path: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
 
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
@@ -62,4 +64,7 @@ jobs:
             - 📺 **Xiaomi Mi Box Sabit Başlatıcı Uyumluluğu:** Doğrudan TV Sistem Ayarları entegrasyonu ile 'Bu işlemi işleyecek uygulama yok' sorunu giderildi.
             - 🌅 **Ekran Koruyucu İyileştirmesi:** Ambiyans modundaki tuş bilgisi yazısı kaldırıldı, tam sinematik görsel deneyim sağlandı.
             - 🔑 **Resmi EAS Keystore İmzası:** Önceki sürümlerin üzerine sorunsuz güncellenir ("Uygulama yüklenemedi" hatası vermez).
-          files: android/app/build/outputs/apk/release/app-release.apk
+            - 📦 **Google Play Store Paketi (.AAB):** Play Console'a doğrudan yüklenebilir Android App Bundle eklendi.
+          files: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
