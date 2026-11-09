@@ -34,11 +34,11 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.5';
-const CURRENT_BUILD = 31;
+const CURRENT_VERSION = '3.2.6';
+const CURRENT_BUILD = 32;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gsultra322';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gs326apk';
 
 // ================= 18 MADDELİK GELİŞMİŞ TV ÖZELLEŞTİRME TİPLERİ =================
 export type IconShapeType = 'rounded' | 'circle' | 'squircle' | 'rectangle';
@@ -3748,92 +3748,6 @@ export default function App() {
                   </View>
                 </View>
               </View>
-            </View>
-          )}
-
-          {/* 1.b IMDb POPÜLER FİLM & DİZİ KARTLARI ŞERİDİ (KUMANDAYLA D-PAD İLE DOĞRUDAN SEÇİLEBİLİR) */}
-          {vitrinGorunur && dinamikFilmKatalogu.length > 0 && (
-            <View style={{ marginBottom: 16 }}>
-              <View style={styles.bolumBaslikSatir}>
-                <View style={styles.bolumBaslikIkonlu}>
-                  <Text style={{ fontSize: 16, marginRight: 6 }}>🍿</Text>
-                  <Text style={styles.bolumBaslik}>IMDb Popüler Filmler & Diziler</Text>
-                  <Text style={styles.appSayiRozet}>({dinamikFilmKatalogu.length})</Text>
-                </View>
-                <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>
-                  Kumandayla film seçip "Oynat" diyebilirsiniz
-                </Text>
-              </View>
-
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
-                {dinamikFilmKatalogu.map((film, fIdx) => {
-                  const secili = aktifFilm?.id === film.id;
-                  const posterUrl = guvenliGorselUrl(film.posterUrl || film.backdropUrl);
-                  return (
-                    <FocusableItem
-                      key={film.id || fIdx}
-                      style={[
-                        {
-                          width: 125,
-                          height: 190,
-                          borderRadius: 14,
-                          overflow: 'hidden',
-                          marginRight: 12,
-                          backgroundColor: '#0F172A',
-                          borderWidth: secili ? 2 : 1,
-                          borderColor: secili ? aktifTema.border : 'rgba(255,255,255,0.15)',
-                        },
-                        secili && { shadowColor: aktifTema.accent, shadowRadius: 10, shadowOpacity: 0.8 },
-                      ]}
-                      focusedStyle={{
-                        transform: [{ scale: 1.08 }],
-                        borderColor: '#FFFFFF',
-                        shadowColor: aktifTema.accent,
-                        shadowRadius: 14,
-                        shadowOpacity: 1,
-                      }}
-                      onPress={() => {
-                        setSeciliFilmIndex(fIdx);
-                        filmDetayAc(film);
-                      }}
-                    >
-                      {(isFocused) => (
-                        <View style={{ flex: 1, position: 'relative' }}>
-                          {posterUrl ? (
-                            <Image
-                              source={{ uri: posterUrl }}
-                              style={StyleSheet.absoluteFillObject}
-                              resizeMode="cover"
-                            />
-                          ) : (
-                            <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#1E293B', justifyContent: 'center', alignItems: 'center', padding: 8 }]}>
-                              <Text style={{ fontSize: 32, marginBottom: 4 }}>🎬</Text>
-                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '700', textAlign: 'center' }} numberOfLines={2}>
-                                {film.title}
-                              </Text>
-                            </View>
-                          )}
-                          {/* Üst IMDb Puanı Rozeti */}
-                          <View style={{ position: 'absolute', top: 6, right: 6, backgroundColor: 'rgba(0,0,0,0.85)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 0.8, borderColor: '#FACC15' }}>
-                            <Text style={{ color: '#FACC15', fontSize: 10, fontWeight: '900' }}>
-                              {film.rating?.split(' ')[0] || '8.5'} ⭐
-                            </Text>
-                          </View>
-                          {/* Alt Bilgi Karartması */}
-                          <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 8, backgroundColor: isFocused ? 'rgba(5, 10, 25, 0.94)' : 'rgba(0, 0, 0, 0.78)' }}>
-                            <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800' }} numberOfLines={1}>
-                              {film.title}
-                            </Text>
-                            <Text style={{ color: aktifTema.border, fontSize: 9, fontWeight: '700', marginTop: 1 }}>
-                              {film.year} • {isFocused ? '▶ Şimdi İzle' : film.genre?.split('•')[0] || 'Sinema'}
-                            </Text>
-                          </View>
-                        </View>
-                      )}
-                    </FocusableItem>
-                  );
-                })}
-              </ScrollView>
             </View>
           )}
 

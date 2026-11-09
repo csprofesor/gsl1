@@ -1,7 +1,7 @@
 {
-  "version": "3.2.5",
-  "versionCode": 31,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.5/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gs325apk",
-  "changelog": "v3.2.5 (Build 31): IMDb filmleri için yatay gezilebilir film ve dizi kartları şeridi eklendi (kumandayla doğrudan film seçebilme), afişlerdeki çift encode hatası düzeltildi, TvProvider Watch Next sorgusu SQLite syntax hatalarından arındırıldı ve READ_TV_LISTINGS izni eklendi, seçilen film adının hedef uygulamada arama kutusuna otomatik yazılması ve yapıştırılması (Erişilebilirlik & Pano) sağlandı."
+  "version": "3.2.6",
+  "versionCode": 32,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.6/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gs326apk",
+  "changelog": "v3.2.6 (Build 32): IMDb film kartları yatay şeridi ana ekrandan tamamen kaldırıldı (yalnızca üst sinema vitrini korundu). Kaldığın yerden devam et listesi arındırıldı: preview_program tanıtım kanalları kaldırıldı, yalnızca kullanıcının gerçekten izlemekte olduğu devam eden (watch_next_type=0 / oynatma süresi olan) gerçek içerikler listeleniyor."
 }
