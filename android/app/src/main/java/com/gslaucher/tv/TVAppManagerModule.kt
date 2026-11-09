@@ -143,13 +143,19 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
         try {
             val pm = reactContext.packageManager
 
-            // 0. Arama sorgusu varsa panoya kopyala (Kullanıcı arama kutusuna anında yapıştırabilsin)
+            // 0. Arama sorgusu varsa panoya kopyala ve Erişilebilirlik Servisine kaydet (Otomatik Doldurma)
             if (!query.isNullOrEmpty()) {
                 try {
                     val clipboard = reactContext.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                     val clip = ClipData.newPlainText("Film Arama", query)
                     clipboard?.setPrimaryClip(clip)
                 } catch (_: Exception) {}
+
+                if (!packageName.isNullOrEmpty()) {
+                    try {
+                        TVAccessibilityService.setAutoSearch(packageName, query)
+                    } catch (_: Exception) {}
+                }
             }
 
             // 1. Derin Link (URI) Doğrudan Oynatma / Arama
@@ -1238,92 +1244,94 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun getSystemWatchNextPrograms(promise: Promise) {
-        try {
-            val uri = Uri.parse("content://android.media.tv/watch_next_program")
-            val projection = arrayOf(
-                "_id",
-                "package_name",
-                "title",
-                "episode_title",
-                "short_description",
-                "poster_art_uri",
-                "thumbnail_uri",
-                "intent_uri",
-                "last_playback_position_millis",
-                "duration_millis",
-                "last_engagement_time_utc_millis"
-            )
-            val cursor = reactContext.contentResolver.query(
-                uri,
-                projection,
-                null,
-                null,
-                "last_engagement_time_utc_millis DESC LIMIT 20"
-            )
-            val result = Arguments.createArray()
-            if (cursor != null) {
-                val pm = reactContext.packageManager
-                val idCol = cursor.getColumnIndex("_id")
-                val pkgCol = cursor.getColumnIndex("package_name")
-                val titleCol = cursor.getColumnIndex("title")
-                val epTitleCol = cursor.getColumnIndex("episode_title")
-                val descCol = cursor.getColumnIndex("short_description")
-                val posterCol = cursor.getColumnIndex("poster_art_uri")
-                val thumbCol = cursor.getColumnIndex("thumbnail_uri")
-                val intentCol = cursor.getColumnIndex("intent_uri")
-                val posCol = cursor.getColumnIndex("last_playback_position_millis")
-                val durCol = cursor.getColumnIndex("duration_millis")
+        val result = Arguments.createArray()
+        val pm = reactContext.packageManager
 
-                while (cursor.moveToNext()) {
-                    val item = Arguments.createMap()
-                    val id = if (idCol >= 0) cursor.getLong(idCol) else 0L
-                    val pkg = if (pkgCol >= 0) cursor.getString(pkgCol) ?: "" else ""
-                    val title = if (titleCol >= 0) cursor.getString(titleCol) ?: "" else ""
-                    val epTitle = if (epTitleCol >= 0) cursor.getString(epTitleCol) ?: "" else ""
-                    val desc = if (descCol >= 0) cursor.getString(descCol) ?: "" else ""
-                    val poster = if (posterCol >= 0) cursor.getString(posterCol) ?: "" else ""
-                    val thumb = if (thumbCol >= 0) cursor.getString(thumbCol) ?: "" else ""
-                    val intentUri = if (intentCol >= 0) cursor.getString(intentCol) ?: "" else ""
-                    val posMs = if (posCol >= 0) cursor.getLong(posCol) else 0L
-                    val durMs = if (durCol >= 0) cursor.getLong(durCol) else 0L
+        // Denenecek TV İçerik Sağlayıcı URI'leri (Watch Next ve Preview Programs)
+        val urisToTry = listOf(
+            Uri.parse("content://android.media.tv/watch_next_program"),
+            Uri.parse("content://android.media.tv/preview_program")
+        )
 
-                    var appName = pkg
-                    try {
-                        val appInfo = pm.getApplicationInfo(pkg, 0)
-                        appName = pm.getApplicationLabel(appInfo).toString()
-                    } catch (_: Exception) {}
-
-                    val displayTitle = if (title.isNotEmpty()) title else epTitle
-                    if (displayTitle.isEmpty()) continue
-
-                    item.putString("id", "sys_${id}")
-                    item.putDouble("systemProgramId", id.toDouble())
-                    item.putString("pkg", pkg)
-                    item.putString("platform", appName)
-                    item.putString("platformIcon", "▶")
-                    item.putString("title", displayTitle)
-                    val subtitle = if (epTitle.isNotEmpty() && epTitle != title) epTitle else if (desc.isNotEmpty()) desc else "${appName} • Kaldığın Yerden"
-                    item.putString("subtitle", subtitle)
-                    
-                    val backdrop = if (poster.isNotEmpty()) poster else thumb
-                    item.putString("backdropUrl", backdrop)
-                    item.putString("intentUri", intentUri)
-
-                    val kaldigiDk = if (posMs > 0) (posMs / 60000).toInt() else 10
-                    val toplamDk = if (durMs > 0) (durMs / 60000).toInt() else 100
-                    item.putInt("kaldigiDk", kaldigiDk)
-                    item.putInt("toplamDk", if (toplamDk > 0) toplamDk else 100)
-                    item.putString("sonIzlemeZamani", "Kaldığın Yerden")
-                    item.putBoolean("isSystemWatchNext", true)
-
-                    result.pushMap(item)
-                }
-                cursor.close()
+        for (uri in urisToTry) {
+            var cursor: android.database.Cursor? = null
+            try {
+                // Güvenli sorgu: projection=null ve sortOrder=null vererek SQLiteException syntax ve LIMIT hatalarını tamamen engelle
+                cursor = reactContext.contentResolver.query(uri, null, null, null, null)
+            } catch (e: Exception) {
             }
-            promise.resolve(result)
-        } catch (e: Exception) {
-            promise.resolve(Arguments.createArray())
+
+            if (cursor != null) {
+                try {
+                    val idCol = cursor.getColumnIndex("_id")
+                    val pkgCol = cursor.getColumnIndex("package_name")
+                    val titleCol = cursor.getColumnIndex("title")
+                    val epTitleCol = cursor.getColumnIndex("episode_title")
+                    val descCol = cursor.getColumnIndex("short_description")
+                    val posterCol = cursor.getColumnIndex("poster_art_uri")
+                    val thumbCol = cursor.getColumnIndex("thumbnail_uri")
+                    val intentCol = cursor.getColumnIndex("intent_uri")
+                    val posCol = cursor.getColumnIndex("last_playback_position_millis")
+                    val durCol = cursor.getColumnIndex("duration_millis")
+
+                    var count = 0
+                    while (cursor.moveToNext() && count < 25) {
+                        val id = if (idCol >= 0) cursor.getLong(idCol) else 0L
+                        val pkg = if (pkgCol >= 0) cursor.getString(pkgCol) ?: "" else ""
+                        val title = if (titleCol >= 0) cursor.getString(titleCol) ?: "" else ""
+                        val epTitle = if (epTitleCol >= 0) cursor.getString(epTitleCol) ?: "" else ""
+                        val desc = if (descCol >= 0) cursor.getString(descCol) ?: "" else ""
+                        val poster = if (posterCol >= 0) cursor.getString(posterCol) ?: "" else ""
+                        val thumb = if (thumbCol >= 0) cursor.getString(thumbCol) ?: "" else ""
+                        val intentUri = if (intentCol >= 0) cursor.getString(intentCol) ?: "" else ""
+                        val posMs = if (posCol >= 0) cursor.getLong(posCol) else 0L
+                        val durMs = if (durCol >= 0) cursor.getLong(durCol) else 0L
+
+                        val displayTitle = if (title.isNotEmpty()) title else epTitle
+                        if (displayTitle.isEmpty()) continue
+
+                        var appName = pkg
+                        try {
+                            val appInfo = pm.getApplicationInfo(pkg, 0)
+                            appName = pm.getApplicationLabel(appInfo).toString()
+                        } catch (_: Exception) {}
+
+                        val item = Arguments.createMap()
+                        item.putString("id", "sys_${id}")
+                        item.putDouble("systemProgramId", id.toDouble())
+                        item.putString("pkg", pkg)
+                        item.putString("platform", appName)
+                        item.putString("platformIcon", "▶")
+                        item.putString("title", displayTitle)
+                        val subtitle = if (epTitle.isNotEmpty() && epTitle != title) epTitle else if (desc.isNotEmpty()) desc else "${appName} • Kaldığın Yerden"
+                        item.putString("subtitle", subtitle)
+                        
+                        val backdrop = if (poster.isNotEmpty()) poster else thumb
+                        item.putString("backdropUrl", backdrop)
+                        item.putString("intentUri", intentUri)
+
+                        val kaldigiDk = if (posMs > 0) (posMs / 60000).toInt() else 10
+                        val toplamDk = if (durMs > 0) (durMs / 60000).toInt() else 100
+                        item.putInt("kaldigiDk", kaldigiDk)
+                        item.putInt("toplamDk", if (toplamDk > 0) toplamDk else 100)
+                        item.putString("sonIzlemeZamani", "Kaldığın Yerden")
+                        item.putBoolean("isSystemWatchNext", true)
+
+                        result.pushMap(item)
+                        count++
+                    }
+                } catch (_: Exception) {
+                } finally {
+                    try { cursor.close() } catch (_: Exception) {}
+                }
+            }
+
+            if (result.size() > 0) {
+                break
+            }
         }
+
+        promise.resolve(result)
     }
 
     @ReactMethod
