@@ -34,11 +34,11 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.9';
-const CURRENT_BUILD = 35;
+const CURRENT_VERSION = '3.2.10';
+const CURRENT_BUILD = 36;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gs329apk';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gs3210apk';
 
 // Trakt.tv Açık API & Scrobbler Kimlikleri (Google Play & Apple App Store %100 Uyumlu)
 const TRAKT_CLIENT_ID = 'db7483669be745d448651a141b71192e21e05a8f4c2c54ec8360d2cf34d28f8f';
@@ -3958,14 +3958,12 @@ export default function App() {
                 }
               }}
             >
-              {(isFocused) => (
+              {() => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>📶</Text>
-                  {isFocused && (
-                    <Text style={styles.miniButonYazi}>
-                      Wi-Fi
-                    </Text>
-                  )}
+                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
+                    Wi-Fi
+                  </Text>
                 </View>
               )}
             </FocusableItem>
@@ -3976,14 +3974,12 @@ export default function App() {
               focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
               onPress={() => setHizTestiAcik(true)}
             >
-              {(isFocused) => (
+              {() => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>⚡</Text>
-                  {isFocused && (
-                    <Text style={styles.miniButonYazi}>
-                      Hız
-                    </Text>
-                  )}
+                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
+                    Hız
+                  </Text>
                 </View>
               )}
             </FocusableItem>
@@ -3997,7 +3993,7 @@ export default function App() {
               {() => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>🔔</Text>
-                  <Text style={[styles.miniButonYazi, { fontWeight: '900' }]}>
+                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
                     {bildirimListesi.length}
                   </Text>
                 </View>
@@ -4013,7 +4009,7 @@ export default function App() {
               {() => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>📡</Text>
-                  <Text style={styles.miniButonYazi}>
+                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
                     TV
                   </Text>
                 </View>
@@ -4026,14 +4022,12 @@ export default function App() {
               focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
               onPress={() => setGuncellemeModalAcik(true)}
             >
-              {(isFocused) => (
+              {() => (
                 <View style={styles.miniButonIcerik}>
                   <Text style={{ fontSize: 13 }}>🔄</Text>
-                  {isFocused && (
-                    <Text style={styles.miniButonYazi}>
-                      Güncelle
-                    </Text>
-                  )}
+                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
+                    Güncelle
+                  </Text>
                 </View>
               )}
             </FocusableItem>
@@ -8341,12 +8335,9 @@ const styles = StyleSheet.create({
   },
   ayarlarTemalarYazi: {
     color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '900',
     marginLeft: 4,
-    textShadowColor: 'rgba(0, 0, 0, 0.95)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
   miniAksiyonButon: {
     flexDirection: 'row',
@@ -8363,12 +8354,9 @@ const styles = StyleSheet.create({
   },
   miniButonYazi: {
     color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '900',
     marginLeft: 4,
-    textShadowColor: 'rgba(0, 0, 0, 0.95)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
 
   arkaplan: { flex: 1, backgroundColor: '#0A0C16' },

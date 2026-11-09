@@ -52,18 +52,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v3.2.9' }}
-          name: "GS TV Launcher Ultra v3.2.9 (Build 35)"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v3.2.10' }}
+          name: "GS TV Launcher Ultra v3.2.10 (Build 36)"
           draft: false
           prerelease: false
           body: |
-            ## GS TV Launcher Ultra v3.2.9 (Build 35)
-            - 🔌 **Eklentiler & Senkronizasyon Merkezi:** Stremio, Kodi, VLC, Plex gibi uygulamalarla tam uyumlu modüler eklenti sistemi.
-            - 🔴 **Trakt.tv Scrobbler & OAuth Device Flow:** TV ekranından tek kullanımlık kodla (`trakt.tv/activate`) doğrudan bağlanma ve tüm uygulamalardaki izleme geçmişini tek tıkla çekme.
-            - 🟣 **Stremio Yerel Daemon Köprüsü:** Cihazdaki yerel Stremio akış motoru (`127.0.0.1:11470`) ile haberleşme ve anlık kütüphane eşleşmesi.
-            - 📺 **Android TV Sistem Kanalları (TvContract):** SmartTube, YouTube, VLC gibi uygulamaların sistem kanallarından içerik içe aktarma.
-            - 🛡️ **Google Play Store & Apple App Store Tam Uyum:** Kesinlikle telifli yayın veya scraper barındırmayan %100 yasal saf metaveri mimarisi; mağaza satışına hazır.
-            - ⚡ **Sıfır Döngü Doğrudan Oynatma:** Kaldığın Yerden Devam Et kartına basıldığında hedef uygulama anında film adı kopyalanmış ve derin bağlantılı olarak başlar.
+            ## GS TV Launcher Ultra v3.2.10 (Build 36)
+            - ⚡ **Üst Panel 'Hız' Yazısı Görünürlük Düzeltmesi:** Üst paneldeki Hız butonu yazısında oluşan siyah gölge kararması giderildi, saf beyaz (#FFFFFF) ve yüksek kontrastlı net yazı tipi uygulandı.
+            - 🌐 **Üst Bar Kontrol Butonları İyileştirmesi:** 'Wi-Fi', 'Hız', 'Güncelle', 'TV' ve 'Bildirim' etiketleri sürekli görünür yapılarak uzaktan kumanda ile gezinti kolaylaştırıldı.
+            - 🔌 **Eklentiler & Senkronizasyon (Trakt.tv, Stremio, TV Kanalları):** Cihazlar arası devam etme ve mağaza uyumlu metaveri altyapısı.
           files: |
             android/app/build/outputs/apk/release/app-release.apk
             android/app/build/outputs/bundle/release/app-release.aab
