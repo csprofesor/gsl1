@@ -45,7 +45,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                             reactContext
                                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                                 .emit("onWatchNextChanged", null)
-                        } catch (_: Exception) {}
+                        } catch (e: Exception) {}
                     }
                 }
                 reactContext.contentResolver.registerContentObserver(
@@ -54,7 +54,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     watchNextObserver!!
                 )
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
     }
 
     override fun initialize() {
@@ -69,7 +69,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                 reactContext.contentResolver.unregisterContentObserver(it)
             }
             watchNextObserver = null
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
     }
 
     private fun drawableToBitmap(drawable: Drawable): Bitmap {
@@ -130,7 +130,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                             if (iconFile.exists() && iconFile.length() > 0) {
                                 item.putString("iconUri", "file://${iconFile.absolutePath}")
                             }
-                        } catch (_: Exception) {}
+                        } catch (e: Exception) {}
 
                         // Android TV Banner'ı varsa onu da al
                         try {
@@ -147,7 +147,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                                     item.putString("bannerUri", "file://${bannerFile.absolutePath}")
                                 }
                             }
-                        } catch (_: Exception) {}
+                        } catch (e: Exception) {}
 
                         appList.pushMap(item)
                     }
@@ -194,12 +194,12 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     val clipboard = reactContext.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                     val clip = ClipData.newPlainText("Film Arama", query)
                     clipboard?.setPrimaryClip(clip)
-                } catch (_: Exception) {}
+                } catch (e: Exception) {}
 
                 if (!packageName.isNullOrEmpty()) {
                     try {
                         TVAccessibilityService.setAutoSearch(packageName, query)
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {}
                 }
             }
 
@@ -217,7 +217,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         promise.resolve(true)
                         return
                     }
-                } catch (_: Exception) {}
+                } catch (e: Exception) {}
 
                 // Belirtilen paketle açılamadıysa sistemdeki herhangi bir oynatıcı ile dene
                 try {
@@ -229,7 +229,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         promise.resolve(true)
                         return
                     }
-                } catch (_: Exception) {}
+                } catch (e: Exception) {}
             }
 
             // 2. Uygulama İçi Doğrudan Arama ve Film Başlatma Intent'leri
@@ -249,7 +249,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                             promise.resolve(true)
                             return
                         }
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {}
                 }
 
                 // Nuvio için doğrudan arama deep-link
@@ -265,7 +265,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                             promise.resolve(true)
                             return
                         }
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {}
                 }
 
                 // Stremio için doğrudan IMDb detay veya arama deep-link
@@ -285,7 +285,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                             promise.resolve(true)
                             return
                         }
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {}
                 }
 
                 // YouTube için özel leanback arama intent
@@ -299,7 +299,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         reactContext.startActivity(ytIntent)
                         promise.resolve(true)
                         return
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {}
                 }
 
                 // Netflix için özel arama deep-link
@@ -311,7 +311,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         reactContext.startActivity(nflxIntent)
                         promise.resolve(true)
                         return
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {}
                 }
 
                 // Standart Android TV Media / Search Intent (Tüm Diğer Medya Uygulamaları)
@@ -443,7 +443,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         promise.resolve(true)
                         return
                     }
-                } catch (_: Exception) {}
+                } catch (e: Exception) {}
             }
 
             val fallback = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
@@ -486,7 +486,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         promise.resolve(true)
                         return
                     }
-                } catch (_: Exception) {}
+                } catch (e: Exception) {}
             }
 
             val fallback = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
@@ -511,7 +511,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     fun isAccessibilityEnabled(promise: Promise) {
         try {
             promise.resolve(TVAccessibilityService.isServiceRunning)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             promise.resolve(false)
         }
     }
@@ -526,7 +526,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                 .emit("onUpdateDownloadProgress", params)
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
     }
 
     @ReactMethod
@@ -584,14 +584,14 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                             }
                             val act = reactContext.currentActivity ?: reactContext
                             act.startActivity(intent)
-                        } catch (_: Exception) {
+                        } catch (e: Exception) {
                             try {
                                 val secIntent = Intent(Settings.ACTION_SECURITY_SETTINGS).apply {
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
                                 val act = reactContext.currentActivity ?: reactContext
                                 act.startActivity(secIntent)
-                            } catch (_: Exception) {}
+                            } catch (e: Exception) {}
                         }
                         promise.reject(
                             "PERMISSION_NEEDED",
@@ -896,7 +896,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     promise.resolve(true)
                     return
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {}
         }
 
         try {
@@ -962,7 +962,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     promise.resolve(true)
                     return
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {}
         }
 
         try {
@@ -1000,7 +1000,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         item.putString("name", label)
                         item.putInt("importance", proc.importance)
                         result.pushMap(item)
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {}
                 }
                 promise.resolve(result)
             } catch (e: Exception) {
@@ -1034,7 +1034,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     if (pkg != myPkg && !pkg.startsWith("android") && !pkg.startsWith("com.google.android.inputmethod")) {
                         try {
                             am.killBackgroundProcesses(pkg)
-                        } catch (_: Exception) {}
+                        } catch (e: Exception) {}
                     }
                 }
                 promise.resolve(true)
@@ -1096,7 +1096,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             val installer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 try {
                     pm.getInstallSourceInfo(myPackage).installingPackageName
-                } catch (_: Exception) {
+                } catch (e: Exception) {
                     pm.getInstallerPackageName(myPackage)
                 }
             } else {
@@ -1123,10 +1123,10 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     reactContext
                         .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                         .emit("onPhotosUpdated", null)
-                } catch (_: Exception) {}
+                } catch (e: Exception) {}
             }
             photoServer?.start()
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
     }
 
     @ReactMethod
@@ -1165,7 +1165,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         reactContext
                             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                             .emit("onPhotosUpdated", null)
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {}
                 }
             }
             photoServer?.start()
@@ -1307,7 +1307,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     @ReactMethod
     fun requestTvListingsPermission(promise: Promise) {
         try {
-            val activity = currentActivity
+            val activity = reactContext.currentActivity
             if (activity != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 ActivityCompat.requestPermissions(
                     activity,
@@ -1355,11 +1355,11 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                 null,
                 "last_engagement_time_utc_millis DESC"
             )
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             try {
                 // Bazı ROM'larda bu sıralama sütunu yoksa sıralamasız güvenli sorgu yap
                 cursor = reactContext.contentResolver.query(uri, null, null, null, null)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
             }
         }
 
@@ -1407,7 +1407,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     try {
                         val appInfo = pm.getApplicationInfo(pkg, 0)
                         appName = pm.getApplicationLabel(appInfo).toString()
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {}
 
                     val item = Arguments.createMap()
                     item.putString("id", "sys_${id}")
@@ -1442,9 +1442,9 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     result.pushMap(item)
                     count++
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
             } finally {
-                try { cursor.close() } catch (_: Exception) {}
+                try { cursor.close() } catch (e: Exception) {}
             }
         }
 
@@ -1467,7 +1467,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         reactContext.startActivity(intent)
                         launched = true
                     }
-                } catch (_: Exception) {}
+                } catch (e: Exception) {}
             }
 
             // 2. Android TV TvContract program URI ile ACTION_VIEW dene
@@ -1484,7 +1484,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         reactContext.startActivity(viewIntent)
                         launched = true
                     }
-                } catch (_: Exception) {}
+                } catch (e: Exception) {}
             }
 
             // 3. Hedef paketi başlat
@@ -1611,7 +1611,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         try {
                             val appInfo = pm.getApplicationInfo(pkg, 0)
                             appName = pm.getApplicationLabel(appInfo).toString()
-                        } catch (_: Exception) {}
+                        } catch (e: Exception) {}
 
                         val channelMap = Arguments.createMap()
                         channelMap.putDouble("id", id.toDouble())
@@ -1626,7 +1626,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     cursor.close()
                 }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
         promise.resolve(result)
     }
 
@@ -1676,7 +1676,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         try {
                             val appInfo = pm.getApplicationInfo(pkg, 0)
                             appName = pm.getApplicationLabel(appInfo).toString()
-                        } catch (_: Exception) {}
+                        } catch (e: Exception) {}
 
                         val item = Arguments.createMap()
                         item.putString("id", "prev_${id}")
@@ -1702,7 +1702,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     cursor.close()
                 }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
         promise.resolve(result)
     }
 }

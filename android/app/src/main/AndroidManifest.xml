@@ -24,7 +24,7 @@
       android:hardwareAccelerated="true"
       android:theme="@style/AppTheme"
       android:banner="@drawable/tv_banner"
-      android:usesCleartextTraffic="true"
+      android:usesCleartextTraffic="${usesCleartextTraffic}"
       android:supportsRtl="true">
       <activity
         android:name=".MainActivity"
