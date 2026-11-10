@@ -1,7 +1,7 @@
 {
-  "version": "3.2.22",
-  "versionCode": 48,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.22/app-release.apk",
-  "shortUrl": "https://tinyurl.com/26hheewn",
-  "changelog": "v3.2.22 (Build 48): 1) 2026 Profesyonel İkon Paketleri entegre edildi: GSTV_System_Topbar_Icon_Pack ve GSTV_Glossy_Icon_Assets projeye dahil edildi. 2) Üst Durum Çubuğu (Topbar) tamamen modern 2026 beyaz/vektörel saydam ikonlarla yenilendi (Wi-Fi, Bellek, Bildirimler, Canlı TV, Güncelleme, Düzen, Ayarlar ve Canlı Hava Durumu). 3) Kontrol Merkezi (Ayarlar) karo menülerindeki tüm emojiler yerini yüksek kaliteli sistem ikonlarına bıraktı. 4) Uygulama çekmecesi ve kartlarında Netflix, YouTube, Prime Video, Disney+, HBO Max, Spotify, Chrome, Google Play vb. için modern 2026 3D Glossy ikonlar uygulandı."
+  "version": "3.2.23",
+  "versionCode": 49,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.23/app-release.apk",
+  "shortUrl": "https://tinyurl.com/23jy7uuy",
+  "changelog": "v3.2.23 (Build 49): 1) TVAccessibilityService kök neden analizi ve tam onarımı: accessibility_service_config.xml dosyasına Android TV ve Mi Box için zorunlu olan android:accessibilityFeedbackType='feedbackGeneric' ve android:accessibilityFlags='flagRequestFilterKeyEvents|flagDefault' eklendi; böylece TV Settings anahtarı kapalı algılamaz ve geri kapatmaz. 2) onServiceConnected() içindeki tüm işlemler try-catch ve null-safe yapıya kavuşturuldu; ResolveInfo/activityInfo kaynaklı çökmeler önlendi. 3) Servis bağlandığında zamansız açılan openLauncher() tetikleyicisi kaldırılarak kullanıcının Ayarlar ekranında kalması sağlandı. 4) Servisin yaşam döngüsü için 'GSTV_Accessibility' logcat teşhis mekanizması kuruldu."
 }
