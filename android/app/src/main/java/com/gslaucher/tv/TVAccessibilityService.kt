@@ -72,10 +72,10 @@ class TVAccessibilityService : AccessibilityService() {
 
         try {
             val info = serviceInfo ?: AccessibilityServiceInfo()
-            // eventTypes asla 0 olmamalı; 0 olduğunda Android servisi geçersiz sayıp anında kapatır!
-            info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+            // Projectivy paritesi: TYPE_WINDOW_STATE_CHANGED + TYPE_VIEW_CLICKED
+            info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or AccessibilityEvent.TYPE_VIEW_CLICKED
             info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
-            info.flags = info.flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+            info.flags = info.flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS or AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
             info.notificationTimeout = 100
             serviceInfo = info
         } catch (e: Throwable) {

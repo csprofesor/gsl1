@@ -1,7 +1,7 @@
 {
-  "version": "3.2.20",
-  "versionCode": 46,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.20/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gs20tv",
-  "changelog": "v3.2.20 (Build 46): 1) TV Erişilebilirlik ve Ayarlar menüsünden geri dönüldüğünde ana sayfaya sıfırlanma sorunu çözüldü (Kaldığın yer, açık olan ayar modalı ve menü konumu SharedPreferences ile tam olarak korunur). 2) Mi Box ve Android TV için TVAccessibilityService yapılandırması optimize edildi (exported=true, doğrudan süreç, typeWindowStateChanged ve KEYCODE_HOME donanımsal yakalama). 3) Alternatif olarak TV Varsayılan Ana Ekran (Home App) seçim menüsünü tek tıkla doğrudan açma seçeneği eklendi."
+  "version": "3.2.21",
+  "versionCode": 47,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.21/app-release.apk",
+  "shortUrl": "https://tinyurl.com/29kl8d4g",
+  "changelog": "v3.2.21 (Build 47): 1) Projectivy Launcher (miproja1) tersine mühendislik paritesi uygulandı: accessibility_service_config.xml dosyasında canRetrieveWindowContent='true' ve canRequestFilterKeyEvents='true' tanımlandı, Android TV sisteminin servisi reddetmesine yol açan statik flagler temizlendi. 2) AndroidManifest.xml'de TVAccessibilityService için android:enabled='true' ve settingsActivity doğrudan tanımlandı. 3) TVAccessibilityService içinde Projectivy mimarisine tam uyumlu dinamik event ve key filtresi (TYPE_WINDOW_STATE_CHANGED + TYPE_VIEW_CLICKED ve FLAG_RETRIEVE_INTERACTIVE_WINDOWS) yapılandırıldı. Artık Mi Box ve Android TV'de erişilebilirlik anahtarı açıldığında otomatik kapanmaz, kalıcı olarak açık kalır."
 }

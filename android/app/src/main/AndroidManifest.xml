@@ -84,11 +84,12 @@
         </intent-filter>
       </activity>
 
-      <!-- Sabit Başlatıcı Hizmeti (Mi Box / Android TV Uyumlu) -->
+      <!-- Sabit Başlatıcı Hizmeti (Projectivy / Mi Box / Android TV Uyumlu) -->
       <service
           android:name=".TVAccessibilityService"
           android:label="@string/accessibility_service_label"
           android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+          android:enabled="true"
           android:exported="true">
           <intent-filter>
               <action android:name="android.accessibilityservice.AccessibilityService" />
