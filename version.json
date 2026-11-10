@@ -1,7 +1,7 @@
 {
-  "version": "3.2.23",
-  "versionCode": 49,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.23/app-release.apk",
-  "shortUrl": "https://tinyurl.com/23jy7uuy",
-  "changelog": "v3.2.23 (Build 49): 1) TVAccessibilityService kök neden analizi ve tam onarımı: accessibility_service_config.xml dosyasına Android TV ve Mi Box için zorunlu olan android:accessibilityFeedbackType='feedbackGeneric' ve android:accessibilityFlags='flagRequestFilterKeyEvents|flagDefault' eklendi; böylece TV Settings anahtarı kapalı algılamaz ve geri kapatmaz. 2) onServiceConnected() içindeki tüm işlemler try-catch ve null-safe yapıya kavuşturuldu; ResolveInfo/activityInfo kaynaklı çökmeler önlendi. 3) Servis bağlandığında zamansız açılan openLauncher() tetikleyicisi kaldırılarak kullanıcının Ayarlar ekranında kalması sağlandı. 4) Servisin yaşam döngüsü için 'GSTV_Accessibility' logcat teşhis mekanizması kuruldu."
+  "version": "3.2.24",
+  "versionCode": 50,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.24/app-release.apk",
+  "shortUrl": "https://tinyurl.com/27b9jtc4",
+  "changelog": "v3.2.24 (Build 50): 1) Sabit Başlatıcı için canRetrieveWindowContent='false' yapıldı; böylece Xiaomi Mi Box'ın servisi tehlikeli ekran okuyucu olarak işaretleyip anahtarı otomatik kapatması engellendi. 2) TYPE_VIEW_CLICKED kaldırılarak sadece TYPE_WINDOW_STATE_CHANGED ve KEYCODE_HOME donanımsal tuş yakalama filtrelemesine geçildi (Matinee mimarisi). 3) onServiceConnected() içindeki paket taraması arka plan iş parçacığına alınarak kilitlenme ve zaman aşımı önlendi."
 }

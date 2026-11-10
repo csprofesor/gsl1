@@ -79,18 +79,24 @@ class TVAccessibilityService : AccessibilityService() {
             isServiceRunning = true
             Log.i(TAG, "onServiceConnected: Sabit başlatıcı servisi sisteme bağlandı.")
 
-            // Stock home aktivitelerini güvenli şekilde tara
-            stockHomes = stockHomeActivities()
-
-            // ServiceInfo ayarlarını dinamik olarak pekiştir
+            // ServiceInfo ayarlarını dinamik olarak pekiştir (canRetrieveWindowContent=false ile uyumlu)
             val info = serviceInfo ?: AccessibilityServiceInfo()
-            info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or AccessibilityEvent.TYPE_VIEW_CLICKED
+            info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
             info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
-            info.flags = info.flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+            info.flags = AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
             info.notificationTimeout = 50
             serviceInfo = info
 
             Log.i(TAG, "onServiceConnected: ServiceInfo başarıyla güncellendi (flags=${info.flags}, feedbackType=${info.feedbackType})")
+
+            // Stock home aktivitelerini arka planda tara (onServiceConnected ana iş parçacığını asla bloke etmemeli)
+            Thread {
+                try {
+                    stockHomes = stockHomeActivities()
+                } catch (e: Throwable) {
+                    Log.w(TAG, "Arka plan stockHomes taraması tamamlanamadı: ${e.message}")
+                }
+            }.start()
         } catch (e: Throwable) {
             Log.e(TAG, "onServiceConnected sırasında hata oluştu!", e)
         }
