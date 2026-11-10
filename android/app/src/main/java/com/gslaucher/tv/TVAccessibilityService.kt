@@ -43,7 +43,7 @@ class TVAccessibilityService : AccessibilityService() {
 
         // Sadece orijinal TV başlatıcılarının pencere olaylarını dinle;
         // tüm ekran olaylarını dinleyip gereksiz IPC yükü ve sistem kill riskini önler.
-        serviceInfo = serviceInfo.apply {
+        serviceInfo = (serviceInfo ?: AccessibilityServiceInfo()).apply {
             if (stockHomes.isEmpty()) {
                 eventTypes = 0
             } else {

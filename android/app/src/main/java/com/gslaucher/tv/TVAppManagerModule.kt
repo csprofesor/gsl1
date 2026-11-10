@@ -525,7 +525,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             }
             val am = reactContext.getSystemService(AccessibilityManager::class.java)
             val isRunningInAm = am?.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
-                ?.any { it.resolveInfo?.serviceInfo?.let { info -> info.packageName == reactContext.packageName } } == true
+                ?.any { it.resolveInfo?.serviceInfo?.packageName == reactContext.packageName } ?: false
             if (isRunningInAm) {
                 promise.resolve(true)
                 return
