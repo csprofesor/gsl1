@@ -34,11 +34,11 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.14';
-const CURRENT_BUILD = 40;
+const CURRENT_VERSION = '3.2.15';
+const CURRENT_BUILD = 41;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gs14apk';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gs15tv';
 
 // Trakt.tv Açık API & Scrobbler Kimlikleri (Google Play & Apple App Store %100 Uyumlu)
 const TRAKT_CLIENT_ID = 'db7483669be745d448651a141b71192e21e05a8f4c2c54ec8360d2cf34d28f8f';
@@ -7401,15 +7401,15 @@ export default function App() {
                       focusedStyle={[styles.kontrolTileOdak, { borderColor: '#FFFFFF' }]}
                       onPress={() => {
                         Alert.alert(
-                          '🔒 Sabit Başlatıcı (Asla Kapanmaz)',
-                          'Home tuşuna basıldığında veya TV açıldığında GS Launcher\'ın daima sabit kalmasını sağlar.\n\n⚠️ İZNİ AÇINCA HEMEN KAPANIYORSA (Mi Box / Xiaomi Çözümü):\n1. Aşağıdaki "⚙️ Uygulama Bilgisi & İzinler" butonuna basın.\n2. Açılan ekranda varsa sağ üstteki menüden "Kısıtlı ayarlara izin ver" (Allow restricted settings) seçin.\n3. Pil / Güç Tasarrufunu "Kısıtlamasız" (No restrictions) yapın.\n4. Ardından "🔓 Erişilebilirliği Aç" butonuna basıp GS Launcher\'ı Açık yapın. Artık sistem servisi kapatmayacaktır.',
+                          '🔒 Sabit Başlatıcı (Xiaomi / Mi Box Çözümü)',
+                          'Xiaomi Mi Box ve Android TV\'lerde Türkçe arayüzdeki bilinen bir Android TV sistem hatası (Leanback bug) nedeniyle onay penceresi çöküp anahtar hemen kapanabilir.\n\n⚡ 30 SANİYELİK KESİN ÇÖZÜM:\n1. Aşağıdaki "🌐 TV Dilini Değiştir" butonuna basın ve dili geçici olarak "English (United States)" yapın.\n2. Ardından "🔓 Erişilebilirliği Aç" butonuna basıp GS Launcher\'ı ON yapın ve çıkan uyarıya OK deyin (Artık hemen kapanmayacak ve açık kalacaktır!).\n3. Tekrar dili Türkçe\'ye geri çevirin. Sabit Başlatıcı kalıcı olarak açık kalacaktır!',
                           [
                             { text: 'Kapat', style: 'cancel' },
                             {
-                              text: '⚙️ Uygulama Bilgisi & İzinler',
+                              text: '🌐 TV Dilini Değiştir',
                               onPress: () => {
-                                if (Platform.OS === 'android' && TVAppManager && TVAppManager.openAppPermissionSettings) {
-                                  TVAppManager.openAppPermissionSettings().catch(() => {});
+                                if (Platform.OS === 'android' && TVAppManager && TVAppManager.openLanguageSettings) {
+                                  TVAppManager.openLanguageSettings().catch(() => {});
                                 }
                               },
                             },

@@ -1,7 +1,7 @@
 {
-  "version": "3.2.14",
-  "versionCode": 40,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.14/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gs14tv",
-  "changelog": "v3.2.14 (Build 40): Sabit Başlatıcı & Erişilebilirlik Kapanma Düzeltmesi: 1) Xiaomi Mi Box ve Android TV'de izin açıldığında servisin hemen kapanmasına neden olan sistem bayrak çakışması (flagRetrieveInteractiveWindows) standart kararlı moda (flagDefault) çekildi. 2) Erişilebilirlik servisi bağlanırken ve ayarlarda gezinirken geçici muafiyet süresi verilerek onay diyaloglarının kesilmesi önlendi. 3) Ayarlar ve izin denetleyici pencereleri istisna listesine alınarak servisin çökmesi tamamen engellendi. 4) Tüm arka plan erişilebilirlik çağrıları çökme korumasıyla sarıldı."
+  "version": "3.2.15",
+  "versionCode": 41,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.15/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gs15tv",
+  "changelog": "v3.2.15 (Build 41): Xiaomi Mi Box & Android TV Erişilebilirlik Kapanma Düzeltmesi: 1) Leanback arayüzündeki Türkçe dil çakışması ve onay penceresi çökmesi için İngilizce fallback kaynakları (values-en) ve temiz XML metinleri eklendi. 2) Tek tıkla TV Dil Ayarlarına (openLanguageSettings) geçiş sağlandı. 3) Kapanma sorununa karşı adım adım rehber eklendi."
 }

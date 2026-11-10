@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">GS Launcher</string>
+    <string name="accessibility_service_label">GS Launcher Fixed Home Service</string>
+    <string name="accessibility_service_description">Keeps GS Launcher active as your default home screen on Android TV and Xiaomi TV Box.</string>
+</resources>

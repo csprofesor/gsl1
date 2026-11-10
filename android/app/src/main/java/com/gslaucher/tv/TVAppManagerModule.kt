@@ -468,6 +468,39 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun openLanguageSettings(promise: Promise) {
+        try {
+            val pm = reactContext.packageManager
+            val intents = listOf(
+                Intent(Settings.ACTION_LOCALE_SETTINGS),
+                Intent("android.settings.LOCALE_SETTINGS"),
+                Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.system.LanguageActivity")),
+                Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.device.LanguageActivity")),
+                Intent(Settings.ACTION_SETTINGS)
+            )
+
+            for (intent in intents) {
+                try {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    if (intent.resolveActivity(pm) != null) {
+                        reactContext.startActivity(intent)
+                        promise.resolve(true)
+                        return
+                    }
+                } catch (e: Exception) {}
+            }
+
+            val fallback = Intent(Settings.ACTION_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(fallback)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.resolve(false)
+        }
+    }
+
+    @ReactMethod
     fun openAccessibilitySettings(promise: Promise) {
         try {
             // Kullanıcı ayarlarda gezinirken ve izin onaylarken 3 dakika boyunca launcher müdahalesini engelle
