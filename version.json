@@ -1,7 +1,7 @@
 {
-  "version": "3.2.17",
-  "versionCode": 43,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.17/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gstv17",
-  "changelog": "v3.2.17 (Build 43): Erişilebilirlik ve Ayarlar Açılış Hatası Düzeltmesi: 1) Android 11+ Package Visibility (paket görünürlüğü) için AndroidManifest'e <queries> etiketleri eklendi. 2) Erişilebilirlik ayarlarını açarken sistemin 'Bu işlemi işleyecek uygulama yok' hatası vermesine sebep olan resolveActivity engeli kaldırılarak doğrudan hata yakalamalı açılış sağlandı. 3) TV Ayarları yedek butonu eklendi."
+  "version": "3.2.18",
+  "versionCode": 44,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.18/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gstv18",
+  "changelog": "v3.2.18 (Build 44): 1) Ayarlar Görünüm sekmesinde en üste ergonomik ve kompakt Yatay Renk Paleti eklendi. 2) Kaldığın Yerden Devam Et rafındaki 'Test Et' ve 'Listeyi Sil' buton yazıları kristal beyaz (#FFFFFF) yapıldı; listeyi sıfırlama sistemi Android TV TvProvider veritabanıyla tam senkronize edilerek silinen içeriklerin geri gelmesi engellendi. 3) Wi-Fi arama motoru güçlendirildi; bağlı ağ ve kaydedilmiş ağlar garanti listeye alındı. 4) Dahili uydu tuner, TV girişleri ve tek tıkla ulusal canlı kanalları içeren 'Canlı TV & Uydu Hub'ı eklendi."
 }

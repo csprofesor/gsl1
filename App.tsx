@@ -34,11 +34,11 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.17';
-const CURRENT_BUILD = 43;
+const CURRENT_VERSION = '3.2.18';
+const CURRENT_BUILD = 44;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gstv17';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gstv18';
 
 // Trakt.tv Açık API & Scrobbler Kimlikleri (Google Play & Apple App Store %100 Uyumlu)
 const TRAKT_CLIENT_ID = 'db7483669be745d448651a141b71192e21e05a8f4c2c54ec8360d2cf34d28f8f';
@@ -1440,6 +1440,7 @@ export default function App() {
   const [bagliWifiAdi, setBagliWifiAdi] = useState<string>('');
   const [wifiSinyalGucu, setWifiSinyalGucu] = useState<number>(-100);
   const [wifiModalAcik, setWifiModalAcik] = useState(false);
+  const [canliTvModalAcik, setCanliTvModalAcik] = useState(false);
   const [wifiAgListesi, setWifiAgListesi] = useState<Array<{ ssid: string; level: number; isConnected: boolean; isSecure: boolean; frequency: number }>>([]);
   const [wifiTaraniyor, setWifiTaraniyor] = useState(false);
 
@@ -4220,10 +4221,19 @@ export default function App() {
     setTimeout(() => setBildirimMetni(''), 2500);
   };
 
-  const devamEtListesiniSifirla = () => {
+  const devamEtListesiniSifirla = async () => {
+    setTvTestAktif(false);
     setDevamEdenIcerikler([]);
-    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
-      TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify([])).catch(() => {});
+    if (Platform.OS === 'android' && TVAppManager) {
+      if (TVAppManager.clearAllWatchNextPrograms) {
+        await TVAppManager.clearAllWatchNextPrograms().catch(() => {});
+      }
+      if (TVAppManager.clearAllTestWatchNextPrograms) {
+        await TVAppManager.clearAllTestWatchNextPrograms().catch(() => {});
+      }
+      if (TVAppManager.saveSetting) {
+        await TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify([])).catch(() => {});
+      }
     }
     setBildirimMetni('🗑️ İzleme geçmişi tamamen temizlendi');
     setTimeout(() => setBildirimMetni(''), 2500);
@@ -4281,48 +4291,9 @@ export default function App() {
     }
   };
 
-  // Doğrudan Canlı Uyduya / TV Kanallarına Geçiş
+  // Doğrudan Canlı Uyduya / TV Kanallarına Geçiş (Zengin Canlı TV & Uydu Hub)
   const canliUyduyaGec = () => {
-    const canliTvUygulamalari = uygulamalar.filter((u) => u.category === 'tv');
-
-    Alert.alert(
-      '📡 Canlı TV & Uydu Kanalları',
-      'Hangi yayına geçiş yapmak istiyorsunuz?',
-      [
-        {
-          text: '📺 Dahili Uydu Tunerına Geç (Gerçek Uydu)',
-          onPress: async () => {
-            if (Platform.OS === 'android' && TVAppManager && TVAppManager.openLiveChannels) {
-              try {
-                await TVAppManager.openLiveChannels();
-              } catch {
-                Alert.alert('Bilgi', 'Dahili uydu tunerına ulaşılamadı. TV girişlerini kontrol edin.');
-              }
-            } else {
-              Alert.alert('Canlı Uydu', 'Dahili uydu alıcısı başlatılıyor...');
-            }
-          },
-        },
-        ...(canliTvUygulamalari.length > 0
-          ? [
-              {
-                text: `📱 Canlı TV Uygulaması (${canliTvUygulamalari[0].name})`,
-                onPress: () =>
-                  uygulamaBaslat(canliTvUygulamalari[0].packageName, canliTvUygulamalari[0].name),
-              },
-            ]
-          : []),
-        {
-          text: '🔌 TV Girişleri (HDMI / Uydu Kaynağı)',
-          onPress: () => {
-            if (Platform.OS === 'android' && TVAppManager && TVAppManager.openTVInputs) {
-              TVAppManager.openTVInputs().catch(() => {});
-            }
-          },
-        },
-        { text: 'Vazgeç', style: 'cancel' },
-      ]
-    );
+    setCanliTvModalAcik(true);
   };
 
   // Dinamik Duvar Kağıdı Belirleme (Özel Fotoğraf, Reddit, Google Art, Unsplash veya GS Teması)
@@ -5888,11 +5859,11 @@ export default function App() {
                         )}
                         <FocusableItem
                           onPress={tvTestAktif ? tvIzlemeTestiTemizle : tvIzlemeTestiYap}
-                          style={[styles.tumunuGorButon, { marginRight: 8 }]}
-                          focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                          style={[styles.tumunuGorButon, { marginRight: 8, backgroundColor: 'rgba(255, 255, 255, 0.12)', borderColor: 'rgba(255, 255, 255, 0.35)' }]}
+                          focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF', backgroundColor: 'rgba(255, 255, 255, 0.25)' }}
                         >
                           {() => (
-                            <Text style={styles.tumunuGorYazi}>
+                            <Text style={[styles.tumunuGorYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
                               {tvTestAktif ? '🧹 Testi Sil' : '🧪 Test Et'}
                             </Text>
                           )}
@@ -5905,10 +5876,10 @@ export default function App() {
                                 { text: 'Temizle', onPress: devamEtListesiniSifirla },
                               ]);
                             }}
-                            style={styles.tumunuGorButon}
-                            focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
+                            style={[styles.tumunuGorButon, { backgroundColor: 'rgba(239, 68, 68, 0.25)', borderColor: '#EF4444' }]}
+                            focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF', backgroundColor: 'rgba(239, 68, 68, 0.45)' }}
                           >
-                            {() => <Text style={styles.tumunuGorYazi}>🗑️ Listeyi Temizle</Text>}
+                            {() => <Text style={[styles.tumunuGorYazi, { color: '#FFFFFF', fontWeight: '900' }]}>🗑️ Listeyi Sil</Text>}
                           </FocusableItem>
                         )}
                       </View>
@@ -6190,10 +6161,73 @@ export default function App() {
 
               {/* SEKME İÇERİKLERİ */}
               <ScrollView style={{ maxHeight: 370 }} showsVerticalScrollIndicator={false}>
-                {/* SEKME 1: GÖRÜNÜM (İkon Şekli, İkon Paketi, Kart Boyutu, Odak Animasyonu, Temalar) */}
+                {/* SEKME 1: GÖRÜNÜM (Ergonomik Renk Paleti, İkon Şekli, İkon Paketi, Kart Boyutu, Odak Animasyonu) */}
                 {kontrolSekmesi === 'gorunum' && (
                   <View>
-                    {/* 1. İkon Şekli */}
+                    {/* 🎨 1. ERGONOMİK RENK PALETİ (En Üstte - Aşağı İnmeden Tek Tıkla Seçim) */}
+                    <View style={[styles.ayarGrubuKutusu, { backgroundColor: 'rgba(255, 255, 255, 0.04)', borderColor: aktifTema.accent, borderWidth: 1.5, paddingVertical: 12 }]}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={{ fontSize: 16 }}>🎨</Text>
+                          <Text style={[styles.ayarGrubuBaslik, { marginBottom: 0, fontSize: 13, color: '#FFFFFF' }]}>
+                            Tema Renk Paleti:
+                          </Text>
+                        </View>
+                        <View style={{ backgroundColor: aktifTema.accent, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                          <Text style={{ color: aktifTema.textOnAccent, fontSize: 11, fontWeight: '900' }}>
+                            {aktifTema.name}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Yatay Renk Paleti Swatch'ları */}
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center', paddingVertical: 4 }}>
+                        {MONET_TEMALARI.map((t) => {
+                          const secili = aktifTema.id === t.id;
+                          return (
+                            <FocusableItem
+                              key={t.id}
+                              style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 22,
+                                backgroundColor: t.accent,
+                                marginRight: 12,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderWidth: secili ? 3.5 : 1.5,
+                                borderColor: secili ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)',
+                                shadowColor: t.accent,
+                                shadowOpacity: secili ? 0.9 : 0.3,
+                                shadowRadius: 10,
+                                elevation: secili ? 10 : 3,
+                              }}
+                              focusedStyle={{
+                                transform: [{ scale: 1.25 }],
+                                borderColor: '#FFFFFF',
+                                borderWidth: 3.5,
+                              }}
+                              onPress={() => {
+                                setAktifTema(t);
+                                if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+                                  TVAppManager.saveSetting('seciliTemaId', t.id).catch(() => {});
+                                }
+                                setBildirimMetni(`🎨 "${t.name}" teması uygulandı.`);
+                                setTimeout(() => setBildirimMetni(''), 2000);
+                              }}
+                            >
+                              {() => (
+                                secili ? (
+                                  <Text style={{ color: t.textOnAccent, fontWeight: '900', fontSize: 16 }}>✔</Text>
+                                ) : null
+                              )}
+                            </FocusableItem>
+                          );
+                        })}
+                      </ScrollView>
+                    </View>
+
+                    {/* 2. İkon Şekli */}
                     <View style={styles.ayarGrubuKutusu}>
                       <Text style={styles.ayarGrubuBaslik}>◽ İkon Şekli:</Text>
                       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -6394,45 +6428,6 @@ export default function App() {
                       </View>
                     </View>
 
-                    {/* 5. Arayüz Teması */}
-                    <View style={styles.ayarGrubuKutusu}>
-                      <Text style={styles.ayarGrubuBaslik}>🎨 Arayüz Renk Teması (Monet Material You):</Text>
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        {MONET_TEMALARI.map((t) => {
-                          const secili = aktifTema.id === t.id;
-                          return (
-                            <FocusableItem
-                              key={t.id}
-                              style={[
-                                styles.kategoriSecimPill,
-                                { borderColor: t.border, marginRight: 8, paddingHorizontal: 12, paddingVertical: 6 },
-                                secili && { backgroundColor: t.accent, borderColor: '#FFFFFF' },
-                              ]}
-                              focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.08 }] }}
-                              onPress={() => {
-                                setAktifTema(t);
-                                if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
-                                  TVAppManager.saveSetting('seciliTemaId', t.id).catch(() => {});
-                                }
-                                setBildirimMetni(`🎨 "${t.name}" teması uygulandı.`);
-                                setTimeout(() => setBildirimMetni(''), 2500);
-                              }}
-                            >
-                              {() => (
-                                <Text
-                                  style={[
-                                    styles.kategoriSecimPillYazi,
-                                    secili && { color: t.textOnAccent, fontWeight: '900' },
-                                  ]}
-                                >
-                                  {secili ? '✔ ' : ''}{t.name}
-                                </Text>
-                              )}
-                            </FocusableItem>
-                          );
-                        })}
-                      </ScrollView>
-                    </View>
                   </View>
                 )}
 
@@ -10505,6 +10500,198 @@ export default function App() {
           </View>
         </Modal>
 
+        {/* ================= MODAL: CANLI TV & UYDU YAYINLARI HUB ================= */}
+        <Modal
+          visible={canliTvModalAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setCanliTvModalAcik(false)}
+        >
+          <View style={styles.modalArkaplan}>
+            <View style={[styles.modalPencere, { borderColor: aktifTema.border, width: 780, maxHeight: '90%' }]}>
+              {/* Modal Başlığı */}
+              <View style={styles.modalBaslikSatir}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 24, marginRight: 10 }}>📡</Text>
+                  <View>
+                    <Text style={styles.modalBaslik}>Canlı TV & Uydu Yayınları</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>
+                      Ulusal Canlı Kanallar, TV Girişleri ve Yüklü TV Uygulamaları
+                    </Text>
+                  </View>
+                </View>
+                <FocusableItem
+                  style={[styles.modalKapatUstButon, { borderColor: aktifTema.border }]}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => setCanliTvModalAcik(false)}
+                >
+                  {() => <Text style={styles.modalKapatUstYazi}>✕ Kapat</Text>}
+                </FocusableItem>
+              </View>
+
+              <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+                {/* 1. Donanımsal Girişler & Uydu Tunerı */}
+                <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>
+                  🔌 TV Donanım Girişleri & Dahili Uydu:
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+                  <FocusableItem
+                    style={{
+                      flex: 1,
+                      backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                      borderColor: '#10B981',
+                      borderWidth: 1.5,
+                      padding: 12,
+                      borderRadius: 12,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                    }}
+                    focusedStyle={{ transform: [{ scale: 1.03 }], borderColor: '#FFFFFF', backgroundColor: '#10B981' }}
+                    onPress={async () => {
+                      setCanliTvModalAcik(false);
+                      if (Platform.OS === 'android' && TVAppManager && TVAppManager.openLiveChannels) {
+                        try {
+                          await TVAppManager.openLiveChannels();
+                        } catch {
+                          Alert.alert('Bilgi', 'Dahili uydu tunerına ulaşılamadı. HDMI veya TV girişlerini kontrol edin.');
+                        }
+                      }
+                    }}
+                  >
+                    {(isFocused) => (
+                      <>
+                        <Text style={{ fontSize: 24, marginRight: 10 }}>📺</Text>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>Dahili Uydu Tunerı</Text>
+                          <Text style={{ color: isFocused ? '#FFFFFF' : 'rgba(255,255,255,0.7)', fontSize: 11 }}>
+                            TV dahili tuner ve Live Channels
+                          </Text>
+                        </View>
+                      </>
+                    )}
+                  </FocusableItem>
+
+                  <FocusableItem
+                    style={{
+                      flex: 1,
+                      backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                      borderColor: '#38BDF8',
+                      borderWidth: 1.5,
+                      padding: 12,
+                      borderRadius: 12,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                    }}
+                    focusedStyle={{ transform: [{ scale: 1.03 }], borderColor: '#FFFFFF', backgroundColor: '#38BDF8' }}
+                    onPress={() => {
+                      setCanliTvModalAcik(false);
+                      if (Platform.OS === 'android' && TVAppManager && TVAppManager.openTVInputs) {
+                        TVAppManager.openTVInputs().catch(() => {});
+                      }
+                    }}
+                  >
+                    {(isFocused) => (
+                      <>
+                        <Text style={{ fontSize: 24, marginRight: 10 }}>🔌</Text>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>TV Girişleri (HDMI / AV)</Text>
+                          <Text style={{ color: isFocused ? '#FFFFFF' : 'rgba(255,255,255,0.7)', fontSize: 11 }}>
+                            HDMI 1, HDMI 2, Uydu Alıcısı seçici
+                          </Text>
+                        </View>
+                      </>
+                    )}
+                  </FocusableItem>
+                </View>
+
+                {/* 2. Ulusal Canlı TV Kanalları (Hızlı İzle) */}
+                <Text style={{ color: '#F59E0B', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>
+                  📡 Ulusal Canlı TV Kanalları (Tek Tıkla Canlı Yayın):
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+                  {[
+                    { ad: 'TRT 1 HD', url: 'https://www.trtizle.com/canli/tv/trt-1', ikon: '🔴' },
+                    { ad: 'ATV HD', url: 'https://www.atv.com.tr/canli-yayin', ikon: '🟡' },
+                    { ad: 'Kanal D HD', url: 'https://www.kanald.com.tr/canli-yayin', ikon: '🔵' },
+                    { ad: 'Show TV HD', url: 'https://www.showtv.com.tr/canli-yayin', ikon: '🟣' },
+                    { ad: 'Star TV HD', url: 'https://www.startv.com.tr/canli-yayin', ikon: '⭐' },
+                    { ad: 'TV8 HD', url: 'https://www.tv8.com.tr/canli-yayin', ikon: '🟠' },
+                    { ad: 'HaberTürk HD', url: 'https://www.haberturk.com/canli-yayin', ikon: '📰' },
+                    { ad: 'TRT Spor HD', url: 'https://www.trtspor.com.tr/canli-yayin-izle/trt-spor/', ikon: '⚽' },
+                  ].map((kan, kIdx) => (
+                    <FocusableItem
+                      key={`kan_${kIdx}`}
+                      style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        paddingHorizontal: 14,
+                        paddingVertical: 10,
+                        borderRadius: 10,
+                        width: '23%',
+                        alignItems: 'center',
+                      }}
+                      focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF', transform: [{ scale: 1.06 }] }}
+                      onPress={() => {
+                        setCanliTvModalAcik(false);
+                        Linking.openURL(kan.url).catch(() => {
+                          Alert.alert('Canlı Yayın', `${kan.ad} açılamadı.`);
+                        });
+                      }}
+                    >
+                      {() => (
+                        <>
+                          <Text style={{ fontSize: 16, marginBottom: 4 }}>{kan.ikon}</Text>
+                          <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '800' }}>
+                            {kan.ad}
+                          </Text>
+                        </>
+                      )}
+                    </FocusableItem>
+                  ))}
+                </View>
+
+                {/* 3. Cihazdaki Canlı TV & IPTV Uygulamaları */}
+                {uygulamalar.filter((u) => u.category === 'tv' || u.name.toLowerCase().includes('tv') || u.name.toLowerCase().includes('iptv') || u.name.toLowerCase().includes('tivimate')).length > 0 && (
+                  <>
+                    <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '800', marginBottom: 8 }}>
+                      📱 Kurulu Canlı TV & IPTV Uygulamalarınız:
+                    </Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                      {uygulamalar.filter((u) => u.category === 'tv' || u.name.toLowerCase().includes('tv') || u.name.toLowerCase().includes('iptv') || u.name.toLowerCase().includes('tivimate')).map((app) => (
+                        <FocusableItem
+                          key={`tvapp_${app.packageName}`}
+                          style={{
+                            backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                            borderColor: '#10B981',
+                            borderWidth: 1,
+                            paddingHorizontal: 14,
+                            paddingVertical: 8,
+                            borderRadius: 10,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                          }}
+                          focusedStyle={{ backgroundColor: '#10B981', borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                          onPress={() => {
+                            setCanliTvModalAcik(false);
+                            uygulamaBaslat(app.packageName, app.name);
+                          }}
+                        >
+                          {() => (
+                            <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '800' }}>
+                              ▶ {app.name}
+                            </Text>
+                          )}
+                        </FocusableItem>
+                      ))}
+                    </View>
+                  </>
+                )}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
         {/* KUMANDA KISAYOLLARI VE HIZLI YARDIM BİLGİ BANDI */}
         <View style={styles.kumandaKilavuzBant}>
           <Text style={styles.kumandaKilavuzYazi}>
@@ -11132,7 +11319,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
   },
-  tumunuGorYazi: { fontSize: 11, fontWeight: '700' },
+  tumunuGorYazi: { fontSize: 11, fontWeight: '800', color: '#FFFFFF' },
 
   yatayListe: { flexDirection: 'row', marginBottom: 20 },
 

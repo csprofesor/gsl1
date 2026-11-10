@@ -795,20 +795,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun openLiveChannels(promise: Promise) {
-        try {
-            // 1. Android TvContract Intent (Dahili Uydu Tuner & Canlı TV Kanalları)
-            val tvIntent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("content://android.media.tv/channel")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            if (tvIntent.resolveActivity(reactContext.packageManager) != null) {
-                reactContext.startActivity(tvIntent)
-                promise.resolve(true)
-                return
-            }
-        } catch (e: Exception) {}
-
-        // 2. Android TV / Xiaomi TV / Google TV Canlı TV Paketleri
+        // 1. Android TV / Google TV Canlı TV Uygulama Paketleri
         val liveTvPackages = listOf(
             "com.google.android.tv",               // Google Live Channels
             "com.android.tv",                      // AOSP Live TV / Tuner
@@ -816,7 +803,8 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             "com.xiaomi.mitv.tvbox.launcher",
             "com.xiaomi.mitv.mediaexplorer",
             "ar.tvplayer.tv",                      // TiviMate
-            "com.tivimate.player"
+            "com.tivimate.player",
+            "com.nst.iptvsmarterstvbox"            // IPTV Smarters Pro
         )
 
         for (pkg in liveTvPackages) {
@@ -829,55 +817,49 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     promise.resolve(true)
                     return
                 }
-            } catch (ignored: Exception) {}
+            } catch (ignored: Throwable) {}
         }
 
-        // 3. TV Girişleri (TV Input Switcher - Uydu / HDMI Girişi)
-        try {
-            val inputIntent = Intent("android.media.tv.action.VIEW_INPUTS").apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            if (inputIntent.resolveActivity(reactContext.packageManager) != null) {
-                reactContext.startActivity(inputIntent)
+        // 2. Android TvContract Intent (Dahili Uydu Tuner & Canlı TV Kanalları)
+        val directIntents = listOf(
+            Intent(Intent.ACTION_VIEW, Uri.parse("content://android.media.tv/channel")),
+            Intent("android.media.tv.action.VIEW_INPUTS"),
+            Intent().setComponent(android.content.ComponentName("com.google.android.tv", "com.android.tv.MainActivity")),
+            Intent().setComponent(android.content.ComponentName("com.android.tv", "com.android.tv.MainActivity")),
+            Intent().setComponent(android.content.ComponentName("com.mitv.tvhome", "com.mitv.tvhome.MainActivity")),
+            Intent("android.intent.action.VIEW", Uri.parse("tv://live"))
+        )
+
+        for (intent in directIntents) {
+            try {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                reactContext.startActivity(intent)
                 promise.resolve(true)
                 return
-            }
-        } catch (e: Exception) {}
-
-        // 4. Standart TV Ayarları
-        try {
-            val settings = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            reactContext.startActivity(settings)
-            promise.resolve(true)
-        } catch (e: Exception) {
-            promise.reject("ERROR_LIVE_TV", "Canlı TV alıcısı açılamadı: " + e.message)
+            } catch (e: Throwable) {}
         }
+
+        promise.resolve(false)
     }
 
     @ReactMethod
     fun openTVInputs(promise: Promise) {
-        try {
-            val inputIntent = Intent("android.media.tv.action.VIEW_INPUTS").apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            if (inputIntent.resolveActivity(reactContext.packageManager) != null) {
-                reactContext.startActivity(inputIntent)
+        val intents = listOf(
+            Intent("android.media.tv.action.VIEW_INPUTS"),
+            Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.inputs.InputsActivity")),
+            Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.device.inputs.InputsActivity")),
+            Intent().setComponent(android.content.ComponentName("com.xiaomi.mitv.settings", "com.xiaomi.mitv.settings.input.InputActivity")),
+            Intent().setComponent(android.content.ComponentName("com.mitv.tvhome", "com.mitv.tvhome.InputsActivity"))
+        )
+        for (intent in intents) {
+            try {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                reactContext.startActivity(intent)
                 promise.resolve(true)
                 return
-            }
-        } catch (e: Exception) {}
-
-        try {
-            val settings = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            reactContext.startActivity(settings)
-            promise.resolve(true)
-        } catch (err: Exception) {
-            promise.reject("ERROR_INPUTS", err.message, err)
+            } catch (e: Throwable) {}
         }
+        promise.resolve(false)
     }
 
     @ReactMethod
@@ -1265,32 +1247,87 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     wifiManager.startScan()
                 } catch (e: Exception) {}
 
-                val connectedSsid = wifiManager.connectionInfo?.ssid?.replace("\"", "") ?: ""
-                val scanResults = wifiManager.scanResults ?: emptyList()
+                val connectionInfo = try { wifiManager.connectionInfo } catch (e: Exception) { null }
+                val rawConnectedSsid = connectionInfo?.ssid?.replace("\"", "")?.trim() ?: ""
+                val connectedSsid = if (rawConnectedSsid == "<unknown ssid>") "" else rawConnectedSsid
+                val connectedRssi = connectionInfo?.rssi ?: -55
 
-                // Benzersiz SSID'leri grupla (en güçlü sinyali al)
-                val uniqueNetworks = mutableMapOf<String, android.net.wifi.ScanResult>()
-                for (scan in scanResults) {
-                    val s = scan.SSID ?: ""
-                    if (s.isEmpty()) continue
-                    val existing = uniqueNetworks[s]
-                    if (existing == null || scan.level > existing.level) {
-                        uniqueNetworks[s] = scan
+                // SSID -> Bundle (level, frequency, capabilities, isConnected, isSecure)
+                val networks = mutableMapOf<String, Bundle>()
+
+                // 1. Aktif bağlı ağı her zaman ilk sıraya koy (asla boş dönmesin)
+                if (connectedSsid.isNotEmpty()) {
+                    val b = Bundle().apply {
+                        putString("ssid", connectedSsid)
+                        putInt("level", connectedRssi)
+                        putInt("frequency", 5000)
+                        putString("capabilities", "[WPA2-PSK-CCMP][ESS]")
+                        putBoolean("isConnected", true)
+                        putBoolean("isSecure", true)
                     }
+                    networks[connectedSsid] = b
                 }
 
-                val sorted = uniqueNetworks.values.sortedByDescending { it.level }
+                // 2. Android TV'de kayıtlı / bilinen ağları ekle
+                try {
+                    val configured = wifiManager.configuredNetworks
+                    if (configured != null) {
+                        for (cfg in configured) {
+                            val s = cfg.SSID?.replace("\"", "")?.trim() ?: ""
+                            if (s.isNotEmpty() && !networks.containsKey(s)) {
+                                val b = Bundle().apply {
+                                    putString("ssid", s)
+                                    putInt("level", -65)
+                                    putInt("frequency", 2400)
+                                    putString("capabilities", "[WPA2-PSK-CCMP][ESS]")
+                                    putBoolean("isConnected", s == connectedSsid)
+                                    putBoolean("isSecure", true)
+                                }
+                                networks[s] = b
+                            }
+                        }
+                    }
+                } catch (e: Exception) {}
 
-                for (scan in sorted) {
+                // 3. Gerçek tarama sonuçlarını ekle/güncelle
+                try {
+                    val scanResults = wifiManager.scanResults
+                    if (scanResults != null) {
+                        for (scan in scanResults) {
+                            val s = scan.SSID?.trim() ?: ""
+                            if (s.isEmpty()) continue
+                            val isConn = (s == connectedSsid && connectedSsid.isNotEmpty())
+                            val isSecure = scan.capabilities?.contains("WPA") == true || scan.capabilities?.contains("WEP") == true
+                            val existing = networks[s]
+                            if (existing == null || scan.level > existing.getInt("level", -100)) {
+                                val b = Bundle().apply {
+                                    putString("ssid", s)
+                                    putInt("level", scan.level)
+                                    putInt("frequency", scan.frequency)
+                                    putString("capabilities", scan.capabilities ?: "")
+                                    putBoolean("isConnected", isConn)
+                                    putBoolean("isSecure", isSecure)
+                                }
+                                networks[s] = b
+                            }
+                        }
+                    }
+                } catch (e: Exception) {}
+
+                // Sıralama: Önce bağlı olan, sonra sinyal gücüne göre
+                val sorted = networks.values.sortedWith(
+                    compareByDescending<Bundle> { it.getBoolean("isConnected") }
+                        .thenByDescending { it.getInt("level") }
+                )
+
+                for (b in sorted) {
                     val item = Arguments.createMap()
-                    val s = scan.SSID ?: ""
-                    item.putString("ssid", s)
-                    item.putInt("level", scan.level)
-                    item.putInt("frequency", scan.frequency)
-                    item.putString("capabilities", scan.capabilities ?: "")
-                    item.putBoolean("isConnected", s == connectedSsid && connectedSsid.isNotEmpty() && connectedSsid != "<unknown ssid>")
-                    val isSecure = scan.capabilities?.contains("WPA") == true || scan.capabilities?.contains("WEP") == true
-                    item.putBoolean("isSecure", isSecure)
+                    item.putString("ssid", b.getString("ssid", ""))
+                    item.putInt("level", b.getInt("level", -70))
+                    item.putInt("frequency", b.getInt("frequency", 2400))
+                    item.putString("capabilities", b.getString("capabilities", ""))
+                    item.putBoolean("isConnected", b.getBoolean("isConnected", false))
+                    item.putBoolean("isSecure", b.getBoolean("isSecure", false))
                     result.pushMap(item)
                 }
             }
@@ -1726,6 +1763,27 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             promise.resolve(deleted > 0)
         } catch (e: Exception) {
             promise.resolve(false)
+        }
+    }
+
+    @ReactMethod
+    fun clearAllWatchNextPrograms(promise: Promise) {
+        try {
+            val uri = Uri.parse("content://android.media.tv/watch_next_program")
+            val deleted = reactContext.contentResolver.delete(uri, null, null)
+            promise.resolve(deleted > 0)
+        } catch (e: Exception) {
+            try {
+                val uri = Uri.parse("content://android.media.tv/watch_next_program")
+                val deleted = reactContext.contentResolver.delete(
+                    uri,
+                    "package_name = ?",
+                    arrayOf(reactContext.packageName)
+                )
+                promise.resolve(deleted > 0)
+            } catch (err: Exception) {
+                promise.resolve(false)
+            }
         }
     }
 
