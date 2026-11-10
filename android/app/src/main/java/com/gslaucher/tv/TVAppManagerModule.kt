@@ -425,125 +425,88 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun openHomeSettings(promise: Promise) {
-        try {
-            val pm = reactContext.packageManager
-            val intents = listOf(
-                Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.device.apps.DefaultAppsActivity")),
-                Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS),
-                Intent("android.settings.MANAGE_DEFAULT_APPS_SETTINGS"),
-                Intent(android.provider.Settings.ACTION_HOME_SETTINGS),
-                Intent(android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS),
-                Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.MainSettings")),
-                Intent("android.settings.TV_SETTINGS"),
-                Intent(android.provider.Settings.ACTION_SETTINGS)
-            )
+        val intents = listOf(
+            Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.device.apps.DefaultAppsActivity")),
+            Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS),
+            Intent("android.settings.MANAGE_DEFAULT_APPS_SETTINGS"),
+            Intent(android.provider.Settings.ACTION_HOME_SETTINGS),
+            Intent("android.settings.HOME_SETTINGS"),
+            Intent(android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS),
+            Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.MainSettings")),
+            Intent("android.settings.TV_SETTINGS"),
+            Intent(android.provider.Settings.ACTION_SETTINGS)
+        )
 
-            for (intent in intents) {
-                try {
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    if (intent.resolveActivity(pm) != null) {
-                        reactContext.startActivity(intent)
-                        promise.resolve(true)
-                        return
-                    }
-                } catch (e: Exception) {}
-            }
-
-            val fallback = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            reactContext.startActivity(fallback)
-            promise.resolve(true)
-        } catch (e: Exception) {
+        for (intent in intents) {
             try {
-                val fallback = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                reactContext.startActivity(fallback)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                reactContext.startActivity(intent)
                 promise.resolve(true)
-            } catch (err: Exception) {
-                promise.reject("ERROR_HOME_SETTINGS", err.message, err)
-            }
+                return
+            } catch (e: Throwable) {}
         }
+        promise.resolve(false)
     }
 
     @ReactMethod
     fun openLanguageSettings(promise: Promise) {
-        try {
-            val pm = reactContext.packageManager
-            val intents = listOf(
-                Intent(Settings.ACTION_LOCALE_SETTINGS),
-                Intent("android.settings.LOCALE_SETTINGS"),
-                Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.system.LanguageActivity")),
-                Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.device.LanguageActivity")),
-                Intent(Settings.ACTION_SETTINGS)
-            )
+        val intents = listOf(
+            Intent(Settings.ACTION_LOCALE_SETTINGS),
+            Intent("android.settings.LOCALE_SETTINGS"),
+            Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.system.LanguageActivity")),
+            Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.device.LanguageActivity")),
+            Intent("android.settings.TV_SETTINGS"),
+            Intent(Settings.ACTION_SETTINGS)
+        )
 
-            for (intent in intents) {
-                try {
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    if (intent.resolveActivity(pm) != null) {
-                        reactContext.startActivity(intent)
-                        promise.resolve(true)
-                        return
-                    }
-                } catch (e: Exception) {}
-            }
-
-            val fallback = Intent(Settings.ACTION_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            reactContext.startActivity(fallback)
-            promise.resolve(true)
-        } catch (e: Exception) {
-            promise.resolve(false)
+        for (intent in intents) {
+            try {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                reactContext.startActivity(intent)
+                promise.resolve(true)
+                return
+            } catch (e: Throwable) {}
         }
+        promise.resolve(false)
     }
 
     @ReactMethod
     fun openAccessibilitySettings(promise: Promise) {
-        try {
-            // Kullanıcı ayarlarda gezinirken ve izin onaylarken 3 dakika boyunca launcher müdahalesini engelle
-            TVAccessibilityService.allowStockLauncherUntil = System.currentTimeMillis() + 180000L
+        // Kullanıcı ayarlarda gezinirken ve izin onaylarken 3 dakika boyunca launcher müdahalesini engelle
+        TVAccessibilityService.allowStockLauncherUntil = System.currentTimeMillis() + 180000L
 
-            val pm = reactContext.packageManager
-            val intents = listOf(
-                Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.accessibility.AccessibilityActivity")),
-                Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.device.accessibility.AccessibilityActivity")),
-                Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS),
-                Intent("android.settings.ACCESSIBILITY_SETTINGS"),
-                Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.MainSettings")),
-                Intent("android.settings.TV_SETTINGS"),
-                Intent(android.provider.Settings.ACTION_SETTINGS)
-            )
+        val intents = listOf(
+            // 1. Standart Android Erişilebilirlik Intent'i (En genel ve kesin çalışan)
+            Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS),
+            Intent("android.settings.ACCESSIBILITY_SETTINGS"),
 
-            for (intent in intents) {
-                try {
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    if (intent.resolveActivity(pm) != null) {
-                        reactContext.startActivity(intent)
-                        promise.resolve(true)
-                        return
-                    }
-                } catch (e: Exception) {}
-            }
+            // 2. Android TV / Leanback Erişilebilirlik Aktiviteleri
+            Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.accessibility.AccessibilityActivity")),
+            Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.device.accessibility.AccessibilityActivity")),
+            Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.device.DevicePrefActivity")),
 
-            val fallback = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            reactContext.startActivity(fallback)
-            promise.resolve(true)
-        } catch (e: Exception) {
+            // 3. Xiaomi TV / Mi Box Özel Ayar Aktiviteleri
+            Intent().setComponent(android.content.ComponentName("com.xiaomi.mitv.settings", "com.xiaomi.mitv.settings.MainActivity")),
+            Intent().setComponent(android.content.ComponentName("com.mitv.tvhome", "com.mitv.tvhome.SettingsActivity")),
+
+            // 4. Android TV Genel Ayarları
+            Intent("android.settings.TV_SETTINGS"),
+            Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.MainSettings")),
+
+            // 5. Standart Android Ayarlar
+            Intent(android.provider.Settings.ACTION_SETTINGS)
+        )
+
+        for (intent in intents) {
             try {
-                val fallback = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                reactContext.startActivity(fallback)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                reactContext.startActivity(intent)
                 promise.resolve(true)
-            } catch (err: Exception) {
-                promise.reject("ERROR_ACCESSIBILITY", err.message, err)
-            }
+                return
+            } catch (e: Throwable) {}
         }
+
+        promise.resolve(false)
     }
 
     @ReactMethod
@@ -765,15 +728,20 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun openSettings(promise: Promise) {
-        try {
-            val intent = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            reactContext.startActivity(intent)
-            promise.resolve(true)
-        } catch (e: Exception) {
-            promise.reject("ERROR_SETTINGS", e.message, e)
+        val intents = listOf(
+            Intent("android.settings.TV_SETTINGS"),
+            Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.MainSettings")),
+            Intent(android.provider.Settings.ACTION_SETTINGS)
+        )
+        for (intent in intents) {
+            try {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                reactContext.startActivity(intent)
+                promise.resolve(true)
+                return
+            } catch (e: Throwable) {}
         }
+        promise.resolve(false)
     }
 
     @ReactMethod

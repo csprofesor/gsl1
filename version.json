@@ -1,7 +1,7 @@
 {
-  "version": "3.2.16",
-  "versionCode": 42,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.16/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gstv16",
-  "changelog": "v3.2.16 (Build 42): Sabit Başlatıcı Orijinal Kararlı Yapılandırmaya Geri Döndürüldü: 1) Erişilebilirlik servisinden canRetrieveWindowContent kaldırıldı (false yapıldı), böylece sistemin ekran okuma / hassas veri uyarısı vermesi ve Xiaomi tarafından engellenmesi tamamen ortadan kalktı. 2) Gereksiz bayraklar ve arama kutusu tarayıcısı kaldırılarak servis ilk hafif ve anında açılan haline getirildi."
+  "version": "3.2.17",
+  "versionCode": 43,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.17/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gstv17",
+  "changelog": "v3.2.17 (Build 43): Erişilebilirlik ve Ayarlar Açılış Hatası Düzeltmesi: 1) Android 11+ Package Visibility (paket görünürlüğü) için AndroidManifest'e <queries> etiketleri eklendi. 2) Erişilebilirlik ayarlarını açarken sistemin 'Bu işlemi işleyecek uygulama yok' hatası vermesine sebep olan resolveActivity engeli kaldırılarak doğrudan hata yakalamalı açılış sağlandı. 3) TV Ayarları yedek butonu eklendi."
 }

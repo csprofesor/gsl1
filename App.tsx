@@ -34,11 +34,11 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.16';
-const CURRENT_BUILD = 42;
+const CURRENT_VERSION = '3.2.17';
+const CURRENT_BUILD = 43;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gs16tv';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gstv17';
 
 // Trakt.tv Açık API & Scrobbler Kimlikleri (Google Play & Apple App Store %100 Uyumlu)
 const TRAKT_CLIENT_ID = 'db7483669be745d448651a141b71192e21e05a8f4c2c54ec8360d2cf34d28f8f';
@@ -7405,6 +7405,14 @@ export default function App() {
                           'Kumanda ana ekran (Home) tuşuna basıldığında veya TV her açıldığında GS Launcher\'ın daima sabit kalmasını sağlar.\n\nAşağıdaki "🔓 Erişilebilirliği Aç" butonuna basın ve listeden GS Launcher\'ı AÇIK konuma getirin.',
                           [
                             { text: 'Kapat', style: 'cancel' },
+                            {
+                              text: '⚙️ TV Ayarları',
+                              onPress: () => {
+                                if (Platform.OS === 'android' && TVAppManager && TVAppManager.openSettings) {
+                                  TVAppManager.openSettings().catch(() => {});
+                                }
+                              },
+                            },
                             {
                               text: '🔓 Erişilebilirliği Aç',
                               onPress: () => {

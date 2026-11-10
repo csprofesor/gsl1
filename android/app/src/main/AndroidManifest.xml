@@ -18,6 +18,33 @@
     <uses-feature android:name="android.hardware.faketouch" android:required="false" />
     <uses-feature android:name="android.software.leanback" android:required="false" />
 
+    <queries>
+        <package android:name="com.android.tv.settings" />
+        <package android:name="com.android.settings" />
+        <package android:name="com.google.android.tvlauncher" />
+        <package android:name="com.google.android.apps.tv.launcherx" />
+        <package android:name="com.xiaomi.mitv.settings" />
+        <package android:name="com.mitv.tvhome" />
+        <intent>
+            <action android:name="android.settings.ACCESSIBILITY_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.TV_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.HOME_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.MANAGE_DEFAULT_APPS_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.WIFI_SETTINGS" />
+        </intent>
+    </queries>
+
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
