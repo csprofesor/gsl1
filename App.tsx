@@ -1477,6 +1477,52 @@ export default function App() {
     }
   };
 
+  // Ayarlardan veya TV Menüsünden Geri Dönüşte Kaldığın Yeri Hatırla (Modal Koruma)
+  const sonAyarModaliniGeriYukle = useCallback(async () => {
+    if (Platform.OS !== 'android' || !TVAppManager || !TVAppManager.getSetting) return;
+    try {
+      const sonModal = await TVAppManager.getSetting('gs_son_modal_konumu').catch(() => null);
+      if (sonModal === 'sabit_baslatici') {
+        setKontrolMerkeziAcik(true);
+        setSabitBaslaticiModalAcik(true);
+        sabitBaslaticiDurumuKontrolEt();
+      }
+    } catch {}
+  }, []);
+
+  const sabitBaslaticiModaliniKapat = useCallback(() => {
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+      TVAppManager.saveSetting('gs_son_modal_konumu', '').catch(() => {});
+    }
+    setSabitBaslaticiModalAcik(false);
+  }, []);
+
+  const tvErisilebilirlikAc = async () => {
+    if (Platform.OS === 'android' && TVAppManager) {
+      if (TVAppManager.saveSetting) {
+        await TVAppManager.saveSetting('gs_son_modal_konumu', 'sabit_baslatici').catch(() => {});
+      }
+      if (TVAppManager.openAccessibilitySettings) {
+        TVAppManager.openAccessibilitySettings().catch(() => {});
+      }
+    }
+  };
+
+  const tvVarsayilanBaslaticiAc = async () => {
+    if (Platform.OS === 'android' && TVAppManager) {
+      if (TVAppManager.saveSetting) {
+        await TVAppManager.saveSetting('gs_son_modal_konumu', 'sabit_baslatici').catch(() => {});
+      }
+      if (TVAppManager.openHomeSettings) {
+        TVAppManager.openHomeSettings().catch(() => {});
+      }
+    }
+  };
+
+  useEffect(() => {
+    sonAyarModaliniGeriYukle();
+  }, [sonAyarModaliniGeriYukle]);
+
   // Yeni İçerik Widget'ları Durumları
   const [haberIndex, setHaberIndex] = useState(0);
   const [aktifRadyoIdx, setAktifRadyoIdx] = useState(0);
@@ -2852,6 +2898,7 @@ export default function App() {
         if (traktToken) {
           traktPlaybackCek();
         }
+        sonAyarModaliniGeriYukle();
       }
     });
 
@@ -9241,7 +9288,7 @@ export default function App() {
           visible={sabitBaslaticiModalAcik}
           transparent
           animationType="fade"
-          onRequestClose={() => setSabitBaslaticiModalAcik(false)}
+          onRequestClose={sabitBaslaticiModaliniKapat}
         >
           <View style={styles.modalArkaplan}>
             <View style={[styles.modalPencere, { borderColor: aktifTema.accent, borderWidth: 2, maxWidth: 660 }]}>
@@ -9251,7 +9298,7 @@ export default function App() {
                   <Text style={{ fontSize: 22 }}>🔒</Text>
                   <View>
                     <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '900' }}>
-                      Sabit Başlatıcı Servisi (Matinee Mimarisi)
+                      Sabit Başlatıcı Servisi (Mi Box & Android TV)
                     </Text>
                     <Text style={{ color: '#94A3B8', fontSize: 11 }}>
                       Home tuşu yakalama ve Android TV / Mi Box kalıcı sabitleme
@@ -9261,7 +9308,7 @@ export default function App() {
                 <FocusableItem
                   style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8 }}
                   focusedStyle={{ backgroundColor: '#EF4444', borderColor: '#FFFFFF' }}
-                  onPress={() => setSabitBaslaticiModalAcik(false)}
+                  onPress={sabitBaslaticiModaliniKapat}
                 >
                   {() => <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 12 }}>✕ Kapat</Text>}
                 </FocusableItem>
@@ -9284,7 +9331,7 @@ export default function App() {
                   {sabitBaslaticiDurum.kisitli && (
                     <View style={{ marginTop: 8, padding: 8, backgroundColor: 'rgba(239, 68, 68, 0.15)', borderRadius: 8, borderWidth: 1, borderColor: '#EF4444' }}>
                       <Text style={{ color: '#FCA5A5', fontSize: 11, fontWeight: '700' }}>
-                        ⚠️ Android 13+ Güvenlik Kısıtlaması (Restricted Settings): TV'niz APK ile yüklenen uygulamaların erişilebilirlik iznini kilitlediği için düğmeyi açtığınızda kendiliğinden kapanır. Aşağıdaki 'Tek Tıkla Otomatik ADB' veya ADB komutu ile bu kısıtlamayı kaldırabilirsiniz!
+                        ⚠️ Android 13+ Güvenlik Kısıtlaması (Restricted Settings): TV'niz APK ile yüklenen uygulamaların erişilebilirlik iznini kilitlediği için düğmeyi açtığınızda kendiliğinden kapanır. Aşağıdaki 'Seçenek 2: Varsayılan Başlatıcı' veya ADB komutu ile bu kısıtlamayı kaldırabilirsiniz!
                       </Text>
                     </View>
                   )}
@@ -9292,21 +9339,35 @@ export default function App() {
 
                 {/* ⚙️ BUTON 1: TV ERİŞİLEBİLİRLİK MENÜSÜNÜ AÇ */}
                 <FocusableItem
-                  style={{ backgroundColor: '#10B981', borderColor: '#FFFFFF', borderWidth: 1.5, borderRadius: 10, padding: 12, marginBottom: 12 }}
+                  style={{ backgroundColor: '#10B981', borderColor: '#FFFFFF', borderWidth: 1.5, borderRadius: 10, padding: 12, marginBottom: 10 }}
                   focusedStyle={{ transform: [{ scale: 1.02 }], backgroundColor: '#059669', borderColor: '#FFFFFF' }}
-                  onPress={() => {
-                    if (Platform.OS === 'android' && TVAppManager && TVAppManager.openAccessibilitySettings) {
-                      TVAppManager.openAccessibilitySettings().catch(() => {});
-                    }
-                  }}
+                  onPress={tvErisilebilirlikAc}
                 >
                   {() => (
                     <View style={{ alignItems: 'center' }}>
                       <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
-                        ⚙️ 1. Adım: TV Erişilebilirlik Menüsünü Aç
+                        ⚙️ Seçenek 1: TV Erişilebilirlik Menüsünü Aç
                       </Text>
                       <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 10, marginTop: 2 }}>
-                        (Açılan menüde "GS Launcher Sabit Başlatıcı"yı AÇIK konuma getirin)
+                        (Açılan TV menüsünde "GS Launcher Sabit Başlatıcı"yı AÇIK konuma getirin)
+                      </Text>
+                    </View>
+                  )}
+                </FocusableItem>
+
+                {/* 🏠 BUTON 2: TV VARSAYILAN BAŞLATICI MENÜSÜNÜ AÇ */}
+                <FocusableItem
+                  style={{ backgroundColor: '#3B82F6', borderColor: '#FFFFFF', borderWidth: 1.5, borderRadius: 10, padding: 12, marginBottom: 12 }}
+                  focusedStyle={{ transform: [{ scale: 1.02 }], backgroundColor: '#2563EB', borderColor: '#FFFFFF' }}
+                  onPress={tvVarsayilanBaslaticiAc}
+                >
+                  {() => (
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
+                        🏠 Seçenek 2: TV Varsayılan Ana Ekran (Home App) Menüsünü Aç
+                      </Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 10, marginTop: 2 }}>
+                        (Eğer TV'niz izin veriyorsa varsayılan başlatıcı olarak doğrudan GS Launcher'ı seçin)
                       </Text>
                     </View>
                   )}
@@ -9315,7 +9376,7 @@ export default function App() {
                 {/* 💻 BİLGİSAYAR / TELEFON ADB KOMUTLARI REHBERİ (KAPANMA SORUNUNU KALICI ÇÖZER) */}
                 <View style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', marginTop: 2 }}>
                   <Text style={{ color: '#38BDF8', fontWeight: '900', fontSize: 12, marginBottom: 4 }}>
-                    💻 2. Adım: Anahtar Kendiliğinden Kapanıyorsa (Android 13+ Güvenlik Çözümü):
+                    💻 Alternatif: Anahtar Kendiliğinden Kapanıyorsa (Android 13+ Güvenlik Çözümü):
                   </Text>
                   <Text style={{ color: '#CBD5E1', fontSize: 10, marginBottom: 6, lineHeight: 14 }}>
                     Mi Box veya Android 13+ TV'niz APK ile kurulan uygulamaların erişilebilirlik iznini kilitler (Restricted Settings). Bu yüzden anahtarı açtığınız anda sistem kapatır. Telefonunuzdaki Bugjaeger veya bilgisayarınızdaki ADB ile şu tek satırlık komutu verin:

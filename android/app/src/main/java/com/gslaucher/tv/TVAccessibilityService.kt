@@ -41,6 +41,19 @@ class TVAccessibilityService : AccessibilityService() {
         @Volatile
         var searchQueryExpiry: Long = 0L
 
+        // Bilinen tüm Android TV ve Mi Box sistem başlatıcıları
+        val STOCK_LAUNCHER_PACKAGES = setOf(
+            "com.google.android.tvlauncher",
+            "com.google.android.apps.tv.launcherx",
+            "com.mitv.tvhome",
+            "com.xiaomi.mitv.tvhome",
+            "com.xiaomi.mitv.tvbox.launcher",
+            "com.android.launcher3",
+            "com.android.launcher",
+            "com.amazon.firehomelauncher",
+            "com.android.tv.home"
+        )
+
         @JvmStatic
         fun setAutoSearch(pkg: String, query: String) {
             lastTargetPackage = pkg.lowercase()
@@ -57,16 +70,15 @@ class TVAccessibilityService : AccessibilityService() {
         isServiceRunning = true
         stockHomes = stockHomeActivities()
 
-        // Sadece orijinal TV başlatıcılarının pencere olaylarını dinle;
-        // tüm ekran olaylarını dinleyip gereksiz IPC yükü ve sistem kill riskini önler.
-        serviceInfo = (serviceInfo ?: AccessibilityServiceInfo()).apply {
-            if (stockHomes.isEmpty()) {
-                eventTypes = 0
-            } else {
-                eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
-                packageNames = stockHomes.map { it.packageName }.distinct().toTypedArray()
-            }
-            flags = flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+        try {
+            val info = serviceInfo ?: AccessibilityServiceInfo()
+            // eventTypes asla 0 olmamalı; 0 olduğunda Android servisi geçersiz sayıp anında kapatır!
+            info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+            info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
+            info.flags = info.flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+            info.notificationTimeout = 100
+            serviceInfo = info
+        } catch (e: Throwable) {
         }
 
         // TV açıldıktan sonra ilk boot penceresinde launcher'ı öne al
@@ -107,7 +119,7 @@ class TVAccessibilityService : AccessibilityService() {
             if (System.currentTimeMillis() < allowStockLauncherUntil) return
 
             val shown = ComponentName(pkg, cls)
-            if (shown in stockHomes) {
+            if (shown in stockHomes || STOCK_LAUNCHER_PACKAGES.contains(pkg)) {
                 openLauncher()
             }
         } catch (e: Throwable) {
@@ -122,7 +134,7 @@ class TVAccessibilityService : AccessibilityService() {
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName) ?: Intent(this, MainActivity::class.java)
         launchIntent.addFlags(
             Intent.FLAG_ACTIVITY_NEW_TASK or
-            Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+            Intent.FLAG_ACTIVITY_SINGLE_TOP
         )
         try {
             startActivity(launchIntent)
