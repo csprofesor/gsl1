@@ -32,6 +32,22 @@ class TVAccessibilityService : AccessibilityService() {
         @Volatile
         var allowStockLauncherUntil: Long = 0L
 
+        @Volatile
+        var lastTargetPackage: String? = null
+
+        @Volatile
+        var lastSearchQuery: String? = null
+
+        @Volatile
+        var searchQueryExpiry: Long = 0L
+
+        @JvmStatic
+        fun setAutoSearch(pkg: String, query: String) {
+            lastTargetPackage = pkg.lowercase()
+            lastSearchQuery = query
+            searchQueryExpiry = System.currentTimeMillis() + 20_000L
+        }
+
         private const val REOPEN_GUARD_MS = 1_000L
         private const val BOOT_WINDOW_MS = 2 * 60_000L
     }

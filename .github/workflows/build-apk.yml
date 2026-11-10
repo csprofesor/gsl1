@@ -38,7 +38,7 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace || (echo "=== BUILD FAILED, DUMPING ERROR REPORTS ===" && find app/build/reports -type f -exec cat {} + && exit 1)
+          ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace
 
       - name: Upload Build Reports on Failure
         if: failure()
