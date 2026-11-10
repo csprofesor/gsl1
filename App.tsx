@@ -34,8 +34,8 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.18';
-const CURRENT_BUILD = 44;
+const CURRENT_VERSION = '3.2.19';
+const CURRENT_BUILD = 45;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/gstv18';
@@ -1457,6 +1457,45 @@ export default function App() {
   const [duzenModalAcik, setDuzenModalAcik] = useState(false);
   const [aktifDuzenSekme, setAktifDuzenSekme] = useState<'sirala' | 'ekle' | 'sekil'>('sirala');
   const [fotoWidgetIndex, setFotoWidgetIndex] = useState(0);
+
+  // Renk Kartelası Açılır Kapanır Akordeon
+  const [renkPaletiAcik, setRenkPaletiAcik] = useState(false);
+
+  // Sabit Başlatıcı & Local ADB (Matinee Mimarisi)
+  const [sabitBaslaticiModalAcik, setSabitBaslaticiModalAcik] = useState(false);
+  const [sabitBaslaticiDurum, setSabitBaslaticiDurum] = useState<{ aktif: boolean; kisitli: boolean; kontrolEdiliyor: boolean }>({ aktif: false, kisitli: false, kontrolEdiliyor: false });
+  const [adbKurulumSonuc, setAdbKurulumSonuc] = useState<string | null>(null);
+  const [adbYukleniyor, setAdbYukleniyor] = useState(false);
+
+  const sabitBaslaticiDurumuKontrolEt = async () => {
+    if (Platform.OS !== 'android' || !TVAppManager) return;
+    setSabitBaslaticiDurum(prev => ({ ...prev, kontrolEdiliyor: true }));
+    try {
+      const aktif = await TVAppManager.isAccessibilityEnabled().catch(() => false);
+      const kisitli = TVAppManager.isRestrictedSettings ? await TVAppManager.isRestrictedSettings().catch(() => false) : false;
+      setSabitBaslaticiDurum({ aktif: !!aktif, kisitli: !!kisitli, kontrolEdiliyor: false });
+    } catch {
+      setSabitBaslaticiDurum({ aktif: false, kisitli: false, kontrolEdiliyor: false });
+    }
+  };
+
+  const localAdbKurulumuYap = async () => {
+    if (Platform.OS !== 'android' || !TVAppManager || !TVAppManager.setupLocalAdb) {
+      Alert.alert('Bilgi', 'Yerel ADB modülü bu cihazda desteklenmiyor.');
+      return;
+    }
+    setAdbYukleniyor(true);
+    setAdbKurulumSonuc(null);
+    try {
+      const res = await TVAppManager.setupLocalAdb();
+      setAdbYukleniyor(false);
+      setAdbKurulumSonuc(res);
+      await sabitBaslaticiDurumuKontrolEt();
+    } catch (err: any) {
+      setAdbYukleniyor(false);
+      setAdbKurulumSonuc(`Hata: ${err?.message || err}`);
+    }
+  };
 
   // Yeni İçerik Widget'ları Durumları
   const [haberIndex, setHaberIndex] = useState(0);
@@ -4377,117 +4416,102 @@ export default function App() {
               <Text style={styles.saatYazi}>{saat}</Text>
             </View>
 
-            {/* 10.a Canlı Wi-Fi Tuşu (Bağlı Ağ Adı & Uygulama İçi Arama) */}
+            {/* 1. Canlı Wi-Fi Tuşu (Sadece Modern İkon & Bağlantı Noktası) */}
             <FocusableItem
-              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)', maxWidth: 160 }]}
-              focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+              style={styles.ustBarIkonButon}
+              focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
               onPress={() => {
                 setWifiModalAcik(true);
                 wifiAglariniTara();
               }}
             >
               {() => (
-                <View style={styles.miniButonIcerik}>
-                  <Text style={{ fontSize: 13 }}>📶</Text>
-                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]} numberOfLines={1}>
-                    {bagliWifiAdi || 'Wi-Fi'}
-                  </Text>
+                <View style={styles.ustBarIkonKapsayici}>
+                  <Text style={{ fontSize: 16 }}>📶</Text>
+                  {!!bagliWifiAdi && <View style={styles.bagliNoktaYesil} />}
                 </View>
               )}
             </FocusableItem>
 
-            {/* 10.b Canlı Hız Testi Tuşu (Net Görünür Roket İkonu) */}
+            {/* 2. Canlı Hız Testi Tuşu (Sadece Modern Hız İkonu) */}
             <FocusableItem
-              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
-              focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+              style={styles.ustBarIkonButon}
+              focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
               onPress={() => setHizTestiAcik(true)}
             >
               {() => (
-                <View style={styles.miniButonIcerik}>
-                  <Text style={{ fontSize: 14 }}>🚀</Text>
-                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
-                    Hız
-                  </Text>
+                <View style={styles.ustBarIkonKapsayici}>
+                  <Text style={{ fontSize: 16 }}>⚡</Text>
                 </View>
               )}
             </FocusableItem>
 
-            {/* 9. Bildirim Tuşu */}
+            {/* 3. Bildirim Tuşu (Sadece İkon & Rozet) */}
             <FocusableItem
-              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
-              focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+              style={styles.ustBarIkonButon}
+              focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
               onPress={() => setBildirimPaneliAcik(true)}
             >
               {() => (
-                <View style={styles.miniButonIcerik}>
-                  <Text style={{ fontSize: 13 }}>🔔</Text>
-                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
-                    {bildirimListesi.length}
-                  </Text>
+                <View style={styles.ustBarIkonKapsayici}>
+                  <Text style={{ fontSize: 16 }}>🔔</Text>
+                  {bildirimListesi.length > 0 && (
+                    <View style={styles.bildirimRozetKucuk}>
+                      <Text style={styles.bildirimRozetYazi}>{bildirimListesi.length}</Text>
+                    </View>
+                  )}
                 </View>
               )}
             </FocusableItem>
 
-            {/* Canlı Uydu / TV Butonu */}
+            {/* 4. Canlı Uydu / TV Butonu (Sadece İkon) */}
             <FocusableItem
-              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.25)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
-              focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+              style={styles.ustBarIkonButon}
+              focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
               onPress={canliUyduyaGec}
             >
               {() => (
-                <View style={styles.miniButonIcerik}>
-                  <Text style={{ fontSize: 13 }}>📡</Text>
-                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
-                    TV
-                  </Text>
+                <View style={styles.ustBarIkonKapsayici}>
+                  <Text style={{ fontSize: 16 }}>📺</Text>
                 </View>
               )}
             </FocusableItem>
 
-            {/* Uygulama İçi Güncelle Butonu */}
+            {/* 5. Uygulama İçi Güncelle Butonu (Sadece İkon) */}
             <FocusableItem
-              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.3)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
-              focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+              style={styles.ustBarIkonButon}
+              focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
               onPress={() => setGuncellemeModalAcik(true)}
             >
               {() => (
-                <View style={styles.miniButonIcerik}>
-                  <Text style={{ fontSize: 13 }}>🔄</Text>
-                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
-                    Güncelle
-                  </Text>
+                <View style={styles.ustBarIkonKapsayici}>
+                  <Text style={{ fontSize: 16 }}>🔄</Text>
                 </View>
               )}
             </FocusableItem>
 
-            {/* 📐 Ana Ekran & Widget Düzenle Butonu */}
+            {/* 6. Ana Ekran & Widget Düzenle Butonu (Sadece İkon) */}
             <FocusableItem
-              style={[styles.miniAksiyonButon, { borderColor: 'rgba(255, 255, 255, 0.3)', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
-              focusedStyle={{ borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }}
+              style={styles.ustBarIkonButon}
+              focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
               onPress={() => setDuzenModalAcik(true)}
             >
               {() => (
-                <View style={styles.miniButonIcerik}>
-                  <Text style={{ fontSize: 13 }}>📐</Text>
-                  <Text style={[styles.miniButonYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
-                    Düzen
-                  </Text>
+                <View style={styles.ustBarIkonKapsayici}>
+                  <Text style={{ fontSize: 16 }}>⊞</Text>
                 </View>
               )}
             </FocusableItem>
 
-            {/* ⚙️ AYARLAR BUTONU (ASLA TAŞMAZ, SÜPER KOMPAKT, BEYAZ VE NET) */}
+            {/* 7. Ayarlar Butonu (Sadece İkon) */}
             <FocusableItem
-              style={[styles.ayarlarTemalarButon, { borderColor: 'rgba(255, 255, 255, 0.35)', backgroundColor: 'rgba(15, 23, 42, 0.85)' }]}
-              focusedStyle={[styles.kontrolMerkeziOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
+              style={styles.ustBarIkonButon}
+              focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
               onPress={() => setKontrolMerkeziAcik(true)}
             >
               {() => (
-                <View style={styles.miniButonIcerik}>
-                  <Text style={{ fontSize: 13 }}>⚙️</Text>
-                  <Text style={styles.ayarlarTemalarYazi}>
-                    Ayarlar
-                  </Text>
+                <View style={styles.ustBarIkonKapsayici}>
+                  <Text style={{ fontSize: 16 }}>⚙️</Text>
                 </View>
               )}
             </FocusableItem>
@@ -6164,67 +6188,79 @@ export default function App() {
                 {/* SEKME 1: GÖRÜNÜM (Ergonomik Renk Paleti, İkon Şekli, İkon Paketi, Kart Boyutu, Odak Animasyonu) */}
                 {kontrolSekmesi === 'gorunum' && (
                   <View>
-                    {/* 🎨 1. ERGONOMİK RENK PALETİ (En Üstte - Aşağı İnmeden Tek Tıkla Seçim) */}
-                    <View style={[styles.ayarGrubuKutusu, { backgroundColor: 'rgba(255, 255, 255, 0.04)', borderColor: aktifTema.accent, borderWidth: 1.5, paddingVertical: 12 }]}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Text style={{ fontSize: 16 }}>🎨</Text>
-                          <Text style={[styles.ayarGrubuBaslik, { marginBottom: 0, fontSize: 13, color: '#FFFFFF' }]}>
-                            Tema Renk Paleti:
-                          </Text>
-                        </View>
-                        <View style={{ backgroundColor: aktifTema.accent, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-                          <Text style={{ color: aktifTema.textOnAccent, fontSize: 11, fontWeight: '900' }}>
-                            {aktifTema.name}
-                          </Text>
-                        </View>
-                      </View>
+                    {/* 🎨 1. AÇILIR KAPANIR ERGONOMİK RENK KARTELASI (Az Yer Kaplayan Akordeon) */}
+                    <View style={[styles.ayarGrubuKutusu, { backgroundColor: 'rgba(255, 255, 255, 0.04)', borderColor: aktifTema.accent, borderWidth: 1.5, paddingVertical: 8, paddingHorizontal: 12 }]}>
+                      <FocusableItem
+                        style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4, borderRadius: 8 }}
+                        focusedStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', transform: [{ scale: 1.02 }] }}
+                        onPress={() => setRenkPaletiAcik(prev => !prev)}
+                      >
+                        {() => (
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                              <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: aktifTema.accent, borderWidth: 2, borderColor: '#FFFFFF' }} />
+                              <Text style={[styles.ayarGrubuBaslik, { marginBottom: 0, fontSize: 13, color: '#FFFFFF', fontWeight: '900' }]}>
+                                Renk Kartelası: {aktifTema.name}
+                              </Text>
+                            </View>
+                            <View style={{ backgroundColor: aktifTema.accent, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                              <Text style={{ color: aktifTema.textOnAccent, fontSize: 11, fontWeight: '900' }}>
+                                {renkPaletiAcik ? '▲ Kartelayı Kapat' : '▼ Renk Seç'}
+                              </Text>
+                            </View>
+                          </View>
+                        )}
+                      </FocusableItem>
 
-                      {/* Yatay Renk Paleti Swatch'ları */}
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center', paddingVertical: 4 }}>
-                        {MONET_TEMALARI.map((t) => {
-                          const secili = aktifTema.id === t.id;
-                          return (
-                            <FocusableItem
-                              key={t.id}
-                              style={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: 22,
-                                backgroundColor: t.accent,
-                                marginRight: 12,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                borderWidth: secili ? 3.5 : 1.5,
-                                borderColor: secili ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)',
-                                shadowColor: t.accent,
-                                shadowOpacity: secili ? 0.9 : 0.3,
-                                shadowRadius: 10,
-                                elevation: secili ? 10 : 3,
-                              }}
-                              focusedStyle={{
-                                transform: [{ scale: 1.25 }],
-                                borderColor: '#FFFFFF',
-                                borderWidth: 3.5,
-                              }}
-                              onPress={() => {
-                                setAktifTema(t);
-                                if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
-                                  TVAppManager.saveSetting('seciliTemaId', t.id).catch(() => {});
-                                }
-                                setBildirimMetni(`🎨 "${t.name}" teması uygulandı.`);
-                                setTimeout(() => setBildirimMetni(''), 2000);
-                              }}
-                            >
-                              {() => (
-                                secili ? (
-                                  <Text style={{ color: t.textOnAccent, fontWeight: '900', fontSize: 16 }}>✔</Text>
-                                ) : null
-                              )}
-                            </FocusableItem>
-                          );
-                        })}
-                      </ScrollView>
+                      {/* Açılır / Kapanır Swatch Listesi */}
+                      {renkPaletiAcik && (
+                        <View style={{ marginTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', paddingTop: 10 }}>
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center', paddingVertical: 4 }}>
+                            {MONET_TEMALARI.map((t) => {
+                              const secili = aktifTema.id === t.id;
+                              return (
+                                <FocusableItem
+                                  key={t.id}
+                                  style={{
+                                    width: 44,
+                                    height: 44,
+                                    borderRadius: 22,
+                                    backgroundColor: t.accent,
+                                    marginRight: 12,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderWidth: secili ? 3.5 : 1.5,
+                                    borderColor: secili ? '#FFFFFF' : 'rgba(255, 255, 255, 0.35)',
+                                    shadowColor: t.accent,
+                                    shadowOpacity: secili ? 0.9 : 0.3,
+                                    shadowRadius: 10,
+                                    elevation: secili ? 10 : 3,
+                                  }}
+                                  focusedStyle={{
+                                    transform: [{ scale: 1.25 }],
+                                    borderColor: '#FFFFFF',
+                                    borderWidth: 3.5,
+                                  }}
+                                  onPress={() => {
+                                    setAktifTema(t);
+                                    if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+                                      TVAppManager.saveSetting('seciliTemaId', t.id).catch(() => {});
+                                    }
+                                    setBildirimMetni(`🎨 "${t.name}" teması uygulandı.`);
+                                    setTimeout(() => setBildirimMetni(''), 2000);
+                                  }}
+                                >
+                                  {() => (
+                                    secili ? (
+                                      <Text style={{ color: t.textOnAccent, fontWeight: '900', fontSize: 16 }}>✔</Text>
+                                    ) : null
+                                  )}
+                                </FocusableItem>
+                              );
+                            })}
+                          </ScrollView>
+                        </View>
+                      )}
                     </View>
 
                     {/* 2. İkon Şekli */}
@@ -7390,41 +7426,22 @@ export default function App() {
                 {/* SEKME 5: SİSTEM & SABİTLEME (Sabit Başlatıcı, Varsayılan, Fabrika Ekranı, Güncelleme) */}
                 {kontrolSekmesi === 'sistem' && (
                   <View style={styles.kontrolGrid}>
-                    {/* Sabit Başlatıcı Modu (Erişilebilirlik - Asla Kapanmaz) */}
+                    {/* Sabit Başlatıcı Modu (Jarvis322/matinee Paritesi - Asla Kapanmaz) */}
                     <FocusableItem
-                      style={[styles.kontrolTile, { borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}
+                      style={[styles.kontrolTile, { borderColor: sabitBaslaticiDurum.aktif ? '#10B981' : '#F59E0B', backgroundColor: sabitBaslaticiDurum.aktif ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.12)' }]}
                       focusedStyle={[styles.kontrolTileOdak, { borderColor: '#FFFFFF' }]}
                       onPress={() => {
-                        Alert.alert(
-                          '🔒 Sabit Başlatıcı (Asla Kapanmaz)',
-                          'Kumanda ana ekran (Home) tuşuna basıldığında veya TV her açıldığında GS Launcher\'ın daima sabit kalmasını sağlar.\n\nAşağıdaki "🔓 Erişilebilirliği Aç" butonuna basın ve listeden GS Launcher\'ı AÇIK konuma getirin.',
-                          [
-                            { text: 'Kapat', style: 'cancel' },
-                            {
-                              text: '⚙️ TV Ayarları',
-                              onPress: () => {
-                                if (Platform.OS === 'android' && TVAppManager && TVAppManager.openSettings) {
-                                  TVAppManager.openSettings().catch(() => {});
-                                }
-                              },
-                            },
-                            {
-                              text: '🔓 Erişilebilirliği Aç',
-                              onPress: () => {
-                                if (Platform.OS === 'android' && TVAppManager && TVAppManager.openAccessibilitySettings) {
-                                  TVAppManager.openAccessibilitySettings().catch(() => {});
-                                }
-                              },
-                            },
-                          ]
-                        );
+                        sabitBaslaticiDurumuKontrolEt();
+                        setSabitBaslaticiModalAcik(true);
                       }}
                     >
                       {() => (
                         <>
                           <Text style={styles.tileIkon}>🔒</Text>
-                          <Text style={[styles.tileBaslik, { color: '#10B981', fontWeight: '900' }]}>Sabit Başlatıcı</Text>
-                          <Text style={styles.tileAlt}>Asla Kapanmaz</Text>
+                          <Text style={[styles.tileBaslik, { color: sabitBaslaticiDurum.aktif ? '#10B981' : '#F59E0B', fontWeight: '900' }]}>Sabit Başlatıcı</Text>
+                          <Text style={styles.tileAlt}>
+                            {sabitBaslaticiDurum.aktif ? '🟢 Aktif (Sabit)' : '⚡ Matinee Servisi'}
+                          </Text>
                         </>
                       )}
                     </FocusableItem>
@@ -9239,6 +9256,150 @@ export default function App() {
           </View>
         </Modal>
 
+        {/* ================= MODAL: SABİT BAŞLATICI & MATINEE ERİŞİLEBİLİRLİK (ASLA KAPANMAZ) ================= */}
+        <Modal
+          visible={sabitBaslaticiModalAcik}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setSabitBaslaticiModalAcik(false)}
+        >
+          <View style={styles.modalArkaplan}>
+            <View style={[styles.modalPencere, { borderColor: aktifTema.accent, borderWidth: 2, maxWidth: 660 }]}>
+              {/* Modal Başlık */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)', paddingBottom: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <Text style={{ fontSize: 22 }}>🔒</Text>
+                  <View>
+                    <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '900' }}>
+                      Sabit Başlatıcı Servisi (Matinee Mimarisi)
+                    </Text>
+                    <Text style={{ color: '#94A3B8', fontSize: 11 }}>
+                      Home tuşu yakalama ve Android TV / Mi Box kalıcı sabitleme
+                    </Text>
+                  </View>
+                </View>
+                <FocusableItem
+                  style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8 }}
+                  focusedStyle={{ backgroundColor: '#EF4444', borderColor: '#FFFFFF' }}
+                  onPress={() => setSabitBaslaticiModalAcik(false)}
+                >
+                  {() => <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 12 }}>✕ Kapat</Text>}
+                </FocusableItem>
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
+                {/* Canlı Durum Kartı */}
+                <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', padding: 12, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: sabitBaslaticiDurum.aktif ? '#10B981' : '#F59E0B' }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 13 }}>
+                      Servis Durumu:
+                    </Text>
+                    <View style={{ backgroundColor: sabitBaslaticiDurum.aktif ? '#10B981' : '#EF4444', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                      <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 11 }}>
+                        {sabitBaslaticiDurum.aktif ? '🟢 AKTİF (SABİTLENDİ)' : '🔴 KAPALI / BEKLİYOR'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {sabitBaslaticiDurum.kisitli && (
+                    <View style={{ marginTop: 8, padding: 8, backgroundColor: 'rgba(239, 68, 68, 0.15)', borderRadius: 8, borderWidth: 1, borderColor: '#EF4444' }}>
+                      <Text style={{ color: '#FCA5A5', fontSize: 11, fontWeight: '700' }}>
+                        ⚠️ Android 13+ Güvenlik Kısıtlaması (Restricted Settings): TV'niz APK ile yüklenen uygulamaların erişilebilirlik iznini kilitlediği için düğmeyi açtığınızda kendiliğinden kapanır. Aşağıdaki 'Tek Tıkla Otomatik ADB' veya ADB komutu ile bu kısıtlamayı kaldırabilirsiniz!
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* ⚡ BUTON 1: TEK TIKLA OTOMATİK ADB İLE YETKİLENDİR */}
+                <FocusableItem
+                  style={{ backgroundColor: '#10B981', borderColor: '#FFFFFF', borderWidth: 1.5, borderRadius: 10, padding: 12, marginBottom: 10 }}
+                  focusedStyle={{ transform: [{ scale: 1.02 }], backgroundColor: '#059669', borderColor: '#FFFFFF' }}
+                  onPress={localAdbKurulumuYap}
+                >
+                  {() => (
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
+                        {adbYukleniyor ? '⏳ ADB Bağlanıyor & İzin Veriliyor...' : '⚡ 1. Adım: Tek Tıkla Otomatik ADB Yetkilendir (Matinee Yöntemi)'}
+                      </Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 10, marginTop: 3 }}>
+                        (TV Geliştirici Seçenekleri'nde USB Hata Ayıklama açıksa tek tıkla halleder)
+                      </Text>
+                    </View>
+                  )}
+                </FocusableItem>
+
+                {/* ADB Kurulum Sonucu */}
+                {!!adbKurulumSonuc && (
+                  <View style={{ padding: 10, borderRadius: 8, marginBottom: 10, backgroundColor: adbKurulumSonuc === 'DONE' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)', borderWidth: 1, borderColor: adbKurulumSonuc === 'DONE' ? '#10B981' : '#F59E0B' }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>
+                      {adbKurulumSonuc === 'DONE' && '✅ Başarılı! Sabit başlatıcı servisi yetkilendirildi ve kalıcı olarak sabitlendi!'}
+                      {adbKurulumSonuc === 'ADB_OFF' && '⚠️ TV\'nizde USB Hata Ayıklama (ADB) kapalı. Lütfen TV Ayarları → Cihaz Tercihleri → Hakkında → Yapı Numarası\'na 7 kez basıp Geliştirici Seçenekleri\'nden "USB Hata Ayıklama"yı açın.'}
+                      {adbKurulumSonuc === 'NOT_ALLOWED' && '⚠️ TV ekranına gelen "Hata ayıklamaya izin verilsin mi?" uyarısını kumandadan "Her zaman izin ver" diyerek onaylayın ve tekrar deneyin.'}
+                      {adbKurulumSonuc === 'FAILED' && '⚠️ ADB bağlantısı kurulamadı. Aşağıdaki kılavuzdan manuel komutu kullanabilirsiniz.'}
+                      {adbKurulumSonuc.startsWith('Hata') && adbKurulumSonuc}
+                    </Text>
+                  </View>
+                )}
+
+                {/* ⚙️ BUTON 2: TV ERİŞİLEBİLİRLİK MENÜSÜNÜ AÇ */}
+                <FocusableItem
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.25)', borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 10 }}
+                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                  onPress={() => {
+                    if (Platform.OS === 'android' && TVAppManager && TVAppManager.openAccessibilitySettings) {
+                      TVAppManager.openAccessibilitySettings().catch(() => {});
+                    }
+                  }}
+                >
+                  {() => (
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '900' }}>
+                        ⚙️ 2. Adım: TV Erişilebilirlik Menüsünü Aç
+                      </Text>
+                      <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>
+                        (Açılan menüde "GS Launcher Sabit Başlatıcı"yı AÇIK konuma getirin)
+                      </Text>
+                    </View>
+                  )}
+                </FocusableItem>
+
+                {/* 💻 BİLGİSAYAR / TELEFON ADB KOMUTLARI REHBERİ */}
+                <View style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', marginTop: 4 }}>
+                  <Text style={{ color: '#38BDF8', fontWeight: '900', fontSize: 12, marginBottom: 4 }}>
+                    💻 Bilgisayar veya Telefondan (Bugjaeger / ADB TV) Tek Seferlik Kesin Çözüm:
+                  </Text>
+                  <Text style={{ color: '#CBD5E1', fontSize: 10, marginBottom: 6, lineHeight: 14 }}>
+                    Anahtar açıldığı gibi kapanıyorsa, telefonunuzdaki Bugjaeger veya bilgisayarınızdaki adb terminalinden şu tek komutu verin:
+                  </Text>
+                  <View style={{ backgroundColor: '#020617', padding: 8, borderRadius: 6, marginBottom: 8 }}>
+                    <Text style={{ color: '#A7F3D0', fontFamily: 'monospace', fontSize: 9.5 }}>
+                      adb shell appops set com.gslaucher.tv ACCESS_RESTRICTED_SETTINGS allow && adb shell settings put secure enabled_accessibility_services com.gslaucher.tv/.TVAccessibilityService && adb shell settings put secure accessibility_enabled 1
+                    </Text>
+                  </View>
+
+                  <FocusableItem
+                    style={{ alignSelf: 'flex-start', backgroundColor: 'rgba(56, 189, 248, 0.2)', borderWidth: 1, borderColor: '#38BDF8', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6 }}
+                    focusedStyle={{ backgroundColor: '#38BDF8' }}
+                    onPress={() => {
+                      const komut = 'adb shell appops set com.gslaucher.tv ACCESS_RESTRICTED_SETTINGS allow && adb shell settings put secure enabled_accessibility_services com.gslaucher.tv/.TVAccessibilityService && adb shell settings put secure accessibility_enabled 1';
+                      if (Platform.OS === 'android' && TVAppManager && TVAppManager.copyToClipboard) {
+                        TVAppManager.copyToClipboard(komut).catch(() => {});
+                      }
+                      Alert.alert('Kopyalandı', 'ADB komutu panoya kopyalandı.');
+                    }}
+                  >
+                    {(isFocused) => (
+                      <Text style={{ color: isFocused ? '#000000' : '#38BDF8', fontSize: 11, fontWeight: '800' }}>
+                        📋 ADB Komutunu Kopyala
+                      </Text>
+                    )}
+                  </FocusableItem>
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
         {/* ================= MODAL: UYGULAMA İÇİ WI-FI ARAMA & AĞ YÖNETİMİ ================= */}
         <Modal
           visible={wifiModalAcik}
@@ -10837,6 +10998,56 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     fontWeight: '600',
     marginTop: 2,
+  },
+  ustBarIkonButon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    marginLeft: 6,
+  },
+  ustBarIkonButonOdak: {
+    transform: [{ scale: 1.15 }],
+    elevation: 8,
+  },
+  ustBarIkonKapsayici: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  bagliNoktaYesil: {
+    position: 'absolute',
+    top: -2,
+    right: -4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#10B981',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  bildirimRozetKucuk: {
+    position: 'absolute',
+    top: -4,
+    right: -7,
+    backgroundColor: '#EF4444',
+    borderRadius: 7,
+    minWidth: 14,
+    height: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+  },
+  bildirimRozetYazi: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '900',
   },
   ayarlarTemalarButon: {
     flexDirection: 'row',

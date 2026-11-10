@@ -1,6 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -85,12 +87,13 @@
         </intent-filter>
       </activity>
 
-      <!-- Sabit Başlatıcı Hizmeti (Projectivy / FLauncher Paritesi) -->
+      <!-- Sabit Başlatıcı Hizmeti (Jarvis322/matinee Paritesi) -->
       <service
           android:name=".TVAccessibilityService"
           android:label="@string/accessibility_service_label"
           android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-          android:exported="true">
+          android:exported="false"
+          android:process=":homekey">
           <intent-filter>
               <action android:name="android.accessibilityservice.AccessibilityService" />
           </intent-filter>

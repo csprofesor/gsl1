@@ -1,5 +1,6 @@
 package com.gslaucher.tv
 
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.ClipData
@@ -8,6 +9,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.database.ContentObserver
 import android.graphics.Bitmap
@@ -24,11 +26,15 @@ import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.accessibility.AccessibilityManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 
@@ -517,6 +523,13 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                 promise.resolve(true)
                 return
             }
+            val am = reactContext.getSystemService(AccessibilityManager::class.java)
+            val isRunningInAm = am?.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+                ?.any { it.resolveInfo?.serviceInfo?.let { info -> info.packageName == reactContext.packageName } } == true
+            if (isRunningInAm) {
+                promise.resolve(true)
+                return
+            }
             val expectedService = "${reactContext.packageName}/${TVAccessibilityService::class.java.canonicalName}"
             val enabledServices = android.provider.Settings.Secure.getString(
                 reactContext.contentResolver,
@@ -528,6 +541,51 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             promise.resolve(isEnabled)
         } catch (e: Exception) {
             promise.resolve(false)
+        }
+    }
+
+    /**
+     * Android 13+ (Mi Box / Google TV) yerel/indirilen APK'larda kısıtlanmış ayarları (Restricted Settings) denetler.
+     */
+    @ReactMethod
+    fun isRestrictedSettings(promise: Promise) {
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                promise.resolve(false)
+                return
+            }
+            val source = try {
+                reactContext.packageManager.getInstallSourceInfo(reactContext.packageName).packageSource
+            } catch (_: Throwable) {
+                null
+            }
+            val isRestricted = (source == PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE || 
+                                source == PackageInstaller.PACKAGE_SOURCE_DOWNLOADED_FILE)
+            promise.resolve(isRestricted)
+        } catch (e: Exception) {
+            promise.resolve(false)
+        }
+    }
+
+    /**
+     * Matinee paritesi: TV cihazı üzerindeki yerel ADB portuna (localhost:5555) bağlanarak
+     * tek tıkla gerekli izinleri otomatik verir ve anahtarın kapanmasını çözer.
+     */
+    @ReactMethod
+    fun setupLocalAdb(promise: Promise) {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val adb = LocalAdb(reactContext)
+                val result = adb.setUp()
+                when (result) {
+                    LocalAdb.SetupResult.DONE -> promise.resolve("DONE")
+                    LocalAdb.SetupResult.ADB_OFF -> promise.resolve("ADB_OFF")
+                    LocalAdb.SetupResult.NOT_ALLOWED -> promise.resolve("NOT_ALLOWED")
+                    LocalAdb.SetupResult.FAILED -> promise.resolve("FAILED")
+                }
+            } catch (e: Throwable) {
+                promise.resolve("ERROR: ${e.message}")
+            }
         }
     }
 

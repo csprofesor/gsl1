@@ -1,7 +1,7 @@
 {
-  "version": "3.2.18",
-  "versionCode": 44,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.18/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gs18tv",
-  "changelog": "v3.2.18 (Build 44): 1) Ayarlar Görünüm sekmesinde en üste ergonomik ve kompakt Yatay Renk Paleti eklendi. 2) Kaldığın Yerden Devam Et rafındaki 'Test Et' ve 'Listeyi Sil' buton yazıları kristal beyaz (#FFFFFF) yapıldı; listeyi sıfırlama sistemi Android TV TvProvider veritabanıyla tam senkronize edilerek silinen içeriklerin geri gelmesi engellendi. 3) Wi-Fi arama motoru güçlendirildi; bağlı ağ ve kaydedilmiş ağlar garanti listeye alındı. 4) Dahili uydu tuner, TV girişleri ve tek tıkla ulusal canlı kanalları içeren 'Canlı TV & Uydu Hub'ı eklendi."
+  "version": "3.2.19",
+  "versionCode": 45,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.19/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gs19tv",
+  "changelog": "v3.2.19 (Build 45): 1) Matinee (Jarvis322/matinee) mimarisiyle birebir paritede çalışan sabit başlatıcı servisi entegre edildi: Donanımsal KEYCODE_HOME yakalama, :homekey izole süreci, stock launcher dinamik filtreleme ve TV'nin 'kendi kendine kapanma' sorununu çözen tek tıkla Otomatik ADB desteği (Local ADB dadb). 2) Renk Kartelası kategorisi açılır-kapanır akordeon haline getirildi; ayarlar menüsünde yer kaplaması önlendi. 3) Üst bardaki tüm metin etiketleri (Wi-Fi, Hız, TV, Güncelle, Düzen, Ayarlar) kaldırıldı, sadece modern ve şık 2026 cam tasarım ikonlar bırakıldı."
 }

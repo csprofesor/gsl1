@@ -82,8 +82,8 @@ android {
         applicationId "com.gslaucher.tv"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 44
-        versionName "3.2.18"
+        versionCode 45
+        versionName "3.2.19"
     }
     signingConfigs {
         debug {
@@ -114,6 +114,8 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    // Matinee paritesi: TV cihazı üzerinde adb localhost (otomatik ADB izin yetkilendirme)
+    implementation("dev.mobile:dadb:2.0.0")
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
