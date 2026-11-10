@@ -19,6 +19,7 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
@@ -1236,6 +1237,15 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
         }
     }
 
+    data class WifiNetworkItem(
+        val ssid: String,
+        val level: Int = -70,
+        val frequency: Int = 2400,
+        val capabilities: String = "",
+        val isConnected: Boolean = false,
+        val isSecure: Boolean = false
+    )
+
     @ReactMethod
     fun scanWifiNetworks(promise: Promise) {
         try {
@@ -1252,20 +1262,19 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                 val connectedSsid = if (rawConnectedSsid == "<unknown ssid>") "" else rawConnectedSsid
                 val connectedRssi = connectionInfo?.rssi ?: -55
 
-                // SSID -> Bundle (level, frequency, capabilities, isConnected, isSecure)
-                val networks = mutableMapOf<String, Bundle>()
+                // SSID -> WifiNetworkItem
+                val networks = mutableMapOf<String, WifiNetworkItem>()
 
                 // 1. Aktif bağlı ağı her zaman ilk sıraya koy (asla boş dönmesin)
                 if (connectedSsid.isNotEmpty()) {
-                    val b = Bundle().apply {
-                        putString("ssid", connectedSsid)
-                        putInt("level", connectedRssi)
-                        putInt("frequency", 5000)
-                        putString("capabilities", "[WPA2-PSK-CCMP][ESS]")
-                        putBoolean("isConnected", true)
-                        putBoolean("isSecure", true)
-                    }
-                    networks[connectedSsid] = b
+                    networks[connectedSsid] = WifiNetworkItem(
+                        ssid = connectedSsid,
+                        level = connectedRssi,
+                        frequency = 5000,
+                        capabilities = "[WPA2-PSK-CCMP][ESS]",
+                        isConnected = true,
+                        isSecure = true
+                    )
                 }
 
                 // 2. Android TV'de kayıtlı / bilinen ağları ekle
@@ -1275,15 +1284,14 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         for (cfg in configured) {
                             val s = cfg.SSID?.replace("\"", "")?.trim() ?: ""
                             if (s.isNotEmpty() && !networks.containsKey(s)) {
-                                val b = Bundle().apply {
-                                    putString("ssid", s)
-                                    putInt("level", -65)
-                                    putInt("frequency", 2400)
-                                    putString("capabilities", "[WPA2-PSK-CCMP][ESS]")
-                                    putBoolean("isConnected", s == connectedSsid)
-                                    putBoolean("isSecure", true)
-                                }
-                                networks[s] = b
+                                networks[s] = WifiNetworkItem(
+                                    ssid = s,
+                                    level = -65,
+                                    frequency = 2400,
+                                    capabilities = "[WPA2-PSK-CCMP][ESS]",
+                                    isConnected = s == connectedSsid,
+                                    isSecure = true
+                                )
                             }
                         }
                     }
@@ -1299,16 +1307,15 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                             val isConn = (s == connectedSsid && connectedSsid.isNotEmpty())
                             val isSecure = scan.capabilities?.contains("WPA") == true || scan.capabilities?.contains("WEP") == true
                             val existing = networks[s]
-                            if (existing == null || scan.level > existing.getInt("level", -100)) {
-                                val b = Bundle().apply {
-                                    putString("ssid", s)
-                                    putInt("level", scan.level)
-                                    putInt("frequency", scan.frequency)
-                                    putString("capabilities", scan.capabilities ?: "")
-                                    putBoolean("isConnected", isConn)
-                                    putBoolean("isSecure", isSecure)
-                                }
-                                networks[s] = b
+                            if (existing == null || scan.level > existing.level) {
+                                networks[s] = WifiNetworkItem(
+                                    ssid = s,
+                                    level = scan.level,
+                                    frequency = scan.frequency,
+                                    capabilities = scan.capabilities ?: "",
+                                    isConnected = isConn,
+                                    isSecure = isSecure
+                                )
                             }
                         }
                     }
@@ -1316,18 +1323,18 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
                 // Sıralama: Önce bağlı olan, sonra sinyal gücüne göre
                 val sorted = networks.values.sortedWith(
-                    compareByDescending<Bundle> { it.getBoolean("isConnected") }
-                        .thenByDescending { it.getInt("level") }
+                    compareByDescending<WifiNetworkItem> { it.isConnected }
+                        .thenByDescending { it.level }
                 )
 
-                for (b in sorted) {
+                for (w in sorted) {
                     val item = Arguments.createMap()
-                    item.putString("ssid", b.getString("ssid", ""))
-                    item.putInt("level", b.getInt("level", -70))
-                    item.putInt("frequency", b.getInt("frequency", 2400))
-                    item.putString("capabilities", b.getString("capabilities", ""))
-                    item.putBoolean("isConnected", b.getBoolean("isConnected", false))
-                    item.putBoolean("isSecure", b.getBoolean("isSecure", false))
+                    item.putString("ssid", w.ssid)
+                    item.putInt("level", w.level)
+                    item.putInt("frequency", w.frequency)
+                    item.putString("capabilities", w.capabilities)
+                    item.putBoolean("isConnected", w.isConnected)
+                    item.putBoolean("isSecure", w.isSecure)
                     result.pushMap(item)
                 }
             }
