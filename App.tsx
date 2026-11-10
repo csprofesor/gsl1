@@ -1461,11 +1461,9 @@ export default function App() {
   // Renk Kartelası Açılır Kapanır Akordeon
   const [renkPaletiAcik, setRenkPaletiAcik] = useState(false);
 
-  // Sabit Başlatıcı & Local ADB (Matinee Mimarisi)
+  // Sabit Başlatıcı & Matinee Mimarisi
   const [sabitBaslaticiModalAcik, setSabitBaslaticiModalAcik] = useState(false);
   const [sabitBaslaticiDurum, setSabitBaslaticiDurum] = useState<{ aktif: boolean; kisitli: boolean; kontrolEdiliyor: boolean }>({ aktif: false, kisitli: false, kontrolEdiliyor: false });
-  const [adbKurulumSonuc, setAdbKurulumSonuc] = useState<string | null>(null);
-  const [adbYukleniyor, setAdbYukleniyor] = useState(false);
 
   const sabitBaslaticiDurumuKontrolEt = async () => {
     if (Platform.OS !== 'android' || !TVAppManager) return;
@@ -1476,24 +1474,6 @@ export default function App() {
       setSabitBaslaticiDurum({ aktif: !!aktif, kisitli: !!kisitli, kontrolEdiliyor: false });
     } catch {
       setSabitBaslaticiDurum({ aktif: false, kisitli: false, kontrolEdiliyor: false });
-    }
-  };
-
-  const localAdbKurulumuYap = async () => {
-    if (Platform.OS !== 'android' || !TVAppManager || !TVAppManager.setupLocalAdb) {
-      Alert.alert('Bilgi', 'Yerel ADB modülü bu cihazda desteklenmiyor.');
-      return;
-    }
-    setAdbYukleniyor(true);
-    setAdbKurulumSonuc(null);
-    try {
-      const res = await TVAppManager.setupLocalAdb();
-      setAdbYukleniyor(false);
-      setAdbKurulumSonuc(res);
-      await sabitBaslaticiDurumuKontrolEt();
-    } catch (err: any) {
-      setAdbYukleniyor(false);
-      setAdbKurulumSonuc(`Hata: ${err?.message || err}`);
     }
   };
 
@@ -9310,41 +9290,10 @@ export default function App() {
                   )}
                 </View>
 
-                {/* ⚡ BUTON 1: TEK TIKLA OTOMATİK ADB İLE YETKİLENDİR */}
+                {/* ⚙️ BUTON 1: TV ERİŞİLEBİLİRLİK MENÜSÜNÜ AÇ */}
                 <FocusableItem
-                  style={{ backgroundColor: '#10B981', borderColor: '#FFFFFF', borderWidth: 1.5, borderRadius: 10, padding: 12, marginBottom: 10 }}
+                  style={{ backgroundColor: '#10B981', borderColor: '#FFFFFF', borderWidth: 1.5, borderRadius: 10, padding: 12, marginBottom: 12 }}
                   focusedStyle={{ transform: [{ scale: 1.02 }], backgroundColor: '#059669', borderColor: '#FFFFFF' }}
-                  onPress={localAdbKurulumuYap}
-                >
-                  {() => (
-                    <View style={{ alignItems: 'center' }}>
-                      <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
-                        {adbYukleniyor ? '⏳ ADB Bağlanıyor & İzin Veriliyor...' : '⚡ 1. Adım: Tek Tıkla Otomatik ADB Yetkilendir (Matinee Yöntemi)'}
-                      </Text>
-                      <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 10, marginTop: 3 }}>
-                        (TV Geliştirici Seçenekleri'nde USB Hata Ayıklama açıksa tek tıkla halleder)
-                      </Text>
-                    </View>
-                  )}
-                </FocusableItem>
-
-                {/* ADB Kurulum Sonucu */}
-                {!!adbKurulumSonuc && (
-                  <View style={{ padding: 10, borderRadius: 8, marginBottom: 10, backgroundColor: adbKurulumSonuc === 'DONE' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)', borderWidth: 1, borderColor: adbKurulumSonuc === 'DONE' ? '#10B981' : '#F59E0B' }}>
-                    <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>
-                      {adbKurulumSonuc === 'DONE' && '✅ Başarılı! Sabit başlatıcı servisi yetkilendirildi ve kalıcı olarak sabitlendi!'}
-                      {adbKurulumSonuc === 'ADB_OFF' && '⚠️ TV\'nizde USB Hata Ayıklama (ADB) kapalı. Lütfen TV Ayarları → Cihaz Tercihleri → Hakkında → Yapı Numarası\'na 7 kez basıp Geliştirici Seçenekleri\'nden "USB Hata Ayıklama"yı açın.'}
-                      {adbKurulumSonuc === 'NOT_ALLOWED' && '⚠️ TV ekranına gelen "Hata ayıklamaya izin verilsin mi?" uyarısını kumandadan "Her zaman izin ver" diyerek onaylayın ve tekrar deneyin.'}
-                      {adbKurulumSonuc === 'FAILED' && '⚠️ ADB bağlantısı kurulamadı. Aşağıdaki kılavuzdan manuel komutu kullanabilirsiniz.'}
-                      {adbKurulumSonuc.startsWith('Hata') && adbKurulumSonuc}
-                    </Text>
-                  </View>
-                )}
-
-                {/* ⚙️ BUTON 2: TV ERİŞİLEBİLİRLİK MENÜSÜNÜ AÇ */}
-                <FocusableItem
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.25)', borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 10 }}
-                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
                   onPress={() => {
                     if (Platform.OS === 'android' && TVAppManager && TVAppManager.openAccessibilitySettings) {
                       TVAppManager.openAccessibilitySettings().catch(() => {});
@@ -9353,23 +9302,23 @@ export default function App() {
                 >
                   {() => (
                     <View style={{ alignItems: 'center' }}>
-                      <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '900' }}>
-                        ⚙️ 2. Adım: TV Erişilebilirlik Menüsünü Aç
+                      <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
+                        ⚙️ 1. Adım: TV Erişilebilirlik Menüsünü Aç
                       </Text>
-                      <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>
+                      <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 10, marginTop: 2 }}>
                         (Açılan menüde "GS Launcher Sabit Başlatıcı"yı AÇIK konuma getirin)
                       </Text>
                     </View>
                   )}
                 </FocusableItem>
 
-                {/* 💻 BİLGİSAYAR / TELEFON ADB KOMUTLARI REHBERİ */}
-                <View style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', marginTop: 4 }}>
+                {/* 💻 BİLGİSAYAR / TELEFON ADB KOMUTLARI REHBERİ (KAPANMA SORUNUNU KALICI ÇÖZER) */}
+                <View style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', marginTop: 2 }}>
                   <Text style={{ color: '#38BDF8', fontWeight: '900', fontSize: 12, marginBottom: 4 }}>
-                    💻 Bilgisayar veya Telefondan (Bugjaeger / ADB TV) Tek Seferlik Kesin Çözüm:
+                    💻 2. Adım: Anahtar Kendiliğinden Kapanıyorsa (Android 13+ Güvenlik Çözümü):
                   </Text>
                   <Text style={{ color: '#CBD5E1', fontSize: 10, marginBottom: 6, lineHeight: 14 }}>
-                    Anahtar açıldığı gibi kapanıyorsa, telefonunuzdaki Bugjaeger veya bilgisayarınızdaki adb terminalinden şu tek komutu verin:
+                    Mi Box veya Android 13+ TV'niz APK ile kurulan uygulamaların erişilebilirlik iznini kilitler (Restricted Settings). Bu yüzden anahtarı açtığınız anda sistem kapatır. Telefonunuzdaki Bugjaeger veya bilgisayarınızdaki ADB ile şu tek satırlık komutu verin:
                   </Text>
                   <View style={{ backgroundColor: '#020617', padding: 8, borderRadius: 6, marginBottom: 8 }}>
                     <Text style={{ color: '#A7F3D0', fontFamily: 'monospace', fontSize: 9.5 }}>

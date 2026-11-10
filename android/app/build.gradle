@@ -114,8 +114,6 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    // Matinee paritesi: TV cihazı üzerinde adb localhost (otomatik ADB izin yetkilendirme)
-    implementation("dev.mobile:dadb:2.0.0")
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
