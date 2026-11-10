@@ -32,10 +32,11 @@ export const sonEtkilesimiGuncelle = () => {
 // Varlık Dosyaları (Yalnızca Gerçek İkon ve Temiz Duvar Kağıdı)
 const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
+import { TopbarIcons, SystemIcons, GlossyIcons } from './src/assets/icons';
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.19';
-const CURRENT_BUILD = 45;
+const CURRENT_VERSION = '3.2.22';
+const CURRENT_BUILD = 48;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/gstv18';
@@ -438,40 +439,43 @@ export const ozelTemaUret = (
   };
 };
 
-// Akıllı Çeşitli İkon & Renk Atayıcısı
-const getAppIconAndColor = (name: string, pkg: string): { icon: string; color: string } => {
+// Akıllı Çeşitli İkon & Renk Atayıcısı (2026 Glossy 3D İkon Paketi Paritesi)
+const getAppIconAndColor = (name: string, pkg: string): { icon: string; iconAsset?: any; color: string } => {
   const n = name.toLowerCase();
   const p = pkg.toLowerCase();
 
-  if (n.includes('netflix') || p.includes('netflix')) return { icon: '🎬', color: '#831010' };
-  if (n.includes('prime') || p.includes('amazonvideo')) return { icon: '🍿', color: '#00486D' };
-  if (n.includes('youtube') || n.includes('smarttube') || p.includes('youtube')) return { icon: '📺', color: '#8C1515' };
-  if (n.includes('disney')) return { icon: '✨', color: '#11235A' };
-  if (n.includes('kodi')) return { icon: '❄️', color: '#134B70' };
-  if (n.includes('cloudstream')) return { icon: '☁️', color: '#1B3B6F' };
-  if (n.includes('nuvio')) return { icon: '💜', color: '#3A1448' };
-  if (n.includes('stremio')) return { icon: '🟣', color: '#2B1B4D' };
-  if (n.includes('spotify') || n.includes('music') || n.includes('müzik') || p.includes('spotify')) return { icon: '🎵', color: '#155E38' };
-  if (n.includes('vlc') || n.includes('mx player') || p.includes('videolan')) return { icon: '🎞️', color: '#9A3412' };
-  if (n.includes('plex') || n.includes('jellyfin')) return { icon: '📽️', color: '#78350F' };
-  if (n.includes('trt') || n.includes('canlı') || n.includes('tv') || n.includes('iptv') || n.includes('tivimate')) return { icon: '📡', color: '#065F46' };
-  if (n.includes('exxen') || n.includes('tivibu') || n.includes('bein') || n.includes('sport') || n.includes('maç')) return { icon: '⚽', color: '#1E3A8A' };
-  if (n.includes('game') || n.includes('oyun') || n.includes('retro') || n.includes('play')) return { icon: '🎮', color: '#4C1D95' };
-  if (n.includes('download') || n.includes('indir')) return { icon: '⬇️', color: '#0F766E' };
-  if (n.includes('chrome') || n.includes('browser') || n.includes('tarayıcı') || n.includes('web')) return { icon: '🌐', color: '#1D4ED8' };
-  if (n.includes('file') || n.includes('dosya') || n.includes('explorer')) return { icon: '📁', color: '#374151' };
-  if (n.includes('ayar') || n.includes('setting')) return { icon: '⚙️', color: '#334155' };
-  if (n.includes('temiz') || n.includes('clean') || n.includes('boost')) return { icon: '🧹', color: '#047857' };
-  if (n.includes('galeri') || n.includes('foto') || n.includes('photo')) return { icon: '🖼️', color: '#701A75' };
-  if (n.includes('ses') || n.includes('mic') || n.includes('voice')) return { icon: '🎙️', color: '#0369A1' };
-  if (n.includes('mağaza') || n.includes('store') || n.includes('market')) return { icon: '🛍️', color: '#059669' };
+  if (n.includes('netflix') || p.includes('netflix')) return { icon: '🎬', iconAsset: GlossyIcons.netflix, color: '#831010' };
+  if (n.includes('prime') || p.includes('amazonvideo')) return { icon: '🍿', iconAsset: GlossyIcons.prime_video, color: '#00486D' };
+  if (n.includes('youtube') || n.includes('smarttube') || p.includes('youtube')) return { icon: '📺', iconAsset: GlossyIcons.youtube, color: '#8C1515' };
+  if (n.includes('disney')) return { icon: '✨', iconAsset: GlossyIcons.disney_plus, color: '#11235A' };
+  if (n.includes('hbo') || n.includes('max')) return { icon: '🟣', iconAsset: GlossyIcons.hbo_max, color: '#1E1B4B' };
+  if (n.includes('kodi')) return { icon: '❄️', iconAsset: GlossyIcons.media, color: '#134B70' };
+  if (n.includes('cloudstream')) return { icon: '☁️', iconAsset: GlossyIcons.video, color: '#1B3B6F' };
+  if (n.includes('nuvio')) return { icon: '💜', iconAsset: GlossyIcons.video, color: '#3A1448' };
+  if (n.includes('stremio')) return { icon: '🟣', iconAsset: GlossyIcons.video, color: '#2B1B4D' };
+  if (n.includes('spotify') || n.includes('music') || n.includes('müzik') || p.includes('spotify')) return { icon: '🎵', iconAsset: GlossyIcons.spotify, color: '#155E38' };
+  if (n.includes('vlc') || n.includes('mx player') || p.includes('videolan')) return { icon: '🎞️', iconAsset: GlossyIcons.video, color: '#9A3412' };
+  if (n.includes('plex') || n.includes('jellyfin')) return { icon: '📽️', iconAsset: GlossyIcons.video, color: '#78350F' };
+  if (n.includes('trt') || n.includes('canlı') || n.includes('tv') || n.includes('iptv') || n.includes('tivimate')) return { icon: '📡', iconAsset: GlossyIcons.live_tv, color: '#065F46' };
+  if (n.includes('exxen') || n.includes('tivibu') || n.includes('bein') || n.includes('sport') || n.includes('maç')) return { icon: '⚽', iconAsset: GlossyIcons.live_tv, color: '#1E3A8A' };
+  if (n.includes('game') || n.includes('oyun') || n.includes('retro') || n.includes('play')) return { icon: '🎮', iconAsset: GlossyIcons.apps, color: '#4C1D95' };
+  if (n.includes('download') || n.includes('indir')) return { icon: '⬇️', iconAsset: GlossyIcons.files, color: '#0F766E' };
+  if (n.includes('chrome') || n.includes('browser') || n.includes('tarayıcı') || n.includes('web')) return { icon: '🌐', iconAsset: GlossyIcons.chrome, color: '#1D4ED8' };
+  if (n.includes('file') || n.includes('dosya') || n.includes('explorer')) return { icon: '📁', iconAsset: GlossyIcons.files, color: '#374151' };
+  if (n.includes('ayar') || n.includes('setting')) return { icon: '⚙️', iconAsset: GlossyIcons.settings, color: '#334155' };
+  if (n.includes('temiz') || n.includes('clean') || n.includes('boost')) return { icon: '🧹', iconAsset: GlossyIcons.cleanup, color: '#047857' };
+  if (n.includes('galeri') || n.includes('foto') || n.includes('photo')) return { icon: '🖼️', iconAsset: GlossyIcons.gallery, color: '#701A75' };
+  if (n.includes('ses') || n.includes('mic') || n.includes('voice')) return { icon: '🎙️', iconAsset: GlossyIcons.music, color: '#0369A1' };
+  if (n.includes('mağaza') || n.includes('store') || n.includes('market')) return { icon: '🛍️', iconAsset: GlossyIcons.google_play, color: '#059669' };
 
-  // Farklı farklı dinamik ikonlar
+  // Farklı farklı dinamik 2026 3D Glossy ikonlar
+  const fallbackGlossy = [GlossyIcons.apps, GlossyIcons.media, GlossyIcons.video, GlossyIcons.favorites, GlossyIcons.more];
   const fallbackIcons = ['📱', '⚡', '🌟', '🚀', '🔮', '💎', '🔥', '🎯', '💫', '🎨'];
   const fallbackColors = ['#1E293B', '#1B355A', '#2D1B4E', '#164E63', '#14532D', '#701A75', '#7C2D12'];
   const sum = (name + pkg).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return {
     icon: fallbackIcons[sum % fallbackIcons.length],
+    iconAsset: fallbackGlossy[sum % fallbackGlossy.length],
     color: fallbackColors[sum % fallbackColors.length],
   };
 };
@@ -538,6 +542,7 @@ interface UygulamaItem {
   packageName: string;
   color: string;
   icon: string;
+  iconAsset?: any;
   iconUri?: string;
   bannerUri?: string;
   category: AppCategory;
@@ -2112,6 +2117,7 @@ export default function App() {
               packageName: a.packageName,
               color: meta.color,
               icon: meta.icon,
+              iconAsset: meta.iconAsset,
               iconUri: a.iconUri,
               bannerUri: a.bannerUri,
               category: cat,
@@ -4432,7 +4438,17 @@ export default function App() {
             >
               {() => (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={styles.havaIkon}>{havaDurumu.ikon}</Text>
+                  <Image
+                    source={
+                      havaDurumu.durum.toLowerCase().includes('yağmur')
+                        ? TopbarIcons.weather_rain
+                        : havaDurumu.durum.toLowerCase().includes('bulut')
+                        ? TopbarIcons.weather_cloud
+                        : TopbarIcons.weather_sun
+                    }
+                    style={{ width: 18, height: 18, marginRight: 6, tintColor: '#FFFFFF' }}
+                    resizeMode="contain"
+                  />
                   <Text style={styles.havaDerece}>{havaDurumu.derece}</Text>
                 </View>
               )}
@@ -4443,7 +4459,7 @@ export default function App() {
               <Text style={styles.saatYazi}>{saat}</Text>
             </View>
 
-            {/* 1. Canlı Wi-Fi Tuşu (Sadece Modern İkon & Bağlantı Noktası) */}
+            {/* 1. Canlı Wi-Fi Tuşu (Sadece Profesyonel 2026 İkon & Bağlantı Noktası) */}
             <FocusableItem
               style={styles.ustBarIkonButon}
               focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
@@ -4454,13 +4470,13 @@ export default function App() {
             >
               {() => (
                 <View style={styles.ustBarIkonKapsayici}>
-                  <Text style={{ fontSize: 16 }}>📶</Text>
+                  <Image source={TopbarIcons.wifi} style={{ width: 18, height: 18, tintColor: '#FFFFFF' }} resizeMode="contain" />
                   {!!bagliWifiAdi && <View style={styles.bagliNoktaYesil} />}
                 </View>
               )}
             </FocusableItem>
 
-            {/* 2. Canlı Hız Testi Tuşu (Sadece Modern Hız İkonu) */}
+            {/* 2. Canlı Hız Testi Tuşu (Sadece Profesyonel 2026 Bellek/Hız İkonu) */}
             <FocusableItem
               style={styles.ustBarIkonButon}
               focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
@@ -4468,12 +4484,12 @@ export default function App() {
             >
               {() => (
                 <View style={styles.ustBarIkonKapsayici}>
-                  <Text style={{ fontSize: 16 }}>⚡</Text>
+                  <Image source={SystemIcons.memory} style={{ width: 18, height: 18, tintColor: '#FFFFFF' }} resizeMode="contain" />
                 </View>
               )}
             </FocusableItem>
 
-            {/* 3. Bildirim Tuşu (Sadece İkon & Rozet) */}
+            {/* 3. Bildirim Tuşu (Sadece Profesyonel 2026 Bildirim İkonu & Rozet) */}
             <FocusableItem
               style={styles.ustBarIkonButon}
               focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
@@ -4481,7 +4497,7 @@ export default function App() {
             >
               {() => (
                 <View style={styles.ustBarIkonKapsayici}>
-                  <Text style={{ fontSize: 16 }}>🔔</Text>
+                  <Image source={TopbarIcons.notifications} style={{ width: 18, height: 18, tintColor: '#FFFFFF' }} resizeMode="contain" />
                   {bildirimListesi.length > 0 && (
                     <View style={styles.bildirimRozetKucuk}>
                       <Text style={styles.bildirimRozetYazi}>{bildirimListesi.length}</Text>
@@ -4491,7 +4507,7 @@ export default function App() {
               )}
             </FocusableItem>
 
-            {/* 4. Canlı Uydu / TV Butonu (Sadece İkon) */}
+            {/* 4. Canlı Uydu / TV Butonu (Sadece Profesyonel 2026 TV İkonu) */}
             <FocusableItem
               style={styles.ustBarIkonButon}
               focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
@@ -4499,12 +4515,12 @@ export default function App() {
             >
               {() => (
                 <View style={styles.ustBarIkonKapsayici}>
-                  <Text style={{ fontSize: 16 }}>📺</Text>
+                  <Image source={TopbarIcons.live} style={{ width: 18, height: 18, tintColor: '#FFFFFF' }} resizeMode="contain" />
                 </View>
               )}
             </FocusableItem>
 
-            {/* 5. Uygulama İçi Güncelle Butonu (Sadece İkon) */}
+            {/* 5. Uygulama İçi Güncelle Butonu (Sadece Profesyonel 2026 Güncelleme İkonu) */}
             <FocusableItem
               style={styles.ustBarIkonButon}
               focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
@@ -4512,12 +4528,12 @@ export default function App() {
             >
               {() => (
                 <View style={styles.ustBarIkonKapsayici}>
-                  <Text style={{ fontSize: 16 }}>🔄</Text>
+                  <Image source={SystemIcons.update} style={{ width: 18, height: 18, tintColor: '#FFFFFF' }} resizeMode="contain" />
                 </View>
               )}
             </FocusableItem>
 
-            {/* 6. Ana Ekran & Widget Düzenle Butonu (Sadece İkon) */}
+            {/* 6. Ana Ekran & Widget Düzenle Butonu (Sadece Profesyonel 2026 Düzen İkonu) */}
             <FocusableItem
               style={styles.ustBarIkonButon}
               focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
@@ -4525,12 +4541,12 @@ export default function App() {
             >
               {() => (
                 <View style={styles.ustBarIkonKapsayici}>
-                  <Text style={{ fontSize: 16 }}>⊞</Text>
+                  <Image source={SystemIcons.apps_manager} style={{ width: 18, height: 18, tintColor: '#FFFFFF' }} resizeMode="contain" />
                 </View>
               )}
             </FocusableItem>
 
-            {/* 7. Ayarlar Butonu (Sadece İkon) */}
+            {/* 7. Ayarlar Butonu (Sadece Profesyonel 2026 Ayarlar İkonu) */}
             <FocusableItem
               style={styles.ustBarIkonButon}
               focusedStyle={[styles.ustBarIkonButonOdak, { borderColor: '#FFFFFF', backgroundColor: aktifTema.accent }]}
@@ -4538,7 +4554,7 @@ export default function App() {
             >
               {() => (
                 <View style={styles.ustBarIkonKapsayici}>
-                  <Text style={{ fontSize: 16 }}>⚙️</Text>
+                  <Image source={TopbarIcons.settings} style={{ width: 18, height: 18, tintColor: '#FFFFFF' }} resizeMode="contain" />
                 </View>
               )}
             </FocusableItem>
@@ -5798,6 +5814,24 @@ export default function App() {
                                 {app.iconUri ? (
                                   <Image
                                     source={{ uri: app.iconUri }}
+                                    style={{
+                                      width: cardDim.iconSize * 1.35,
+                                      height: cardDim.iconSize * 1.35,
+                                      marginBottom: 4,
+                                      borderRadius:
+                                        iconShape === 'circle'
+                                          ? (cardDim.iconSize * 1.35) / 2
+                                          : iconShape === 'squircle'
+                                          ? 12
+                                          : iconShape === 'rectangle'
+                                          ? 6
+                                          : 8,
+                                    }}
+                                    resizeMode="contain"
+                                  />
+                                ) : app.iconAsset ? (
+                                  <Image
+                                    source={app.iconAsset}
                                     style={{
                                       width: cardDim.iconSize * 1.35,
                                       height: cardDim.iconSize * 1.35,
@@ -7166,7 +7200,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>📶</Text>
+                          <Image source={SystemIcons.wifi} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#38BDF8' }} resizeMode="contain" />
                           <Text style={styles.tileBaslik}>Wi-Fi & Ağ</Text>
                           <Text style={styles.tileAlt}>Ağ Ayarlarını Aç</Text>
                         </>
@@ -7187,7 +7221,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>🎧</Text>
+                          <Image source={SystemIcons.bluetooth} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#38BDF8' }} resizeMode="contain" />
                           <Text style={[styles.tileBaslik, { color: '#38BDF8', fontWeight: '900' }]}>Bluetooth Ses</Text>
                           <Text style={styles.tileAlt}>Kulaklık & Hoparlör</Text>
                         </>
@@ -7208,7 +7242,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>🔊</Text>
+                          <Image source={SystemIcons.sound} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#A855F7' }} resizeMode="contain" />
                           <Text style={[styles.tileBaslik, { color: '#A855F7', fontWeight: '900' }]}>TV Ses Ayarları</Text>
                           <Text style={styles.tileAlt}>Dolby & Format</Text>
                         </>
@@ -7228,7 +7262,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>🚀</Text>
+                          <Image source={SystemIcons.network} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#38BDF8' }} resizeMode="contain" />
                           <Text style={styles.tileBaslik}>Hız Testi</Text>
                           <Text style={styles.tileAlt}>Canlı Ağ Ölçümü</Text>
                         </>
@@ -7246,7 +7280,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>📡</Text>
+                          <Image source={TopbarIcons.live} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#10B981' }} resizeMode="contain" />
                           <Text style={styles.tileBaslik}>Canlı Uydu / TV</Text>
                           <Text style={styles.tileAlt}>Giriş Kaynağı</Text>
                         </>
@@ -7267,7 +7301,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>💾</Text>
+                          <Image source={SystemIcons.storage} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#F59E0B' }} resizeMode="contain" />
                           <Text style={styles.tileBaslik}>USB Depolama</Text>
                           <Text style={styles.tileAlt}>Flash Bellek / Dosya</Text>
                         </>
@@ -7285,7 +7319,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>📍</Text>
+                          <Image source={TopbarIcons.weather_sun} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#F59E0B' }} resizeMode="contain" />
                           <Text style={styles.tileBaslik}>Hava Konumu</Text>
                           <Text style={[styles.tileAlt, { color: aktifTema.border }]} numberOfLines={1}>
                             {seciliSehir} ({havaDurumu.derece})
@@ -7306,7 +7340,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>{geceModuAktif ? '🌙' : '☀️'}</Text>
+                          <Image source={SystemIcons.display} style={{ width: 26, height: 26, marginBottom: 6, tintColor: geceModuAktif ? '#F59E0B' : '#FFFFFF' }} resizeMode="contain" />
                           <Text style={styles.tileBaslik}>Gece Modu</Text>
                           <Text style={[styles.tileAlt, { color: geceModuAktif ? '#F59E0B' : aktifTema.border }]}>
                             {geceModuAktif ? 'Açık (Sıcak Ton)' : 'Kapalı'}
@@ -7333,7 +7367,7 @@ export default function App() {
                       >
                         {() => (
                           <>
-                            <Text style={styles.tileIkon}>⚡</Text>
+                            <Image source={SystemIcons.apps_manager} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#10B981' }} resizeMode="contain" />
                             <Text style={[styles.tileBaslik, { color: '#10B981', fontWeight: '900' }]}>
                               Çalışan Uygulamaları Yönet
                             </Text>
@@ -7350,7 +7384,7 @@ export default function App() {
                       >
                         {() => (
                           <>
-                            <Text style={styles.tileIkon}>🧹</Text>
+                            <Image source={SystemIcons.cleanup} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#38BDF8' }} resizeMode="contain" />
                             <Text style={[styles.tileBaslik, { color: '#38BDF8', fontWeight: '900' }]}>
                               Hızlı RAM Temizle
                             </Text>
@@ -7464,7 +7498,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>🔒</Text>
+                          <Image source={SystemIcons.lock} style={{ width: 26, height: 26, marginBottom: 6, tintColor: sabitBaslaticiDurum.aktif ? '#10B981' : '#F59E0B' }} resizeMode="contain" />
                           <Text style={[styles.tileBaslik, { color: sabitBaslaticiDurum.aktif ? '#10B981' : '#F59E0B', fontWeight: '900' }]}>Sabit Başlatıcı</Text>
                           <Text style={styles.tileAlt}>
                             {sabitBaslaticiDurum.aktif ? '🟢 Aktif (Sabit)' : '⚡ Matinee Servisi'}
@@ -7487,7 +7521,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>⚡</Text>
+                          <Image source={SystemIcons.power} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#38BDF8' }} resizeMode="contain" />
                           <Text style={styles.tileBaslik}>Varsayılan Başlatıcı</Text>
                           <Text style={styles.tileAlt}>Home Tuşu Menüsü</Text>
                         </>
@@ -7502,7 +7536,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>🏠</Text>
+                          <Image source={GlossyIcons.exit} style={{ width: 26, height: 26, marginBottom: 6 }} resizeMode="contain" />
                           <Text style={[styles.tileBaslik, { color: '#38BDF8', fontWeight: '900' }]}>Orijinal TV Arayüzü</Text>
                           <Text style={styles.tileAlt}>Fabrika Ekranına Geç</Text>
                         </>
@@ -7537,7 +7571,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>📺</Text>
+                          <Image source={GlossyIcons.video} style={{ width: 26, height: 26, marginBottom: 6 }} resizeMode="contain" />
                           <Text style={[styles.tileBaslik, { color: tvIzniVar ? '#10B981' : '#F59E0B', fontWeight: '900' }]}>
                             {tvIzniVar ? 'İzleme Geçmişi: Aktif' : 'İzleme Geçmişi: İzin İste'}
                           </Text>
@@ -7558,7 +7592,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>🔌</Text>
+                          <Image source={SystemIcons.apps_manager} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#C4B5FD' }} resizeMode="contain" />
                           <Text style={[styles.tileBaslik, { color: '#C4B5FD', fontWeight: '900' }]}>Eklentiler & Senkron</Text>
                           <Text style={styles.tileAlt}>Trakt • Stremio • Kanallar</Text>
                         </>
@@ -7578,7 +7612,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>🚀</Text>
+                          <Image source={SystemIcons.update} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#EAB308' }} resizeMode="contain" />
                           <Text style={[styles.tileBaslik, { color: '#EAB308', fontWeight: '900' }]}>Güncelleme Merkezi</Text>
                           <Text style={styles.tileAlt}>v{CURRENT_VERSION} (Denetle)</Text>
                         </>
@@ -7599,7 +7633,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>⚙️</Text>
+                          <Image source={SystemIcons.settings} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#FFFFFF' }} resizeMode="contain" />
                           <Text style={styles.tileBaslik}>Sistem Ayarları</Text>
                           <Text style={styles.tileAlt}>Mi Box TV Ayarları</Text>
                         </>
@@ -7617,7 +7651,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>🎬</Text>
+                          <Image source={GlossyIcons.media} style={{ width: 26, height: 26, marginBottom: 6 }} resizeMode="contain" />
                           <Text style={[styles.tileBaslik, { color: '#A855F7', fontWeight: '900' }]}>Film Oynatıcıları</Text>
                           <Text style={styles.tileAlt}>{filmBaslaticiPaketleri.length} Uygulama</Text>
                         </>
@@ -7632,7 +7666,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>💾</Text>
+                          <Image source={SystemIcons.storage} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#FFFFFF' }} resizeMode="contain" />
                           <Text style={styles.tileBaslik}>Ayarları Kaydet</Text>
                           <Text style={styles.tileAlt}>TV Belleğine Kaydet</Text>
                         </>
@@ -7647,7 +7681,7 @@ export default function App() {
                     >
                       {() => (
                         <>
-                          <Text style={styles.tileIkon}>🔄</Text>
+                          <Image source={SystemIcons.refresh} style={{ width: 26, height: 26, marginBottom: 6, tintColor: '#EF4444' }} resizeMode="contain" />
                           <Text style={styles.tileBaslik}>Ayarları Sıfırla</Text>
                           <Text style={[styles.tileAlt, { color: '#EF4444' }]}>Varsayılana Dön</Text>
                         </>
@@ -8503,6 +8537,12 @@ export default function App() {
                                   style={{ width: 36, height: 36, marginBottom: 4, borderRadius: 8 }}
                                   resizeMode="contain"
                                 />
+                              ) : meta.iconAsset ? (
+                                <Image
+                                  source={meta.iconAsset}
+                                  style={{ width: 36, height: 36, marginBottom: 4, borderRadius: 8 }}
+                                  resizeMode="contain"
+                                />
                               ) : (
                                 <Text style={styles.kuruluAppIkon}>{meta.icon}</Text>
                               )}
@@ -9295,7 +9335,7 @@ export default function App() {
               {/* Modal Başlık */}
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)', paddingBottom: 10 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <Text style={{ fontSize: 22 }}>🔒</Text>
+                  <Image source={SystemIcons.lock} style={{ width: 22, height: 22, tintColor: '#38BDF8' }} resizeMode="contain" />
                   <View>
                     <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '900' }}>
                       Sabit Başlatıcı Servisi (Mi Box & Android TV)
@@ -9427,7 +9467,7 @@ export default function App() {
             <View style={[styles.modalPencere, { borderColor: aktifTema.border, width: 680, maxHeight: '88%' }]}>
               <View style={styles.modalBaslikSatir}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 22, marginRight: 8 }}>📶</Text>
+                  <Image source={SystemIcons.wifi} style={{ width: 22, height: 22, marginRight: 8, tintColor: '#38BDF8' }} resizeMode="contain" />
                   <Text style={styles.modalBaslik}>Wi-Fi Ağları (Arama & Canlı Durum)</Text>
                 </View>
                 <FocusableItem
@@ -10161,7 +10201,7 @@ export default function App() {
             <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border, maxHeight: '94%', width: '72%' }]}>
               <View style={styles.modalBaslikSatir}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={{ fontSize: 22 }}>🚀</Text>
+                  <Image source={SystemIcons.update} style={{ width: 22, height: 22, tintColor: '#EAB308' }} resizeMode="contain" />
                   <Text style={styles.modalBaslik}>GSL1 Güncelleme Merkezi</Text>
                 </View>
                 <FocusableItem
@@ -10683,7 +10723,7 @@ export default function App() {
               {/* Modal Başlığı */}
               <View style={styles.modalBaslikSatir}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 24, marginRight: 10 }}>📡</Text>
+                  <Image source={TopbarIcons.live} style={{ width: 24, height: 24, marginRight: 10, tintColor: '#10B981' }} resizeMode="contain" />
                   <View>
                     <Text style={styles.modalBaslik}>Canlı TV & Uydu Yayınları</Text>
                     <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>

@@ -61,16 +61,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v3.2.21' }}
-          name: "GS TV Launcher Ultra v3.2.21 (Build 47)"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v3.2.22' }}
+          name: "GS TV Launcher Ultra v3.2.22 (Build 48)"
           draft: false
           prerelease: false
           body: |
-            ## GS TV Launcher Ultra v3.2.21 (Build 47)
-            - 🎯 **Projectivy Launcher (miproja1) Birebir Erişilebilirlik Paritesi:** Projectivy Launcher kaynak kodları ve APK manifesti incelenerek erişilebilirlik servis yapılandırması birebir uyarlandı.
-            - 🔑 **Kapanma Sorunu Çözümü (canRetrieveWindowContent='true'):** Android TV ve Mi Box sistemlerinde erişilebilirlik servisinin `canRetrieveWindowContent='false'` iken donanımsal tuş filtrelemesi isteyememesi nedeniyle servisin hemen kapanması sorunu giderildi.
-            - ⚡ **Temiz XML Konfigürasyonu & AndroidManifest enabled='true':** `settingsActivity` ve yetkilendirmeler Projectivy Launcher ile aynı standartta yapılandırıldı; statik XML çakışmaları temizlendi.
-            - 🔙 **Ayar Menüsünden Geri Dönüşte Konum Koruma:** Erişilebilirlik menüsünden geri dönüldüğünde kalınan yer korunur.
+            ## GS TV Launcher Ultra v3.2.22 (Build 48)
+            - ✨ **2026 Profesyonel İkon Paketleri Entegrasyonu:** Kullanıcının sağladığı `GSTV_Glossy_Icon_Assets` ve `GSTV_System_Topbar_Icon_Pack` ikon paketleri projeye entegre edildi.
+            - 🔝 **Modern Üst Bar (Topbar):** Üst çubuktaki emoji simgeleri kaldırıldı; Wi-Fi, Sistem/RAM, Bildirimler, Canlı TV, Güncelleme, Düzen, Ayarlar ve Canlı Hava Durumu için yüksek kaliteli profesyonel saydam ikonlar uygulandı.
+            - 📱 **2026 3D Glossy Uygulama İkonları:** Kurulu uygulamalar ve popüler medya servisleri (Netflix, YouTube, Prime Video, Disney+, HBO Max, Spotify, Chrome, Google Play vb.) için modern 3D Glossy ikonlar uygulandı.
+            - ⚙️ **Kontrol Merkezi & Modal İkon Modernizasyonu:** Tüm ayar karoları ve sistem modalları (Wi-Fi arama, Sabit Başlatıcı, Canlı TV, Güncelleme vb.) yeni vektörel sistem ikonlarıyla donatıldı.
           files: |
             android/app/build/outputs/apk/release/app-release.apk
             android/app/build/outputs/bundle/release/app-release.aab
