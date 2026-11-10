@@ -34,11 +34,11 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.13';
-const CURRENT_BUILD = 39;
+const CURRENT_VERSION = '3.2.14';
+const CURRENT_BUILD = 40;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gs13apk';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gs14apk';
 
 // Trakt.tv Açık API & Scrobbler Kimlikleri (Google Play & Apple App Store %100 Uyumlu)
 const TRAKT_CLIENT_ID = 'db7483669be745d448651a141b71192e21e05a8f4c2c54ec8360d2cf34d28f8f';
@@ -7402,11 +7402,11 @@ export default function App() {
                       onPress={() => {
                         Alert.alert(
                           '🔒 Sabit Başlatıcı (Asla Kapanmaz)',
-                          'Home tuşuna basıldığında veya TV açıldığında GS Launcher\'ın daima sabit kalmasını sağlar.\n\n⚠️ Mİ BOX & ANDROID 13/14 İPUCU:\nEğer "Açık" konuma getirdiğinizde sistem hemen kapatıyorsa:\n1. Aşağıdaki "Uygulama İzinleri" butonuna basarak GS Launcher ayarlarını açın.\n2. Varsa sağ üstteki menüden "Kısıtlı ayarlara izin ver"e basın veya Pil Tasarrufunu "Kısıtlamasız" yapın.\n3. Ardından "Erişilebilirliği Aç" butonuna basıp GS Launcher\'ı Açık yapın.',
+                          'Home tuşuna basıldığında veya TV açıldığında GS Launcher\'ın daima sabit kalmasını sağlar.\n\n⚠️ İZNİ AÇINCA HEMEN KAPANIYORSA (Mi Box / Xiaomi Çözümü):\n1. Aşağıdaki "⚙️ Uygulama Bilgisi & İzinler" butonuna basın.\n2. Açılan ekranda varsa sağ üstteki menüden "Kısıtlı ayarlara izin ver" (Allow restricted settings) seçin.\n3. Pil / Güç Tasarrufunu "Kısıtlamasız" (No restrictions) yapın.\n4. Ardından "🔓 Erişilebilirliği Aç" butonuna basıp GS Launcher\'ı Açık yapın. Artık sistem servisi kapatmayacaktır.',
                           [
                             { text: 'Kapat', style: 'cancel' },
                             {
-                              text: '⚙️ Uygulama İzinleri',
+                              text: '⚙️ Uygulama Bilgisi & İzinler',
                               onPress: () => {
                                 if (Platform.OS === 'android' && TVAppManager && TVAppManager.openAppPermissionSettings) {
                                   TVAppManager.openAppPermissionSettings().catch(() => {});

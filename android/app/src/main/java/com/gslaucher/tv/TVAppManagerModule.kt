@@ -470,6 +470,9 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     @ReactMethod
     fun openAccessibilitySettings(promise: Promise) {
         try {
+            // Kullanıcı ayarlarda gezinirken ve izin onaylarken 3 dakika boyunca launcher müdahalesini engelle
+            TVAccessibilityService.allowStockLauncherUntil = System.currentTimeMillis() + 180000L
+
             val pm = reactContext.packageManager
             val intents = listOf(
                 Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.accessibility.AccessibilityActivity")),
@@ -513,7 +516,19 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
     @ReactMethod
     fun isAccessibilityEnabled(promise: Promise) {
         try {
-            promise.resolve(TVAccessibilityService.isServiceRunning)
+            if (TVAccessibilityService.isServiceRunning) {
+                promise.resolve(true)
+                return
+            }
+            val expectedService = "${reactContext.packageName}/${TVAccessibilityService::class.java.canonicalName}"
+            val enabledServices = android.provider.Settings.Secure.getString(
+                reactContext.contentResolver,
+                android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            ) ?: ""
+            val isEnabled = enabledServices.split(":").any {
+                it.equals(expectedService, ignoreCase = true) || it.contains("TVAccessibilityService")
+            }
+            promise.resolve(isEnabled)
         } catch (e: Exception) {
             promise.resolve(false)
         }

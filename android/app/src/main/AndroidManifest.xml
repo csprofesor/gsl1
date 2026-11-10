@@ -52,6 +52,7 @@
       <!-- Sabit Başlatıcı Hizmeti (Projectivy / FLauncher Paritesi) -->
       <service
           android:name=".TVAccessibilityService"
+          android:label="@string/accessibility_service_label"
           android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
           android:exported="true">
           <intent-filter>

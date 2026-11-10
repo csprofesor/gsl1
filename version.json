@@ -1,7 +1,7 @@
 {
-  "version": "3.2.13",
-  "versionCode": 39,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.13/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gs13tv",
-  "changelog": "v3.2.13 (Build 39): Gelişmiş IMDb Yerleşimleri, Widget Kaldırma/Yükleme & Yeni İçerik Widget'ları: 1) IMDb Film & Dizi Vitrini tamamen taşınabilir hale getirildi ve 5 farklı şekil modu (Dikey Split, 1x1 Kare, 2x1 Geniş, Kapsül, Standart) eklendi. 2) Dikey split yerleşimde solda uzunlamasına IMDb afişi ve detayları, sağda hızlı uygulama ikonları düzeni sağlandı. 3) 'Widget Kaldırma & Yükleme' sistemi: Tek tuşla widget'ları ekrandan silme ve galeriden geri yükleme imkanı. 4) 7 Yeni İçerik Widget'ı: Canlı Haberler & Son Dakika Gündem, Canlı TV Radyo & Müzik İstasyonları, Canlı Skorlar & Fikstür, TV Uyku & Kapanma Zamanlayıcısı, TV Aile Hatırlatıcı Not Panosu, Günün Film Repliği & Trivia, Retro Oyun & Arcade Vitrini."
+  "version": "3.2.14",
+  "versionCode": 40,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.14/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gs14tv",
+  "changelog": "v3.2.14 (Build 40): Sabit Başlatıcı & Erişilebilirlik Kapanma Düzeltmesi: 1) Xiaomi Mi Box ve Android TV'de izin açıldığında servisin hemen kapanmasına neden olan sistem bayrak çakışması (flagRetrieveInteractiveWindows) standart kararlı moda (flagDefault) çekildi. 2) Erişilebilirlik servisi bağlanırken ve ayarlarda gezinirken geçici muafiyet süresi verilerek onay diyaloglarının kesilmesi önlendi. 3) Ayarlar ve izin denetleyici pencereleri istisna listesine alınarak servisin çökmesi tamamen engellendi. 4) Tüm arka plan erişilebilirlik çağrıları çökme korumasıyla sarıldı."
 }
