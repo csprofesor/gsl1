@@ -429,6 +429,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun openHomeSettings(promise: Promise) {
+        TVAccessibilityService.allowStockLauncherUntil = System.currentTimeMillis() + 180000L
         val intents = listOf(
             Intent().setComponent(android.content.ComponentName("com.android.tv.settings", "com.android.tv.settings.device.apps.DefaultAppsActivity")),
             Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS),
@@ -443,8 +444,13 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
         for (intent in intents) {
             try {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                reactContext.startActivity(intent)
+                val act = reactContext.currentActivity
+                if (act != null) {
+                    act.startActivity(intent)
+                } else {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    reactContext.startActivity(intent)
+                }
                 promise.resolve(true)
                 return
             } catch (e: Throwable) {}
@@ -503,7 +509,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
         for (intent in intents) {
             try {
-                val act = currentActivity
+                val act = reactContext.currentActivity
                 if (act != null) {
                     act.startActivity(intent)
                 } else {
@@ -515,31 +521,6 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             } catch (e: Throwable) {}
         }
 
-        promise.resolve(false)
-    }
-
-    @ReactMethod
-    fun openHomeSettings(promise: Promise) {
-        TVAccessibilityService.allowStockLauncherUntil = System.currentTimeMillis() + 180000L
-        val intents = listOf(
-            Intent(android.provider.Settings.ACTION_HOME_SETTINGS),
-            Intent("android.settings.HOME_SETTINGS"),
-            Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS),
-            Intent("android.settings.MANAGE_DEFAULT_APPS_SETTINGS")
-        )
-        for (intent in intents) {
-            try {
-                val act = currentActivity
-                if (act != null) {
-                    act.startActivity(intent)
-                } else {
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    reactContext.startActivity(intent)
-                }
-                promise.resolve(true)
-                return
-            } catch (e: Throwable) {}
-        }
         promise.resolve(false)
     }
 
