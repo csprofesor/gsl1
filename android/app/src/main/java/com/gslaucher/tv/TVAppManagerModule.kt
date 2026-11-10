@@ -1624,6 +1624,10 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
         val result = Arguments.createArray()
         val pm = reactContext.packageManager
 
+        val prefs = reactContext.getSharedPreferences("GS_LAUNCHER_PREFS", Context.MODE_PRIVATE)
+        val sonTemizlemeZamani = prefs.getLong("gs_son_devam_temizleme_zamani", 0L)
+        val silinenSet = prefs.getStringSet("gs_silinen_devam_idler", emptySet()) ?: emptySet()
+
         // Yalnızca resmi Android TV "Watch Next" sağlayıcısını sorgula (content://android.media.tv/watch_next_program)
         val uri = Uri.parse("content://android.media.tv/watch_next_program")
         var cursor: android.database.Cursor? = null
@@ -1658,10 +1662,24 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                 val posCol = cursor.getColumnIndex("last_playback_position_millis")
                 val durCol = cursor.getColumnIndex("duration_millis")
                 val typeCol = cursor.getColumnIndex("watch_next_type")
+                val engTimeCol = cursor.getColumnIndex("last_engagement_time_utc_millis")
 
                 var count = 0
-                while (cursor.moveToNext() && count < 30) {
+                // Tren gibi dizilmemesi için en güncel maksimum 10 içerik al
+                while (cursor.moveToNext() && count < 10) {
                     val id = if (idCol >= 0) cursor.getLong(idCol) else 0L
+                    val engTime = if (engTimeCol >= 0) cursor.getLong(engTimeCol) else 0L
+
+                    // 1. Kullanıcı listeyi sildikten ÖNCEKİ eski içerikleri kesinlikle dahil etme!
+                    if (sonTemizlemeZamani > 0L && engTime > 0L && engTime <= sonTemizlemeZamani) {
+                        continue
+                    }
+
+                    // 2. Kullanıcının tekil olarak sildiği öğeleri atla
+                    if (silinenSet.contains("sys_$id")) {
+                        continue
+                    }
+
                     val pkg = if (pkgCol >= 0) cursor.getString(pkgCol) ?: "" else ""
                     val title = if (titleCol >= 0) cursor.getString(titleCol) ?: "" else ""
                     val epTitle = if (epTitleCol >= 0) cursor.getString(epTitleCol) ?: "" else ""
@@ -1684,6 +1702,10 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                         else -> ""
                     }
                     if (displayTitle.isEmpty()) continue
+
+                    if (silinenSet.contains(displayTitle.lowercase().trim())) {
+                        continue
+                    }
 
                     var appName = pkg
                     try {
@@ -1720,6 +1742,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
                     item.putInt("toplamDk", if (toplamDk > 0) toplamDk else 100)
                     item.putString("sonIzlemeZamani", "Kaldığın Yerden")
                     item.putBoolean("isSystemWatchNext", true)
+                    item.putDouble("engagementTime", engTime.toDouble())
 
                     result.pushMap(item)
                     count++
@@ -1788,12 +1811,29 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun removeSystemWatchNextProgram(programId: Double, promise: Promise) {
-        try {
-            val uri = Uri.parse("content://android.media.tv/watch_next_program/${programId.toLong()}")
-            val count = reactContext.contentResolver.delete(uri, null, null)
-            promise.resolve(count > 0)
-        } catch (e: Exception) {
-            promise.resolve(false)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val pId = programId.toLong()
+                val prefs = reactContext.getSharedPreferences("GS_LAUNCHER_PREFS", Context.MODE_PRIVATE)
+                val currentSet = prefs.getStringSet("gs_silinen_devam_idler", HashSet())?.toMutableSet() ?: mutableSetOf()
+                currentSet.add("sys_$pId")
+                prefs.edit().putStringSet("gs_silinen_devam_idler", currentSet).apply()
+
+                val uri = Uri.parse("content://android.media.tv/watch_next_program/$pId")
+                var count = 0
+                try {
+                    count = reactContext.contentResolver.delete(uri, null, null)
+                } catch (_: Exception) {}
+
+                try {
+                    val adb = LocalAdb(reactContext)
+                    adb.runShell("content delete --uri content://android.media.tv/watch_next_program/$pId")
+                } catch (_: Throwable) {}
+
+                promise.resolve(true)
+            } catch (e: Exception) {
+                promise.resolve(false)
+            }
         }
     }
 
@@ -1869,20 +1909,34 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun clearAllWatchNextPrograms(promise: Promise) {
-        try {
-            val uri = Uri.parse("content://android.media.tv/watch_next_program")
-            val deleted = reactContext.contentResolver.delete(uri, null, null)
-            promise.resolve(deleted > 0)
-        } catch (e: Exception) {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
+                val prefs = reactContext.getSharedPreferences("GS_LAUNCHER_PREFS", Context.MODE_PRIVATE)
+                prefs.edit()
+                    .putLong("gs_son_devam_temizleme_zamani", System.currentTimeMillis())
+                    .putStringSet("gs_silinen_devam_idler", emptySet())
+                    .apply()
+
                 val uri = Uri.parse("content://android.media.tv/watch_next_program")
-                val deleted = reactContext.contentResolver.delete(
-                    uri,
-                    "package_name = ?",
-                    arrayOf(reactContext.packageName)
-                )
-                promise.resolve(deleted > 0)
-            } catch (err: Exception) {
+                try {
+                    reactContext.contentResolver.delete(
+                        uri,
+                        "package_name = ?",
+                        arrayOf(reactContext.packageName)
+                    )
+                } catch (_: Exception) {}
+
+                try {
+                    reactContext.contentResolver.delete(uri, null, null)
+                } catch (_: Exception) {}
+
+                try {
+                    val adb = LocalAdb(reactContext)
+                    adb.runShell("content delete --uri content://android.media.tv/watch_next_program")
+                } catch (_: Throwable) {}
+
+                promise.resolve(true)
+            } catch (e: Exception) {
                 promise.resolve(false)
             }
         }

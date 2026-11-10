@@ -90,6 +90,18 @@ class LocalAdb(context: Context) {
         }
     }
 
+    suspend fun runShell(command: String): Boolean = withContext(Dispatchers.IO) {
+        if (!isListening()) return@withContext false
+        try {
+            connect(5_000).use { adb ->
+                val res = adb.shell(command)
+                res.exitCode == 0
+            }
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
     private fun isListening(): Boolean = try {
         Socket().use { it.connect(InetSocketAddress(HOST, PORT), CONNECT_TIMEOUT_MS) }
         true

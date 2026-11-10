@@ -1025,6 +1025,7 @@ export interface KaldiginYerdenDevamEtItem {
   toplamDk: number;
   sonIzlemeZamani: string;
   isSystemWatchNext?: boolean;
+  engagementTime?: number;
 }
 
 export const VARSAYILAN_DEVAM_ET: KaldiginYerdenDevamEtItem[] = [];
@@ -1307,6 +1308,8 @@ export default function App() {
   const [seciliAmbiyansWp, setSeciliAmbiyansWp] = useState<AmbiyansDuvarKagidi>(AMBIYANS_DUVAR_KAGITLARI[0]);
   const [seciliSehir, setSeciliSehir] = useState<string>('📍 Otomatik (Konum Tespiti)');
   const [devamEdenIcerikler, setDevamEdenIcerikler] = useState<KaldiginYerdenDevamEtItem[]>([]);
+  const [silinenDevamIdleri, setSilinenDevamIdleri] = useState<string[]>([]);
+  const [sonDevamTemizlemeZamani, setSonDevamTemizlemeZamani] = useState<number>(0);
   const [tvIzniVar, setTvIzniVar] = useState<boolean>(true);
   const [tvTestAktif, setTvTestAktif] = useState<boolean>(false);
 
@@ -1907,6 +1910,18 @@ export default function App() {
               }
             } catch {}
             try {
+              const rawSilinen = await TVAppManager.getSetting('gs_silinen_devam_idler', '[]');
+              const parsedSilinen = JSON.parse(rawSilinen);
+              if (Array.isArray(parsedSilinen)) {
+                setSilinenDevamIdleri(parsedSilinen);
+              }
+            } catch {}
+            try {
+              const rawZaman = await TVAppManager.getSetting('gs_son_devam_temizleme_zamani', '0');
+              const parsedZaman = Number(rawZaman) || 0;
+              setSonDevamTemizlemeZamani(parsedZaman);
+            } catch {}
+            try {
               const rawDevam = await TVAppManager.getSetting('devamEdenIcerikler', '[]');
               const parsedDevam = JSON.parse(rawDevam);
               if (Array.isArray(parsedDevam) && parsedDevam.length > 0) {
@@ -1926,9 +1941,9 @@ export default function App() {
                   if (!item.backdropUrl || (!item.backdropUrl.startsWith('http') && !item.backdropUrl.startsWith('content://') && !item.backdropUrl.includes('metahub') && !item.backdropUrl.includes('wsrv.nl') && !item.backdropUrl.includes('unsplash'))) return false;
                   return true;
                 });
-                setDevamEdenIcerikler(temizFilmler);
+                setDevamEdenIcerikler(temizFilmler.slice(0, 8));
                 if (temizFilmler.length !== parsedDevam.length) {
-                  TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(temizFilmler)).catch(() => {});
+                  TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(temizFilmler.slice(0, 8))).catch(() => {});
                 }
               } else {
                 setDevamEdenIcerikler([]);
@@ -2518,11 +2533,21 @@ export default function App() {
       kaldigiDk: 24,
       toplamDk: 120,
       sonIzlemeZamani: 'Bugün',
+      engagementTime: Date.now(),
     };
+
+    // Yeni izlendiği için varsa silinenler listesinden çıkar
+    setSilinenDevamIdleri((prev) => {
+      const temiz = prev.filter((x) => x !== title.toLowerCase().trim());
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+        TVAppManager.saveSetting('gs_silinen_devam_idler', JSON.stringify(temiz)).catch(() => {});
+      }
+      return temiz;
+    });
 
     setDevamEdenIcerikler((prev) => {
       const temiz = prev.filter((d) => d.title.toLowerCase() !== title.toLowerCase() && d.platform !== 'Uygulama');
-      const guncel = [yeniDevam, ...temiz].slice(0, 15);
+      const guncel = [yeniDevam, ...temiz].slice(0, 8);
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
         TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(guncel.filter((x) => !x.isSystemWatchNext))).catch(() => {});
       }
@@ -2614,16 +2639,37 @@ export default function App() {
   const sistemSonIzlenenleriGetir = useCallback(async () => {
     try {
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.getSystemWatchNextPrograms) {
+        let silinenler: string[] = [];
+        let silinmeZamani = 0;
+        if (TVAppManager.getSetting) {
+          const rawSilinen = await TVAppManager.getSetting('gs_silinen_devam_idler', '[]').catch(() => '[]');
+          const rawZaman = await TVAppManager.getSetting('gs_son_devam_temizleme_zamani', '0').catch(() => '0');
+          try { silinenler = JSON.parse(rawSilinen) || []; } catch {}
+          silinmeZamani = Number(rawZaman) || 0;
+        }
+
         const sysPrograms: KaldiginYerdenDevamEtItem[] = await TVAppManager.getSystemWatchNextPrograms();
-        if (Array.isArray(sysPrograms) && sysPrograms.length > 0) {
-          setDevamEdenIcerikler((prev) => {
-            const sysTitles = new Set(sysPrograms.map((s) => s.title.toLowerCase().trim()));
-            const localKalanlar = prev.filter(
-              (p) => !p.isSystemWatchNext && !sysTitles.has(p.title.toLowerCase().trim())
-            );
-            return [...sysPrograms, ...localKalanlar].slice(0, 20);
+        if (Array.isArray(sysPrograms)) {
+          // Filtreleme: Kullanıcının sildiği veya temizleme anından önceki eski sistem kayıtlarını ele
+          const temizSys = sysPrograms.filter((s) => {
+            if (!s || !s.title) return false;
+            const tKey = s.title.toLowerCase().trim();
+            if (silinenler.includes(s.id) || silinenler.includes(tKey)) return false;
+            if (silinmeZamani > 0 && s.engagementTime && s.engagementTime <= silinmeZamani) return false;
+            return true;
           });
-          return;
+
+          setDevamEdenIcerikler((prev) => {
+            const sysTitles = new Set(temizSys.map((s) => s.title.toLowerCase().trim()));
+            const localKalanlar = prev.filter(
+              (p) => !p.isSystemWatchNext &&
+                     !sysTitles.has(p.title.toLowerCase().trim()) &&
+                     !silinenler.includes(p.id) &&
+                     !silinenler.includes(p.title.toLowerCase().trim())
+            );
+            // Tren gibi dizilmemesi için maksimum 8 içerik
+            return [...temizSys, ...localKalanlar].slice(0, 8);
+          });
         }
       }
     } catch {}
@@ -4314,38 +4360,65 @@ export default function App() {
   };
 
   const devamEtListesindenSil = async (id: string, systemProgramId?: number) => {
+    const hedef = devamEdenIcerikler.find((s) => s.id === id);
+    const silinecekler = [id];
+    if (hedef && hedef.title) {
+      silinecekler.push(hedef.title.toLowerCase().trim());
+    }
+
+    setSilinenDevamIdleri((prev) => {
+      const guncel = Array.from(new Set([...prev, ...silinecekler]));
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+        TVAppManager.saveSetting('gs_silinen_devam_idler', JSON.stringify(guncel)).catch(() => {});
+      }
+      return guncel;
+    });
+
     if (systemProgramId && Platform.OS === 'android' && TVAppManager && TVAppManager.removeSystemWatchNextProgram) {
       try {
         await TVAppManager.removeSystemWatchNextProgram(systemProgramId);
       } catch {}
     }
     setDevamEdenIcerikler((prev) => {
-      const guncel = prev.filter((s) => s.id !== id);
+      const guncel = prev.filter((s) => s.id !== id && (!hedef || s.title.toLowerCase().trim() !== hedef.title.toLowerCase().trim()));
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
         TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify(guncel.filter((x) => !x.isSystemWatchNext))).catch(() => {});
       }
       return guncel;
     });
-    setBildirimMetni('🗑️ İçerik devam listesinden kaldırıldı.');
+    setBildirimMetni('🗑️ İçerik devam listesinden kalıcı olarak kaldırıldı.');
     setTimeout(() => setBildirimMetni(''), 2500);
   };
 
   const devamEtListesiniSifirla = async () => {
+    const simdi = Date.now();
     setTvTestAktif(false);
+
+    // Mevcut tüm öğeleri kara listeye alarak geri gelmelerini %100 engelle
+    const mevcutSilinenler = devamEdenIcerikler.flatMap((item) => [
+      item.id,
+      item.title.toLowerCase().trim(),
+    ]);
+
     setDevamEdenIcerikler([]);
+    setSonDevamTemizlemeZamani(simdi);
+    setSilinenDevamIdleri(mevcutSilinenler);
+
     if (Platform.OS === 'android' && TVAppManager) {
+      if (TVAppManager.saveSetting) {
+        await TVAppManager.saveSetting('devamEdenIcerikler', '[]').catch(() => {});
+        await TVAppManager.saveSetting('gs_son_devam_temizleme_zamani', simdi.toString()).catch(() => {});
+        await TVAppManager.saveSetting('gs_silinen_devam_idler', JSON.stringify(mevcutSilinenler)).catch(() => {});
+      }
       if (TVAppManager.clearAllWatchNextPrograms) {
         await TVAppManager.clearAllWatchNextPrograms().catch(() => {});
       }
       if (TVAppManager.clearAllTestWatchNextPrograms) {
         await TVAppManager.clearAllTestWatchNextPrograms().catch(() => {});
       }
-      if (TVAppManager.saveSetting) {
-        await TVAppManager.saveSetting('devamEdenIcerikler', JSON.stringify([])).catch(() => {});
-      }
     }
-    setBildirimMetni('🗑️ İzleme geçmişi tamamen temizlendi');
-    setTimeout(() => setBildirimMetni(''), 2500);
+    setBildirimMetni('🗑️ Kaldığın yerden devam et rafı tamamen sıfırlandı. Artık sadece bu andan sonra açacağınız içerikler görünecektir.');
+    setTimeout(() => setBildirimMetni(''), 3500);
   };
 
   // Filtrelenmiş Uygulamalar (Kategoriye, Aramaya, Sıralamaya ve Gizliliğe Göre)

@@ -1,7 +1,7 @@
 {
-  "version": "3.2.27",
-  "versionCode": 53,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.27/app-release.apk",
-  "shortUrl": "https://tinyurl.com/2b597qs5",
-  "changelog": "v3.2.27 (Build 53): Yerel ADB Doğrulama İyileştirmesi: 1) LocalAdb'de komutlar uygulandığında ve erişilebilirlik servisi başladığında oluşan asılsız 'FAILED' uyarısı düzeltildi. 2) Servis durumu doğrudan kontrol edilerek işlem bittiğinde daima yeşil onay bildirimi gösterilmesi sağlandı."
+  "version": "3.2.28",
+  "versionCode": 54,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.28/app-release.apk",
+  "shortUrl": "https://tinyurl.com/2dy3mrdc",
+  "changelog": "v3.2.28 (Build 54): Kaldığın Yerden Devam Et Rafı Kalıcı Sıfırlama ve Tren Dizilimi Koruması: 1) Silinen veya sıfırlanan içeriklerin sistem arka planından geri gelmesi kalıcı kara liste ve son silinme zaman damgası filtresiyle %100 engellendi. 2) Yalnızca silinme anından sonra bir uygulamada açılan yeni içerikler rafa dahil edilir. 3) Raf tren gibi uzamaması için en güncel maksimum 8 kartla sınırlandırıldı. 4) Yerel ADB ile Android TV içerik sağlayıcısı temizliği entegre edildi."
 }
