@@ -52,15 +52,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v3.2.15' }}
-          name: "GS TV Launcher Ultra v3.2.15 (Build 41)"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v3.2.16' }}
+          name: "GS TV Launcher Ultra v3.2.16 (Build 42)"
           draft: false
           prerelease: false
           body: |
-            ## GS TV Launcher Ultra v3.2.15 (Build 41)
-            - 🌍 **Xiaomi Mi Box & Android TV Dil Uyumluluğu:** Leanback arayüzündeki Türkçe dil çakışması ve onay penceresi çökmesi için İngilizce fallback kaynakları (values-en) ve temiz XML metinleri sağlandı.
-            - ⚙️ **Tek Tıkla Dil Değiştirme Butonu:** TV sistem dilini tek tıkla değiştirebilmek için openLanguageSettings köprüsü eklendi.
-            - 🛡️ **Sabit Başlatıcı Kapanma Düzeltmesi:** Onay diyaloğu ve Leanback preference stabilitesi sağlandı.
+            ## GS TV Launcher Ultra v3.2.16 (Build 42)
+            - 🛡️ **Sabit Başlatıcı Orijinal Yapılandırmaya Döndürüldü:** canRetrieveWindowContent tamamen false yapıldı. Xiaomi Mi Box'ın servisi tehlikeli ekran okuyucu gibi algılayıp kapatması engellendi. İlk çalışan hafif mimariye dönüldü.
             - 🎬 **Taşınabilir IMDb Dikey Split Modu & 7 Yeni İçerik Widget'ı** korundu.
           files: |
             android/app/build/outputs/apk/release/app-release.apk
