@@ -556,7 +556,7 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             }
             val source = try {
                 reactContext.packageManager.getInstallSourceInfo(reactContext.packageName).packageSource
-            } catch (_: Throwable) {
+            } catch (e: Throwable) {
                 null
             }
             val isRestricted = (source == PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE || 

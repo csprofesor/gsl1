@@ -26,12 +26,12 @@ class BootReceiver : BroadcastReceiver() {
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                             try {
                                 context.startActivity(launchIntent)
-                            } catch (_: Exception) {}
+                            } catch (e: Exception) {}
                         }, (gecikmeSaniye * 1000).toLong())
                     } else {
                         try {
                             context.startActivity(launchIntent)
-                        } catch (_: Exception) {}
+                        } catch (e: Exception) {}
                     }
                 }
             }

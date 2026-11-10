@@ -57,11 +57,11 @@ class LocalAdb(private val context: Context) {
                 }
             }
             if (isSetUp()) SetupResult.DONE else SetupResult.FAILED
-        } catch (_: AdbConnectException) {
+        } catch (e: AdbConnectException) {
             SetupResult.NOT_ALLOWED
-        } catch (_: AdbAuthException) {
+        } catch (e: AdbAuthException) {
             SetupResult.NOT_ALLOWED
-        } catch (_: AdbTimeoutException) {
+        } catch (e: AdbTimeoutException) {
             SetupResult.NOT_ALLOWED
         } catch (e: IOException) {
             Log.w(TAG, "adb kurulum hatasi: ${e.message}")
@@ -72,7 +72,7 @@ class LocalAdb(private val context: Context) {
     private fun isListening(): Boolean = try {
         Socket().use { it.connect(InetSocketAddress(HOST, PORT), CONNECT_TIMEOUT_MS) }
         true
-    } catch (_: IOException) {
+    } catch (e: IOException) {
         false
     }
 

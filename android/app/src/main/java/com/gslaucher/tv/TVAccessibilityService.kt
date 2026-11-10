@@ -94,7 +94,7 @@ class TVAccessibilityService : AccessibilityService() {
             if (shown in stockHomes) {
                 openLauncher()
             }
-        } catch (_: Throwable) {
+        } catch (e: Throwable) {
         }
     }
 
@@ -110,7 +110,7 @@ class TVAccessibilityService : AccessibilityService() {
         )
         try {
             startActivity(launchIntent)
-        } catch (_: Throwable) {
+        } catch (e: Throwable) {
         }
     }
 
