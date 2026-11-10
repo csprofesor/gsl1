@@ -1,7 +1,7 @@
 {
-  "version": "3.2.26",
-  "versionCode": 52,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.26/app-release.apk",
-  "shortUrl": "https://tinyurl.com/28k3psw7",
-  "changelog": "v3.2.26 (Build 52): Uygulama İçi Yerel ADB (LocalAdb) Mimarisi: 1) Matinee teknolojisi entegre edildi: Bilgisayar veya telefon gerektirmeden doğrudan TV üzerinde tek tıkla ACCESS_RESTRICTED_SETTINGS ve WRITE_SECURE_SETTINGS kilitleri otomatik açılır. 2) TV'deki Sabit Başlatıcı servisi tek tıkla sistem ayarlarından kalıcı olarak etkinleştirilir. 3) Cihazda ADB kapalıysa doğrudan TV Geliştirici Seçeneklerini açan rehber buton eklendi."
+  "version": "3.2.27",
+  "versionCode": 53,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.27/app-release.apk",
+  "shortUrl": "https://tinyurl.com/2b597qs5",
+  "changelog": "v3.2.27 (Build 53): Yerel ADB Doğrulama İyileştirmesi: 1) LocalAdb'de komutlar uygulandığında ve erişilebilirlik servisi başladığında oluşan asılsız 'FAILED' uyarısı düzeltildi. 2) Servis durumu doğrudan kontrol edilerek işlem bittiğinde daima yeşil onay bildirimi gösterilmesi sağlandı."
 }

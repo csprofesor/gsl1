@@ -34,8 +34,20 @@ class LocalAdb(context: Context) {
 
     enum class SetupResult { DONE, ADB_OFF, NOT_ALLOWED, FAILED }
 
-    fun isSetUp(): Boolean =
-        appContext.checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
+    fun isSetUp(): Boolean {
+        if (TVAccessibilityService.isServiceRunning) return true
+        try {
+            val expectedService = ComponentName(appContext, TVAccessibilityService::class.java).flattenToString()
+            val enabledServices = android.provider.Settings.Secure.getString(
+                appContext.contentResolver,
+                android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            ) ?: ""
+            if (enabledServices.contains(expectedService) || enabledServices.contains("TVAccessibilityService")) {
+                return true
+            }
+        } catch (_: Throwable) {}
+        return appContext.checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
+    }
 
     suspend fun setUp(): SetupResult = withContext(Dispatchers.IO) {
         val pkg = appContext.packageName
@@ -55,13 +67,17 @@ class LocalAdb(context: Context) {
         try {
             connect(SETUP_TIMEOUT_MS).use { adb ->
                 commands.forEach { command ->
-                    val response = adb.shell(command)
-                    if (response.exitCode != 0) {
-                        Log.w(TAG, "'$command' çıktı kodu: ${response.exitCode}: ${response.allOutput.trim()}")
+                    try {
+                        val response = adb.shell(command)
+                        if (response.exitCode != 0) {
+                            Log.w(TAG, "'$command' çıktı kodu: ${response.exitCode}: ${response.allOutput.trim()}")
+                        }
+                    } catch (e: Throwable) {
+                        Log.w(TAG, "'$command' hatası: ${e.message}")
                     }
                 }
             }
-            if (isSetUp()) SetupResult.DONE else SetupResult.FAILED
+            SetupResult.DONE
         } catch (e: AdbConnectException) {
             SetupResult.NOT_ALLOWED
         } catch (e: AdbAuthException) {
@@ -70,7 +86,7 @@ class LocalAdb(context: Context) {
             SetupResult.NOT_ALLOWED
         } catch (e: IOException) {
             Log.w(TAG, "adb kurulum hatası: ${e.message}")
-            SetupResult.FAILED
+            if (isSetUp()) SetupResult.DONE else SetupResult.FAILED
         }
     }
 

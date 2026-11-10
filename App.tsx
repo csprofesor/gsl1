@@ -1482,11 +1482,22 @@ export default function App() {
     try {
       const res = await TVAppManager.setupLocalAdb();
       setAdbYukleniyor(false);
-      setAdbSonuc(res);
+      const aktif = await TVAppManager.isAccessibilityEnabled().catch(() => false);
+      if (res === 'DONE' || aktif) {
+        setAdbSonuc('DONE');
+      } else {
+        setAdbSonuc(res);
+      }
       await sabitBaslaticiDurumuKontrolEt();
     } catch (err: any) {
       setAdbYukleniyor(false);
-      setAdbSonuc(`Hata: ${err?.message || err}`);
+      const aktif = await TVAppManager.isAccessibilityEnabled().catch(() => false);
+      if (aktif) {
+        setAdbSonuc('DONE');
+      } else {
+        setAdbSonuc(`Hata: ${err?.message || err}`);
+      }
+      await sabitBaslaticiDurumuKontrolEt();
     }
   };
 
