@@ -34,11 +34,11 @@ const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.12';
-const CURRENT_BUILD = 38;
+const CURRENT_VERSION = '3.2.13';
+const CURRENT_BUILD = 39;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
-const LATEST_RELEASE_APK = 'https://tinyurl.com/gs12apk';
+const LATEST_RELEASE_APK = 'https://tinyurl.com/gs13apk';
 
 // Trakt.tv Açık API & Scrobbler Kimlikleri (Google Play & Apple App Store %100 Uyumlu)
 const TRAKT_CLIENT_ID = 'db7483669be745d448651a141b71192e21e05a8f4c2c54ec8360d2cf34d28f8f';
@@ -57,21 +57,62 @@ export interface AnaEkranBolumItem {
   baslik: string;
   ikon: string;
   gorunur: boolean;
-  sekil: 'standart' | 'kare' | 'genis' | 'kapsul';
+  sekil: 'standart' | 'kare' | 'genis' | 'kapsul' | 'dikey';
   aciklama: string;
 }
 
 export const VARSAYILAN_ANA_EKRAN_DUZENI: AnaEkranBolumItem[] = [
   { id: 'widget_hava', baslik: 'Canlı Hava & Saat Widget', ikon: '🌤️', gorunur: true, sekil: 'genis', aciklama: 'Anlık sıcaklık, hava durumu, saat ve tarih kartı' },
-  { id: 'vitrin', baslik: 'Öne Çıkan Film & Dizi Vitrini', ikon: '🎬', gorunur: true, sekil: 'standart', aciklama: 'IMDb önerileri ve film başlatıcı afişi' },
+  { id: 'vitrin', baslik: 'IMDb Film & Dizi Önerileri Vitrini', ikon: '🎬', gorunur: true, sekil: 'standart', aciklama: 'Trend filmler, dikey/yatay afişler veya solda film sağda uygulamalar split düzeni' },
   { id: 'kategoriler', baslik: 'Kategori Sekmeleri', ikon: '⭐', gorunur: true, sekil: 'standart', aciklama: 'Tümü, Sinema, TV, Oyunlar hızlı filtre çubuğu' },
   { id: 'uygulamalar', baslik: 'Uygulamalarım Rafı', ikon: '📱', gorunur: true, sekil: 'standart', aciklama: 'Gerçek kurulu uygulamaların ana listesi' },
   { id: 'widget_sistem', baslik: 'Sistem & RAM Performans', ikon: '⚡', gorunur: true, sekil: 'genis', aciklama: 'Canlı RAM bellek ve tek tıkla hızlandırma widgetı' },
   { id: 'devam_et', baslik: 'Kaldığın Yerden Devam Et', ikon: '▶', gorunur: true, sekil: 'standart', aciklama: 'Son izlenen dizi ve filmlerin ilerleme çubukları' },
+  { id: 'widget_haber', baslik: 'Canlı Haberler & Son Dakika', ikon: '📰', gorunur: false, sekil: 'genis', aciklama: 'Son dakika haber başlıkları, özetler ve canlı gündem' },
+  { id: 'widget_radyo', baslik: 'Canlı TV Radyo & Müzik', ikon: '📻', gorunur: false, sekil: 'genis', aciklama: 'Kral Pop, Power FM, Slow Türk canlı istasyon çaları' },
+  { id: 'widget_spor', baslik: 'Canlı Skorlar & Fikstür', ikon: '⚽', gorunur: false, sekil: 'genis', aciklama: 'Süper Lig canlı maç skorları, takımlar ve durumlar' },
+  { id: 'widget_zamanlayici', baslik: 'TV Kapanma / Uyku Zamanlayıcısı', ikon: '⏱️', gorunur: false, sekil: 'kapsul', aciklama: 'Belirlenen süre sonunda TV ekranını uykuya alan sayaç' },
+  { id: 'widget_notlar', baslik: 'TV Aile Not Panosu', ikon: '📌', gorunur: false, sekil: 'genis', aciklama: 'Ev halkı için önemli hatırlatıcılar ve notlar' },
+  { id: 'widget_soz', baslik: 'Günün Film Repliği & Trivia', ikon: '💡', gorunur: false, sekil: 'kapsul', aciklama: 'Sinema tarihinden unutulmaz replikler ve bilgiler' },
   { id: 'widget_hiz', baslik: 'İnternet Hızı & Wi-Fi Bilgi', ikon: '🚀', gorunur: false, sekil: 'kare', aciklama: 'Canlı Wi-Fi ağı, sinyal ve hız ölçüm widgetı' },
   { id: 'widget_trakt', baslik: 'Trakt & İzleme Senkronu', ikon: '🍿', gorunur: false, sekil: 'genis', aciklama: 'Trakt.tv bağlantı durumu ve son izleme geçmişi' },
   { id: 'widget_foto', baslik: 'Aile Fotoğrafı Canlı Çerçeve', ikon: '🖼️', gorunur: false, sekil: 'kare', aciklama: 'Telefondan yüklenen fotoğraflarla mini canlı albüm' },
   { id: 'widget_tv', baslik: 'Canlı TV Kanalları', ikon: '📡', gorunur: false, sekil: 'standart', aciklama: 'Sistem TV uygulamalarından çekilen canlı kanallar' },
+  { id: 'widget_oyunlar', baslik: 'Retro Oyunlar & Emülatörler', ikon: '🎮', gorunur: false, sekil: 'standart', aciklama: 'Kurulu oyunlar ve arcade emülatör başlatıcı rafı' },
+];
+
+export const GUNCEL_HABERLER = [
+  { id: 'h1', kategori: '🔴 SON DAKİKA', baslik: 'Yeni Nesil 4K TV & Akıllı Görüntü Teknolojileri Duyuruldu', kaynak: 'TRT Haber', saat: '10 dk önce', ozet: 'Yeni nesil TV işlemcileri ile gerçek zamanlı yapay zeka yükseltme ve renk optimizasyonu tanıtıldı.' },
+  { id: 'h2', kategori: '🎬 SİNEMA', baslik: 'Yılın Beklenen Başyapıtı Vizyonda Gişe Rekorları Kırıyor', kaynak: 'Sinema Dünyası', saat: '25 dk önce', ozet: 'Eleştirmenlerden tam not alan bilim kurgu yapımı küresel gişede 250 milyon doları aştı.' },
+  { id: 'h3', kategori: '⚽ SPOR', baslik: 'Süper Lig ve Şampiyonlar Ligi Zirve Yarışında Kritik Hafta', kaynak: 'Spor Gündemi', saat: '40 dk önce', ozet: 'Hafta sonu oynanacak dev derbi öncesi takımlar son hazırlıklarını tamamladı.' },
+  { id: 'h4', kategori: '🚀 BİLİM & TEKNOLOJİ', baslik: 'Gökbilimciler Yaşanabilir Bölgede Yeni Bir Gezegen Keşfetti', kaynak: 'Bilim Bülteni', saat: '1 saat önce', ozet: 'James Webb Uzay Teleskobu atmosferinde su buharı bulunan yeni bir ötegezegen tespit etti.' },
+];
+
+export const POPULER_RADYOLAR = [
+  { id: 'r1', ad: 'Kral Pop FM', frekans: '94.7 MHz', tur: 'Türkçe Pop Hit', ikon: '📻', renk: '#EF4444' },
+  { id: 'r2', ad: 'Power FM', frekans: '100.0 MHz', tur: 'Yabancı Hit & Dans', ikon: '⚡', renk: '#F59E0B' },
+  { id: 'r3', ad: 'Slow Türk', frekans: '95.3 MHz', tur: 'Akustik & Slow', ikon: '🎵', renk: '#3B82F6' },
+  { id: 'r4', ad: 'TRT Radyo 1', frekans: '95.6 MHz', tur: 'Haber & Kültür', ikon: '🎙️', renk: '#10B981' },
+  { id: 'r5', ad: 'Joy FM', frekans: '100.6 MHz', tur: 'Caz & Lounge', ikon: '🎷', renk: '#8B5CF6' },
+];
+
+export const CANLI_MACLAR = [
+  { id: 'm1', lig: 'Trendyol Süper Lig', ev: 'Galatasaray', deplasman: 'Fenerbahçe', skor: '2 - 1', dakika: "78'", durum: 'CANLI' },
+  { id: 'm2', lig: 'Trendyol Süper Lig', ev: 'Beşiktaş', deplasman: 'Trabzonspor', skor: '1 - 1', dakika: "62'", durum: 'CANLI' },
+  { id: 'm3', lig: 'UEFA Şampiyonlar Ligi', ev: 'Real Madrid', deplasman: 'Man. City', skor: '3 - 2', dakika: "MS", durum: 'BİTTİ' },
+];
+
+export const AILE_NOTLARI = [
+  { id: 'n1', ikon: '📌', baslik: 'Aile Sinema Gecesi', not: 'Akşam 21:00’de IMDb vitrinindeki yeni film izlenecek!', yazar: 'Baba' },
+  { id: 'n2', ikon: '🔋', baslik: 'Kumanda Şarjı', not: 'TV kumandası şarj ünitesine konuldu, pilleri dolu.', yazar: 'Anne' },
+  { id: 'n3', ikon: '⚽', baslik: 'Canlı Derbi Maçı', not: 'Cumartesi 19:00’da dev maç canlı yayında!', yazar: 'Ev Halkı' },
+];
+
+export const GUNUN_REPLIKLERI = [
+  { id: 's1', replik: '"Ona reddedemeyeceği bir teklif yapacağım."', film: 'The Godfather (1972)', yil: '1972', imdb: '9.2' },
+  { id: 's2', replik: '"Umut iyi bir şeydir, belki de en iyisi. Ve iyi şeyler asla ölmez."', film: 'The Shawshank Redemption', yil: '1994', imdb: '9.3' },
+  { id: 's3', replik: '"Yolun sonunu düşünürsen adımı atamazsın."', film: 'Ezel', yil: '2009', imdb: '8.8' },
+  { id: 's4', replik: '"Neden bu kadar ciddisin? (Why so serious?)"', film: 'The Dark Knight', yil: '2008', imdb: '9.0' },
 ];
 
 export interface DinamikDuvarKagidi {
@@ -1415,6 +1456,31 @@ export default function App() {
   const [duzenModalAcik, setDuzenModalAcik] = useState(false);
   const [aktifDuzenSekme, setAktifDuzenSekme] = useState<'sirala' | 'ekle' | 'sekil'>('sirala');
   const [fotoWidgetIndex, setFotoWidgetIndex] = useState(0);
+
+  // Yeni İçerik Widget'ları Durumları
+  const [haberIndex, setHaberIndex] = useState(0);
+  const [aktifRadyoIdx, setAktifRadyoIdx] = useState(0);
+  const [radyoCaliniyor, setRadyoCaliniyor] = useState(false);
+  const [sporMacIdx, setSporMacIdx] = useState(0);
+  const [kalanUykuSuresiDakika, setKalanUykuSuresiDakika] = useState<number | null>(null);
+  const [aktifNotIdx, setAktifNotIdx] = useState(0);
+  const [sozIdx, setSozIdx] = useState(0);
+
+  // Uyku Zamanlayıcısı Sayacı (Dakikada 1 azaltma)
+  useEffect(() => {
+    if (kalanUykuSuresiDakika === null || kalanUykuSuresiDakika <= 0) return;
+    const timer = setInterval(() => {
+      setKalanUykuSuresiDakika((prev) => {
+        if (prev === null || prev <= 1) {
+          setBildirimMetni('🌙 TV Uyku zamanı geldi, ekran koruyucu devreye alınıyor...');
+          setEkranKoruyucuAcik(true);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 60000);
+    return () => clearInterval(timer);
+  }, [kalanUykuSuresiDakika]);
 
   const etkilesimSifirla = useCallback(() => {
     sonEtkilesimZamani.current = Date.now();
@@ -4036,7 +4102,44 @@ export default function App() {
     });
   };
 
-  const bolumSekilDegistir = (id: string, yeniSekil: 'standart' | 'kare' | 'genis' | 'kapsul') => {
+  const bolumuKaldir = (id: string) => {
+    setAnaEkranDuzen((prev) => {
+      const copy = prev.map((b) => (b.id === id ? { ...b, gorunur: false } : b));
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+        TVAppManager.saveSetting('anaEkranDuzen', JSON.stringify(copy)).catch(() => {});
+      }
+      const silinen = prev.find((b) => b.id === id);
+      setBildirimMetni(`🗑️ "${silinen?.baslik || 'Widget'}" ana ekrandan kaldırıldı`);
+      setTimeout(() => setBildirimMetni(''), 2000);
+      return copy;
+    });
+  };
+
+  const bolumuYukle = (id: string) => {
+    setAnaEkranDuzen((prev) => {
+      const exists = prev.some((b) => b.id === id);
+      let copy: AnaEkranBolumItem[];
+      if (exists) {
+        copy = prev.map((b) => (b.id === id ? { ...b, gorunur: true } : b));
+      } else {
+        const found = VARSAYILAN_ANA_EKRAN_DUZENI.find((b) => b.id === id);
+        if (found) {
+          copy = [...prev, { ...found, gorunur: true }];
+        } else {
+          copy = prev;
+        }
+      }
+      if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
+        TVAppManager.saveSetting('anaEkranDuzen', JSON.stringify(copy)).catch(() => {});
+      }
+      const eklenen = copy.find((b) => b.id === id);
+      setBildirimMetni(`➕ "${eklenen?.baslik || 'Widget'}" ana ekrana yüklendi!`);
+      setTimeout(() => setBildirimMetni(''), 2000);
+      return copy;
+    });
+  };
+
+  const bolumSekilDegistir = (id: string, yeniSekil: 'standart' | 'kare' | 'genis' | 'kapsul' | 'dikey') => {
     setAnaEkranDuzen((prev) => {
       const copy = prev.map((b) => (b.id === id ? { ...b, sekil: yeniSekil } : b));
       if (Platform.OS === 'android' && TVAppManager && TVAppManager.saveSetting) {
@@ -4044,7 +4147,7 @@ export default function App() {
       }
       return copy;
     });
-    setBildirimMetni(`📐 Widget şekli: ${yeniSekil.toUpperCase()}`);
+    setBildirimMetni(`📐 Şekil: ${yeniSekil.toUpperCase()}`);
     setTimeout(() => setBildirimMetni(''), 1500);
   };
 
@@ -4778,6 +4881,350 @@ export default function App() {
 
               case 'vitrin': {
                 if (!vitrinGorunur || !aktifFilm) return null;
+
+                // 1) DİKEY / UZUNLAMASINA SPLIT MOD (Solda Dikey IMDb Afişi, Sağda Uygulama İkonları)
+                if (bolum.sekil === 'dikey') {
+                  return (
+                    <View key={bolum.id} style={{ marginHorizontal: 26, marginVertical: 10 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'stretch', gap: 16 }}>
+                        {/* Sol Sütun: Dikey Uzunlamasına IMDb Afişi */}
+                        <View
+                          style={{
+                            width: 320,
+                            borderRadius: 18,
+                            overflow: 'hidden',
+                            backgroundColor: '#0F172A',
+                            borderWidth: 1.5,
+                            borderColor: aktifTema.border,
+                            position: 'relative',
+                          }}
+                        >
+                          <Image
+                            source={{ uri: guvenliGorselUrl(aktifFilm.posterUrl || aktifFilm.backdropUrl) }}
+                            style={StyleSheet.absoluteFillObject}
+                            resizeMode="cover"
+                          />
+                          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(10, 15, 29, 0.72)' }]} />
+
+                          <View style={{ flex: 1, padding: 14, justifyContent: 'space-between' }}>
+                            <View>
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <View style={[styles.filmPlatformRozet, { backgroundColor: 'rgba(15, 23, 42, 0.85)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.3)' }]}>
+                                  <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>⭐ IMDb Trend</Text>
+                                </View>
+                                <View style={styles.filmPuanRozet}>
+                                  <Text style={styles.filmPuanYazi}>{aktifFilm.rating}</Text>
+                                </View>
+                              </View>
+
+                              <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900', marginTop: 10 }} numberOfLines={2}>
+                                {aktifFilm.title}
+                              </Text>
+                              <Text style={{ color: '#FACC15', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+                                {aktifFilm.year} • {aktifFilm.genre}
+                              </Text>
+                              <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10, marginTop: 6 }} numberOfLines={3}>
+                                {aktifFilm.overview}
+                              </Text>
+                            </View>
+
+                            <View style={{ gap: 8, marginTop: 10 }}>
+                              <FocusableItem
+                                style={[styles.filmOynatButon, { backgroundColor: '#0284C7', borderColor: '#FFFFFF', borderWidth: 1, paddingVertical: 8 }]}
+                                focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF', transform: [{ scale: 1.03 }] }}
+                                onPress={() => filmBaslat(aktifFilm)}
+                              >
+                                {() => (
+                                  <View style={styles.simdiIzleIcerik}>
+                                    <Text style={{ color: '#FFF', fontSize: 13, marginRight: 6 }}>▶</Text>
+                                    <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '900' }}>Filmi Oynat</Text>
+                                  </View>
+                                )}
+                              </FocusableItem>
+
+                              <View style={{ flexDirection: 'row', gap: 6 }}>
+                                <FocusableItem
+                                  style={{
+                                    flex: 1,
+                                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                                    borderColor: 'rgba(255,255,255,0.3)',
+                                    borderWidth: 1,
+                                    borderRadius: 8,
+                                    paddingVertical: 6,
+                                    alignItems: 'center',
+                                  }}
+                                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                                  onPress={() => {
+                                    const count = dinamikFilmKatalogu.length || 1;
+                                    const randomIdx = Math.floor(Math.random() * count);
+                                    setSeciliFilmIndex(randomIdx);
+                                  }}
+                                >
+                                  {() => <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '800' }}>🔀 Başka Film</Text>}
+                                </FocusableItem>
+
+                                <FocusableItem
+                                  style={{
+                                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                                    borderColor: 'rgba(255,255,255,0.3)',
+                                    borderWidth: 1,
+                                    borderRadius: 8,
+                                    paddingHorizontal: 10,
+                                    paddingVertical: 6,
+                                    alignItems: 'center',
+                                  }}
+                                  focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF' }}
+                                  onPress={async () => {
+                                    await canliImdbOnerileriGetir();
+                                    setBildirimMetni('🍿 Yeni IMDb filmleri çekildi!');
+                                    setTimeout(() => setBildirimMetni(''), 2500);
+                                  }}
+                                >
+                                  {() => <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '800' }}>{imdbYukleniyor ? '⏳' : '🔄'}</Text>}
+                                </FocusableItem>
+                              </View>
+                            </View>
+                          </View>
+                        </View>
+
+                        {/* Sağ Sütun: Hızlı Uygulama İkonları Izgarası */}
+                        <View
+                          style={{
+                            flex: 1,
+                            backgroundColor: 'rgba(15, 23, 42, 0.55)',
+                            borderColor: aktifTema.border,
+                            borderWidth: 1,
+                            borderRadius: 18,
+                            padding: 14,
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Text style={{ fontSize: 16 }}>⭐</Text>
+                              <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}>Hızlı Uygulamalar</Text>
+                            </View>
+                            <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>Tek tıkla başlat</Text>
+                          </View>
+
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                            {vitrinUygulamalari.slice(0, 8).map((app) => (
+                              <FocusableItem
+                                key={app.packageName}
+                                style={[
+                                  {
+                                    width: 96,
+                                    height: 108,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: 'rgba(255,255,255,0.06)',
+                                    borderRadius: 12,
+                                    padding: 6,
+                                  },
+                                  getIkonCerceveStili(false),
+                                ]}
+                                focusedStyle={[
+                                  {
+                                    transform: [{ scale: 1.08 }],
+                                    backgroundColor: 'rgba(255,255,255,0.18)',
+                                  },
+                                  getIkonCerceveStili(true),
+                                ]}
+                                onPress={() => uygulamaBaslat(app.packageName)}
+                                onLongPress={() => appAksiyonAc(app)}
+                              >
+                                {() => {
+                                  const appBaslik = app.customName || app.name;
+                                  return (
+                                    <>
+                                      <View style={{ width: 44, height: 44, borderRadius: 10, overflow: 'hidden', marginBottom: 6 }}>
+                                        {app.icon ? (
+                                          <Image source={{ uri: `data:image/png;base64,${app.icon}` }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                                        ) : (
+                                          <View style={{ width: '100%', height: '100%', backgroundColor: aktifTema.accent, justifyContent: 'center', alignItems: 'center' }}>
+                                            <Text style={{ color: '#FFF', fontSize: 18, fontWeight: 'bold' }}>{appBaslik.charAt(0)}</Text>
+                                          </View>
+                                        )}
+                                      </View>
+                                      <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700', textAlign: 'center' }} numberOfLines={1}>
+                                        {appBaslik}
+                                      </Text>
+                                    </>
+                                  );
+                                }}
+                              </FocusableItem>
+                            ))}
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                }
+
+                // 2) KARE MOD (1x1 Kompakt Poster Kartı)
+                if (bolum.sekil === 'kare') {
+                  return (
+                    <View key={bolum.id} style={{ marginHorizontal: 26, marginVertical: 8 }}>
+                      <FocusableItem
+                        style={{
+                          width: 320,
+                          height: 320,
+                          borderRadius: 18,
+                          overflow: 'hidden',
+                          backgroundColor: '#0F172A',
+                          borderWidth: 1.5,
+                          borderColor: aktifTema.border,
+                          position: 'relative',
+                        }}
+                        focusedStyle={{
+                          borderColor: '#FFFFFF',
+                          transform: [{ scale: 1.03 }],
+                          shadowColor: aktifTema.accent,
+                          shadowRadius: 14,
+                          shadowOpacity: 0.8,
+                        }}
+                        onPress={() => filmBaslat(aktifFilm)}
+                      >
+                        {() => (
+                          <>
+                            <Image
+                              source={{ uri: guvenliGorselUrl(aktifFilm.posterUrl || aktifFilm.backdropUrl) }}
+                              style={StyleSheet.absoluteFillObject}
+                              resizeMode="cover"
+                            />
+                            <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(10, 15, 29, 0.65)' }]} />
+                            <View style={{ flex: 1, padding: 14, justifyContent: 'space-between' }}>
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <View style={[styles.filmPlatformRozet, { backgroundColor: 'rgba(15, 23, 42, 0.85)' }]}>
+                                  <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>⭐ IMDb Günün Filmi</Text>
+                                </View>
+                                <View style={styles.filmPuanRozet}>
+                                  <Text style={styles.filmPuanYazi}>{aktifFilm.rating}</Text>
+                                </View>
+                              </View>
+
+                              <View>
+                                <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900' }} numberOfLines={1}>
+                                  {aktifFilm.title}
+                                </Text>
+                                <Text style={{ color: '#FACC15', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+                                  {aktifFilm.year} • {aktifFilm.genre}
+                                </Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 6 }}>
+                                  <View style={{ backgroundColor: '#0284C7', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6 }}>
+                                    <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '900' }}>▶ Filmi Oynat</Text>
+                                  </View>
+                                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10 }}>4K HDR</Text>
+                                </View>
+                              </View>
+                            </View>
+                          </>
+                        )}
+                      </FocusableItem>
+                    </View>
+                  );
+                }
+
+                // 3) GENİŞ MOD (2x1 Kompakt Yatay Afiş)
+                if (bolum.sekil === 'genis') {
+                  return (
+                    <View key={bolum.id} style={{ marginHorizontal: 26, marginVertical: 8 }}>
+                      <View
+                        style={{
+                          height: 180,
+                          borderRadius: 16,
+                          overflow: 'hidden',
+                          backgroundColor: '#0F172A',
+                          borderWidth: 1.5,
+                          borderColor: aktifTema.border,
+                          flexDirection: 'row',
+                        }}
+                      >
+                        <Image
+                          source={{ uri: guvenliGorselUrl(aktifFilm.backdropUrl) }}
+                          style={StyleSheet.absoluteFillObject}
+                          resizeMode="cover"
+                        />
+                        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(10, 15, 29, 0.78)' }]} />
+                        <Image
+                          source={{ uri: guvenliGorselUrl(aktifFilm.posterUrl) }}
+                          style={{ width: 120, height: '100%' }}
+                          resizeMode="cover"
+                        />
+                        <View style={{ flex: 1, padding: 14, justifyContent: 'space-between' }}>
+                          <View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                              <View style={styles.filmPuanRozet}>
+                                <Text style={styles.filmPuanYazi}>{aktifFilm.rating}</Text>
+                              </View>
+                              <Text style={{ color: '#FACC15', fontSize: 11, fontWeight: '700' }}>
+                                {aktifFilm.year} • {aktifFilm.genre}
+                              </Text>
+                            </View>
+                            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900', marginTop: 4 }} numberOfLines={1}>
+                              {aktifFilm.title}
+                            </Text>
+                            <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, marginTop: 4 }} numberOfLines={2}>
+                              {aktifFilm.overview}
+                            </Text>
+                          </View>
+                          <View style={{ flexDirection: 'row', gap: 8 }}>
+                            <FocusableItem
+                              style={{ backgroundColor: '#0284C7', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 }}
+                              focusedStyle={{ backgroundColor: aktifTema.accent, transform: [{ scale: 1.05 }] }}
+                              onPress={() => filmBaslat(aktifFilm)}
+                            >
+                              {() => <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '900' }}>▶ Filmi Oynat</Text>}
+                            </FocusableItem>
+                            <FocusableItem
+                              style={{ backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 }}
+                              focusedStyle={{ backgroundColor: aktifTema.accent, transform: [{ scale: 1.05 }] }}
+                              onPress={() => {
+                                const count = dinamikFilmKatalogu.length || 1;
+                                setSeciliFilmIndex(Math.floor(Math.random() * count));
+                              }}
+                            >
+                              {() => <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🔀 Başka Film</Text>}
+                            </FocusableItem>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                }
+
+                // 4) KAPSÜL MOD (Minimalist Tek Satır Şerit)
+                if (bolum.sekil === 'kapsul') {
+                  return (
+                    <View key={bolum.id} style={styles.widgetKapsayiciKapsul}>
+                      <FocusableItem
+                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1 }}
+                        focusedStyle={{ transform: [{ scale: 1.02 }] }}
+                        onPress={() => filmBaslat(aktifFilm)}
+                      >
+                        {() => (
+                          <>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                              <Text style={{ fontSize: 18 }}>🎬</Text>
+                              <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '900' }} numberOfLines={1}>
+                                IMDb Önerisi: {aktifFilm.title} ({aktifFilm.year})
+                              </Text>
+                              <View style={styles.filmPuanRozet}>
+                                <Text style={styles.filmPuanYazi}>{aktifFilm.rating}</Text>
+                              </View>
+                              <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>• {aktifFilm.genre}</Text>
+                            </View>
+                            <View style={{ backgroundColor: '#0284C7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}>
+                              <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>▶ Oynat</Text>
+                            </View>
+                          </>
+                        )}
+                      </FocusableItem>
+                    </View>
+                  );
+                }
+
+                // 5) STANDART MOD: Tam Genişlik Sinematik Vitrin Bannerı
                 return (
                   <View key={bolum.id} style={[styles.filmVitrinKapsayici, { borderColor: aktifTema.border }]}>
                     <Image
@@ -4889,6 +5336,324 @@ export default function App() {
                             </FocusableItem>
                           </View>
                         </View>
+                      </View>
+                    </View>
+                  </View>
+                );
+              }
+
+              case 'widget_haber': {
+                const curHaber = GUNCEL_HABERLER[haberIndex % GUNCEL_HABERLER.length];
+                if (bolum.sekil === 'kapsul') {
+                  return (
+                    <View key={bolum.id} style={styles.widgetKapsayiciKapsul}>
+                      <FocusableItem
+                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1 }}
+                        focusedStyle={{ transform: [{ scale: 1.02 }] }}
+                        onPress={() => setHaberIndex((prev) => (prev + 1) % GUNCEL_HABERLER.length)}
+                      >
+                        {() => (
+                          <>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                              <Text style={{ fontSize: 16 }}>🔴</Text>
+                              <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '900' }}>SON DAKİKA:</Text>
+                              <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700', flex: 1 }} numberOfLines={1}>
+                                {curHaber.baslik}
+                              </Text>
+                            </View>
+                            <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, marginLeft: 8 }}>
+                              {curHaber.saat} ⏭️
+                            </Text>
+                          </>
+                        )}
+                      </FocusableItem>
+                    </View>
+                  );
+                }
+                return (
+                  <View key={bolum.id} style={{ marginHorizontal: 26, marginVertical: 8 }}>
+                    <View style={[styles.widgetKapsayiciGenis, { borderColor: '#EF4444', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={{ fontSize: 18 }}>📰</Text>
+                          <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '900', letterSpacing: 0.5 }}>
+                            {curHaber.kategori}
+                          </Text>
+                          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
+                            • {curHaber.kaynak} ({curHaber.saat})
+                          </Text>
+                        </View>
+                        <FocusableItem
+                          style={{ backgroundColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}
+                          focusedStyle={{ backgroundColor: aktifTema.accent, transform: [{ scale: 1.05 }] }}
+                          onPress={() => setHaberIndex((prev) => (prev + 1) % GUNCEL_HABERLER.length)}
+                        >
+                          {() => <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '800' }}>⏭️ Sonraki Haber</Text>}
+                        </FocusableItem>
+                      </View>
+                      <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800', marginBottom: 4 }} numberOfLines={1}>
+                        {curHaber.baslik}
+                      </Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }} numberOfLines={2}>
+                        {curHaber.ozet}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              }
+
+              case 'widget_radyo': {
+                const curRad = POPULER_RADYOLAR[aktifRadyoIdx % POPULER_RADYOLAR.length];
+                return (
+                  <View key={bolum.id} style={{ marginHorizontal: 26, marginVertical: 8 }}>
+                    <View style={[styles.widgetKapsayiciGenis, { borderColor: curRad.renk, backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                          <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: curRad.renk, justifyContent: 'center', alignItems: 'center' }}>
+                            <Text style={{ fontSize: 22 }}>📻</Text>
+                          </View>
+                          <View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '900' }}>{curRad.ad}</Text>
+                              <View style={{ backgroundColor: radyoCaliniyor ? '#10B981' : '#64748B', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
+                                <Text style={{ color: '#FFF', fontSize: 9, fontWeight: '900' }}>
+                                  {radyoCaliniyor ? '● CANLI YAYIN' : 'DURDURULDU'}
+                                </Text>
+                              </View>
+                            </View>
+                            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>
+                              {curRad.frekans} • {curRad.tur}
+                            </Text>
+                          </View>
+                        </View>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                          <FocusableItem
+                            style={{ backgroundColor: radyoCaliniyor ? '#EF4444' : '#10B981', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 }}
+                            focusedStyle={{ transform: [{ scale: 1.06 }], borderColor: '#FFFFFF' }}
+                            onPress={() => {
+                              const yeni = !radyoCaliniyor;
+                              setRadyoCaliniyor(yeni);
+                              setBildirimMetni(yeni ? `📻 ${curRad.ad} çalınıyor...` : '⏹️ Radyo durduruldu');
+                              setTimeout(() => setBildirimMetni(''), 2000);
+                            }}
+                          >
+                            {() => <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '900' }}>{radyoCaliniyor ? '⏸️ Durdur' : '▶️ Çal'}</Text>}
+                          </FocusableItem>
+                          <FocusableItem
+                            style={{ backgroundColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 }}
+                            focusedStyle={{ backgroundColor: aktifTema.accent, transform: [{ scale: 1.06 }], borderColor: '#FFFFFF' }}
+                            onPress={() => {
+                              const nextIdx = (aktifRadyoIdx + 1) % POPULER_RADYOLAR.length;
+                              setAktifRadyoIdx(nextIdx);
+                              setBildirimMetni(`📻 Kanal: ${POPULER_RADYOLAR[nextIdx].ad}`);
+                              setTimeout(() => setBildirimMetni(''), 2000);
+                            }}
+                          >
+                            {() => <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>⏭️ Değiştir</Text>}
+                          </FocusableItem>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                );
+              }
+
+              case 'widget_spor': {
+                const curMac = CANLI_MACLAR[sporMacIdx % CANLI_MACLAR.length];
+                return (
+                  <View key={bolum.id} style={{ marginHorizontal: 26, marginVertical: 8 }}>
+                    <View style={[styles.widgetKapsayiciGenis, { borderColor: '#FACC15', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={{ fontSize: 16 }}>⚽</Text>
+                          <Text style={{ color: '#FACC15', fontSize: 11, fontWeight: '900' }}>{curMac.lig}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <View style={{ backgroundColor: '#EF4444', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
+                            <Text style={{ color: '#FFF', fontSize: 9, fontWeight: '900' }}>
+                              ● {curMac.durum} ({curMac.dakika})
+                            </Text>
+                          </View>
+                          <FocusableItem
+                            style={{ backgroundColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}
+                            focusedStyle={{ backgroundColor: aktifTema.accent, transform: [{ scale: 1.05 }] }}
+                            onPress={() => setSporMacIdx((prev) => (prev + 1) % CANLI_MACLAR.length)}
+                          >
+                            {() => <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '800' }}>⏭️ Sonraki Maç</Text>}
+                          </FocusableItem>
+                        </View>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', marginVertical: 6 }}>
+                        <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '900', flex: 1, textAlign: 'right' }}>
+                          {curMac.ev}
+                        </Text>
+                        <View style={{ backgroundColor: '#0284C7', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8, marginHorizontal: 16 }}>
+                          <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900' }}>
+                            {curMac.skor}
+                          </Text>
+                        </View>
+                        <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '900', flex: 1, textAlign: 'left' }}>
+                          {curMac.deplasman}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                );
+              }
+
+              case 'widget_zamanlayici': {
+                return (
+                  <View key={bolum.id} style={styles.widgetKapsayiciKapsul}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={{ fontSize: 16 }}>⏱️</Text>
+                        <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '900' }}>
+                          {kalanUykuSuresiDakika !== null
+                            ? `TV Uyku Zamanlayıcısı: ${kalanUykuSuresiDakika} dk sonra ekran uykuya geçer`
+                            : 'TV Uyku Zamanlayıcısı: Kapalı'}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                        <FocusableItem
+                          style={{ backgroundColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}
+                          focusedStyle={{ backgroundColor: aktifTema.accent, transform: [{ scale: 1.05 }] }}
+                          onPress={() => {
+                            setKalanUykuSuresiDakika(30);
+                            setBildirimMetni('⏱️ 30 dakika uyku zamanlayıcısı kuruldu!');
+                            setTimeout(() => setBildirimMetni(''), 2500);
+                          }}
+                        >
+                          {() => <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>+30 Dk</Text>}
+                        </FocusableItem>
+                        <FocusableItem
+                          style={{ backgroundColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}
+                          focusedStyle={{ backgroundColor: aktifTema.accent, transform: [{ scale: 1.05 }] }}
+                          onPress={() => {
+                            setKalanUykuSuresiDakika(60);
+                            setBildirimMetni('⏱️ 60 dakika uyku zamanlayıcısı kuruldu!');
+                            setTimeout(() => setBildirimMetni(''), 2500);
+                          }}
+                        >
+                          {() => <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>+60 Dk</Text>}
+                        </FocusableItem>
+                        {kalanUykuSuresiDakika !== null && (
+                          <FocusableItem
+                            style={{ backgroundColor: '#EF4444', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}
+                            focusedStyle={{ transform: [{ scale: 1.05 }] }}
+                            onPress={() => {
+                              setKalanUykuSuresiDakika(null);
+                              setBildirimMetni('⏱️ Zamanlayıcı iptal edildi');
+                              setTimeout(() => setBildirimMetni(''), 2000);
+                            }}
+                          >
+                            {() => <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>✕ İptal</Text>}
+                          </FocusableItem>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                );
+              }
+
+              case 'widget_notlar': {
+                const curNot = AILE_NOTLARI[aktifNotIdx % AILE_NOTLARI.length];
+                return (
+                  <View key={bolum.id} style={{ marginHorizontal: 26, marginVertical: 8 }}>
+                    <FocusableItem
+                      style={[styles.widgetKapsayiciGenis, { borderColor: '#F59E0B', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}
+                      focusedStyle={{ borderColor: '#FFFFFF', transform: [{ scale: 1.02 }] }}
+                      onPress={() => setAktifNotIdx((prev) => (prev + 1) % AILE_NOTLARI.length)}
+                    >
+                      {() => (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                            <Text style={{ fontSize: 24 }}>{curNot.ikon}</Text>
+                            <View style={{ flex: 1 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>{curNot.baslik}</Text>
+                                <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>({curNot.yazar})</Text>
+                              </View>
+                              <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, marginTop: 2 }}>
+                                {curNot.not}
+                              </Text>
+                            </View>
+                          </View>
+                          <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginLeft: 8 }}>
+                            Tıkla Değiştir ⏭️
+                          </Text>
+                        </View>
+                      )}
+                    </FocusableItem>
+                  </View>
+                );
+              }
+
+              case 'widget_soz': {
+                const curSoz = GUNUN_REPLIKLERI[sozIdx % GUNUN_REPLIKLERI.length];
+                return (
+                  <View key={bolum.id} style={styles.widgetKapsayiciKapsul}>
+                    <FocusableItem
+                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1 }}
+                      focusedStyle={{ transform: [{ scale: 1.02 }] }}
+                      onPress={() => setSozIdx((prev) => (prev + 1) % GUNUN_REPLIKLERI.length)}
+                    >
+                      {() => (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                          <Text style={{ fontSize: 16 }}>💡</Text>
+                          <Text style={{ color: '#FACC15', fontSize: 11, fontWeight: '900' }}>GÜNÜN REPLİĞİ:</Text>
+                          <Text style={{ color: '#FFFFFF', fontSize: 11, fontStyle: 'italic', flex: 1 }} numberOfLines={1}>
+                            {curSoz.replik}
+                          </Text>
+                          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>
+                            — {curSoz.film} ⏭️
+                          </Text>
+                        </View>
+                      )}
+                    </FocusableItem>
+                  </View>
+                );
+              }
+
+              case 'widget_oyunlar': {
+                return (
+                  <View key={bolum.id} style={{ marginHorizontal: 26, marginVertical: 8 }}>
+                    <View style={[styles.widgetKapsayiciGenis, { borderColor: '#8B5CF6', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={{ fontSize: 18 }}>🎮</Text>
+                          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>Retro Oyunlar & Emülatörler</Text>
+                        </View>
+                        <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>TV Arcade Modu</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', gap: 10 }}>
+                        {[
+                          { ad: 'RetroArch', ikon: '🕹️', paket: 'com.retroarch' },
+                          { ad: 'PPSSPP', ikon: '🎮', paket: 'org.ppsspp.ppsspp' },
+                          { ad: 'Mupen64', ikon: '👾', paket: 'org.mupen64plusae.v3.alpha' },
+                          { ad: 'Dolphin', ikon: '🐬', paket: 'org.dolphinemu.dolphinemu' },
+                        ].map((g) => (
+                          <FocusableItem
+                            key={g.ad}
+                            style={{
+                              flex: 1,
+                              backgroundColor: 'rgba(255,255,255,0.06)',
+                              borderRadius: 10,
+                              paddingVertical: 10,
+                              alignItems: 'center',
+                              borderWidth: 1,
+                              borderColor: 'rgba(255,255,255,0.1)',
+                            }}
+                            focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
+                            onPress={() => uygulamaBaslat(g.paket)}
+                          >
+                            {() => (
+                              <>
+                                <Text style={{ fontSize: 24, marginBottom: 4 }}>{g.ikon}</Text>
+                                <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800' }}>{g.ad}</Text>
+                              </>
+                            )}
+                          </FocusableItem>
+                        ))}
                       </View>
                     </View>
                   </View>
@@ -7868,8 +8633,8 @@ export default function App() {
               {/* Sekme Çubuğu */}
               <View style={{ flexDirection: 'row', gap: 10, marginVertical: 10 }}>
                 {[
-                  { id: 'sirala', label: '📑 Bölüm & Widget Sıralama' },
-                  { id: 'ekle', label: '➕ Widget Galerisi' },
+                  { id: 'sirala', label: '📑 Sıralama & Yönetim' },
+                  { id: 'ekle', label: '➕ Widget Galerisi & Yükleme' },
                   { id: 'sekil', label: '🖼️ İkon Çerçeve Stilleri' },
                 ].map((s) => {
                   const sec = aktifDuzenSekme === s.id;
@@ -7899,6 +8664,7 @@ export default function App() {
                   {anaEkranDuzen.map((item, idx) => {
                     const isFirst = idx === 0;
                     const isLast = idx === anaEkranDuzen.length - 1;
+                    const isWidgetOrVitrin = item.id.startsWith('widget_') || item.id === 'vitrin';
                     return (
                       <View
                         key={item.id}
@@ -7925,10 +8691,10 @@ export default function App() {
                               <Text style={{ color: item.gorunur ? '#FFFFFF' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: '800' }}>
                                 {item.baslik}
                               </Text>
-                              {item.id.startsWith('widget_') && (
-                                <View style={{ backgroundColor: '#0284C7', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
+                              {isWidgetOrVitrin && (
+                                <View style={{ backgroundColor: item.sekil === 'dikey' ? '#8B5CF6' : '#0284C7', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
                                   <Text style={{ color: '#FFF', fontSize: 9, fontWeight: '900' }}>
-                                    {item.sekil === 'kare' ? '▫️ KARE' : item.sekil === 'genis' ? '▭ GENİŞ' : item.sekil === 'kapsul' ? '💊 KAPSÜL' : 'STANDART'}
+                                    {item.sekil === 'kare' ? '▫️ KARE' : item.sekil === 'genis' ? '▭ GENİŞ' : item.sekil === 'kapsul' ? '💊 KAPSÜL' : item.sekil === 'dikey' ? '📱 DİKEY SPLIT' : '📋 STANDART'}
                                   </Text>
                                 </View>
                               )}
@@ -7945,7 +8711,7 @@ export default function App() {
                           <FocusableItem
                             style={{
                               backgroundColor: isFirst ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.12)',
-                              paddingHorizontal: 10,
+                              paddingHorizontal: 9,
                               paddingVertical: 6,
                               borderRadius: 8,
                             }}
@@ -7959,7 +8725,7 @@ export default function App() {
                           <FocusableItem
                             style={{
                               backgroundColor: isLast ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.12)',
-                              paddingHorizontal: 10,
+                              paddingHorizontal: 9,
                               paddingVertical: 6,
                               borderRadius: 8,
                             }}
@@ -7969,8 +8735,8 @@ export default function App() {
                             {() => <Text style={{ color: isLast ? 'rgba(255,255,255,0.2)' : '#FFF', fontSize: 12, fontWeight: '900' }}>⬇️</Text>}
                           </FocusableItem>
 
-                          {/* 🔄 Şekil Değiştir (Sadece Widget'lar için) */}
-                          {item.id.startsWith('widget_') && (
+                          {/* 🔄 Şekil Değiştir (Widget ve IMDb Vitrini için) */}
+                          {isWidgetOrVitrin && (
                             <FocusableItem
                               style={{
                                 backgroundColor: 'rgba(255,255,255,0.1)',
@@ -7983,40 +8749,58 @@ export default function App() {
                               focusedStyle={{ backgroundColor: '#0284C7', borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
                               onPress={() => {
                                 const nextShape =
-                                  item.sekil === 'genis'
+                                  item.id === 'vitrin'
+                                    ? item.sekil === 'standart'
+                                      ? 'dikey'
+                                      : item.sekil === 'dikey'
+                                      ? 'genis'
+                                      : item.sekil === 'genis'
+                                      ? 'kare'
+                                      : item.sekil === 'kare'
+                                      ? 'kapsul'
+                                      : 'standart'
+                                    : item.sekil === 'genis'
                                     ? 'kare'
                                     : item.sekil === 'kare'
                                     ? 'kapsul'
                                     : item.sekil === 'kapsul'
+                                    ? 'dikey'
+                                    : item.sekil === 'dikey'
                                     ? 'standart'
                                     : 'genis';
-                                bolumSekilDegistir(item.id, nextShape);
+                                bolumSekilDegistir(item.id, nextShape as any);
                               }}
                             >
                               {() => (
                                 <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>
-                                  📐 {item.sekil === 'kare' ? 'Kare' : item.sekil === 'genis' ? 'Geniş' : item.sekil === 'kapsul' ? 'Kapsül' : 'Standart'}
+                                  📐 {item.sekil === 'kare' ? 'Kare' : item.sekil === 'genis' ? 'Geniş' : item.sekil === 'kapsul' ? 'Kapsül' : item.sekil === 'dikey' ? 'Dikey' : 'Standart'}
                                 </Text>
                               )}
                             </FocusableItem>
                           )}
 
-                          {/* 👁️ Göster / Gizle */}
+                          {/* 🗑️ Kaldır / ➕ Yükle */}
                           <FocusableItem
                             style={{
-                              backgroundColor: item.gorunur ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                              borderColor: item.gorunur ? '#10B981' : '#EF4444',
+                              backgroundColor: item.gorunur ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                              borderColor: item.gorunur ? '#EF4444' : '#10B981',
                               borderWidth: 1,
-                              paddingHorizontal: 10,
+                              paddingHorizontal: 9,
                               paddingVertical: 6,
                               borderRadius: 8,
                             }}
-                            focusedStyle={{ backgroundColor: item.gorunur ? '#10B981' : '#EF4444', transform: [{ scale: 1.05 }] }}
-                            onPress={() => bolumGorunurlukDegistir(item.id)}
+                            focusedStyle={{ backgroundColor: item.gorunur ? '#EF4444' : '#10B981', transform: [{ scale: 1.05 }] }}
+                            onPress={() => {
+                              if (item.gorunur) {
+                                bolumuKaldir(item.id);
+                              } else {
+                                bolumuYukle(item.id);
+                              }
+                            }}
                           >
                             {() => (
-                              <Text style={{ color: item.gorunur ? '#10B981' : '#EF4444', fontSize: 11, fontWeight: '900' }}>
-                                {item.gorunur ? '👁️ AÇIK' : '🙈 GİZLİ'}
+                              <Text style={{ color: item.gorunur ? '#EF4444' : '#10B981', fontSize: 11, fontWeight: '900' }}>
+                                {item.gorunur ? '🗑️ Kaldır' : '➕ Yükle'}
                               </Text>
                             )}
                           </FocusableItem>
@@ -8027,14 +8811,14 @@ export default function App() {
                 </ScrollView>
               )}
 
-              {/* SEKME 2: WIDGET GALERİSİ */}
+              {/* SEKME 2: WIDGET GALERİSİ & YÜKLEME */}
               {aktifDuzenSekme === 'ekle' && (
                 <ScrollView style={{ maxHeight: 310 }} showsVerticalScrollIndicator={false}>
                   <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 10 }}>
-                    Ana ekranda kullanmak istediğiniz widget'ları seçin ve dilediğiniz şekli (Geniş, Kare, Kapsül) atayın:
+                    Ana ekranda kullanmak istediğiniz widget ve bölümleri seçin, tek tıkla yükleyin veya kaldırın:
                   </Text>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                    {anaEkranDuzen.filter(b => b.id.startsWith('widget_')).map((w) => {
+                    {anaEkranDuzen.filter(b => b.id.startsWith('widget_') || b.id === 'vitrin').map((w) => {
                       return (
                         <View
                           key={w.id}
@@ -8060,17 +8844,25 @@ export default function App() {
                             <FocusableItem
                               style={{
                                 flex: 1,
-                                backgroundColor: w.gorunur ? '#10B981' : 'rgba(255,255,255,0.1)',
+                                backgroundColor: w.gorunur ? 'rgba(239, 68, 68, 0.25)' : '#10B981',
+                                borderColor: w.gorunur ? '#EF4444' : '#10B981',
+                                borderWidth: 1,
                                 paddingVertical: 7,
                                 borderRadius: 8,
                                 alignItems: 'center',
                               }}
-                              focusedStyle={{ backgroundColor: aktifTema.accent, transform: [{ scale: 1.04 }] }}
-                              onPress={() => bolumGorunurlukDegistir(w.id)}
+                              focusedStyle={{ backgroundColor: w.gorunur ? '#EF4444' : aktifTema.accent, transform: [{ scale: 1.04 }] }}
+                              onPress={() => {
+                                if (w.gorunur) {
+                                  bolumuKaldir(w.id);
+                                } else {
+                                  bolumuYukle(w.id);
+                                }
+                              }}
                             >
                               {() => (
                                 <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '900' }}>
-                                  {w.gorunur ? '✔ Ana Ekranda Aktif' : '➕ Ana Ekrana Ekle'}
+                                  {w.gorunur ? '🗑️ Ekranda Yüklü (Kaldır)' : '➕ Ekrana Yükle'}
                                 </Text>
                               )}
                             </FocusableItem>
@@ -8085,12 +8877,26 @@ export default function App() {
                               focusedStyle={{ backgroundColor: '#0284C7', transform: [{ scale: 1.05 }] }}
                               onPress={() => {
                                 const nextShape =
-                                  w.sekil === 'genis'
+                                  w.id === 'vitrin'
+                                    ? w.sekil === 'standart'
+                                      ? 'dikey'
+                                      : w.sekil === 'dikey'
+                                      ? 'genis'
+                                      : w.sekil === 'genis'
+                                      ? 'kare'
+                                      : w.sekil === 'kare'
+                                      ? 'kapsul'
+                                      : 'standart'
+                                    : w.sekil === 'genis'
                                     ? 'kare'
                                     : w.sekil === 'kare'
                                     ? 'kapsul'
+                                    : w.sekil === 'kapsul'
+                                    ? 'dikey'
+                                    : w.sekil === 'dikey'
+                                    ? 'standart'
                                     : 'genis';
-                                bolumSekilDegistir(w.id, nextShape);
+                                bolumSekilDegistir(w.id, nextShape as any);
                               }}
                             >
                               {() => (

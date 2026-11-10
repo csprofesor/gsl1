@@ -1,7 +1,7 @@
 {
-  "version": "3.2.12",
-  "versionCode": 38,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.12/app-release.apk",
-  "shortUrl": "https://tinyurl.com/gs12tv",
-  "changelog": "v3.2.12 (Build 38): Modüler Widget & İkon Çerçeveleri: 1) 8 Farklı Uygulama İkon Çerçevesi (Sade, Neon, Glass, Gold, Cyber, Gradient, Çift Çizgi, Kalın Vurgu). 2) Ana Ekran Bölümlerini ve Widget'ları Taşıma / Sıralama (⬆️ / ⬇️) ve Görünürlük Kontrolü. 3) 6 Farklı İnteraktif Widget (Canlı Hava Durumu, Sistem RAM & Hızlandırma, İnternet Hızı & Wi-Fi, Trakt & Stremio İzleme Senkronu, Aile Fotoğrafı Dijital Çerçeve, Canlı TV Kanalları). 4) Çok Boyutlu Widget Şekilleri (Kare 1x1, Geniş 2x1, Kapsül Çubuğu, Standart Liste). 5) '📐 Ana Ekran & Widget Düzenle' modalı ve üst bar kısayolu."
+  "version": "3.2.13",
+  "versionCode": 39,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.13/app-release.apk",
+  "shortUrl": "https://tinyurl.com/gs13tv",
+  "changelog": "v3.2.13 (Build 39): Gelişmiş IMDb Yerleşimleri, Widget Kaldırma/Yükleme & Yeni İçerik Widget'ları: 1) IMDb Film & Dizi Vitrini tamamen taşınabilir hale getirildi ve 5 farklı şekil modu (Dikey Split, 1x1 Kare, 2x1 Geniş, Kapsül, Standart) eklendi. 2) Dikey split yerleşimde solda uzunlamasına IMDb afişi ve detayları, sağda hızlı uygulama ikonları düzeni sağlandı. 3) 'Widget Kaldırma & Yükleme' sistemi: Tek tuşla widget'ları ekrandan silme ve galeriden geri yükleme imkanı. 4) 7 Yeni İçerik Widget'ı: Canlı Haberler & Son Dakika Gündem, Canlı TV Radyo & Müzik İstasyonları, Canlı Skorlar & Fikstür, TV Uyku & Kapanma Zamanlayıcısı, TV Aile Hatırlatıcı Not Panosu, Günün Film Repliği & Trivia, Retro Oyun & Arcade Vitrini."
 }
