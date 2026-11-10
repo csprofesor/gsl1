@@ -1,31 +1,21 @@
 package com.gslaucher.tv
 
 import android.accessibilityservice.AccessibilityService
-import android.accessibilityservice.AccessibilityServiceInfo
-import android.content.ComponentName
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.content.pm.ResolveInfo
-import android.os.Build
-import android.os.SystemClock
 import android.util.Log
-import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 
 /**
  * Android TV ve Xiaomi Mi Box için Sabit Başlatıcı Erişilebilirlik Hizmeti.
  *
- * TV'nin orijinal başlatıcısının Home tuşunu zorla almasını engeller:
- * 1. Donanımsal KEYCODE_HOME tuşunu input filtresi seviyesinde yakalar.
- * 2. Cihaz uyandığında veya bir uygulama kapandığında stock launcher penceresi
+ * v3.2.16 sürümündeki sorunsuz ve anında açılan hafif mimari:
+ * 1. Donanımsal tuş filtreleme (canRequestFilterKeyEvents) ve ekran okuyucu (canRetrieveWindowContent)
+ *    talep etmez; böylece Xiaomi Mi Box ve Android TV'nin kısıtlama mekanizmalarına takılmaz.
+ * 2. Cihaz uyandığında, Home tuşuna basıldığında veya bir uygulama kapandığında stock launcher penceresi
  *    öne gelirse (TYPE_WINDOW_STATE_CHANGED) GS Launcher'ı anında öne getirir.
- * 3. Hata korumalı yaşam döngüsü ve detaylı Logcat teşhisi ile sistem tarafından
- *    kendi kendine kapatılma veya anahtarın geri atması önlenir.
+ * 3. TV Ayarları ve izin diyaloglarına asla müdahale etmez; anahtar açıldığında asla geri kapanmaz.
  */
 class TVAccessibilityService : AccessibilityService() {
-
-    private var stockHomes: Set<ComponentName> = emptySet()
-    private var lastOpenedAt = 0L
 
     companion object {
         private const val TAG = "GSTV_Accessibility"
@@ -58,165 +48,92 @@ class TVAccessibilityService : AccessibilityService() {
             "com.android.tv.home"
         )
 
+        // Asla müdahale edilmemesi gereken sistem ve ayar paketleri
+        val IGNORED_SYSTEM_PACKAGES = setOf(
+            "com.android.tv.settings",
+            "com.android.settings",
+            "com.xiaomi.mitv.settings",
+            "com.google.android.tv.frameworkpackagestubs",
+            "com.google.android.packageinstaller",
+            "com.android.packageinstaller",
+            "android",
+            "com.android.systemui",
+            "com.google.android.permissioncontroller",
+            "com.android.permissioncontroller"
+        )
+
         @JvmStatic
         fun setAutoSearch(pkg: String, query: String) {
             lastTargetPackage = pkg.lowercase()
             lastSearchQuery = query
             searchQueryExpiry = System.currentTimeMillis() + 20_000L
         }
-
-        private const val REOPEN_GUARD_MS = 1_000L
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-        Log.i(TAG, "onCreate: TVAccessibilityService oluşturuldu.")
     }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        try {
-            isServiceRunning = true
-            Log.i(TAG, "onServiceConnected: Sabit başlatıcı servisi sisteme bağlandı.")
-
-            // ServiceInfo ayarlarını dinamik olarak pekiştir (canRetrieveWindowContent=false ile uyumlu)
-            val info = serviceInfo ?: AccessibilityServiceInfo()
-            info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
-            info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
-            info.flags = AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
-            info.notificationTimeout = 50
-            serviceInfo = info
-
-            Log.i(TAG, "onServiceConnected: ServiceInfo başarıyla güncellendi (flags=${info.flags}, feedbackType=${info.feedbackType})")
-
-            // Stock home aktivitelerini arka planda tara (onServiceConnected ana iş parçacığını asla bloke etmemeli)
-            Thread {
-                try {
-                    stockHomes = stockHomeActivities()
-                } catch (e: Throwable) {
-                    Log.w(TAG, "Arka plan stockHomes taraması tamamlanamadı: ${e.message}")
-                }
-            }.start()
-        } catch (e: Throwable) {
-            Log.e(TAG, "onServiceConnected sırasında hata oluştu!", e)
-        }
-    }
-
-    override fun onUnbind(intent: Intent?): Boolean {
-        isServiceRunning = false
-        Log.w(TAG, "onUnbind: Servis sistem tarafından çözüldü (unbound).")
-        return super.onUnbind(intent)
-    }
-
-    override fun onInterrupt() {
-        isServiceRunning = false
-        Log.w(TAG, "onInterrupt: Erişilebilirlik servisi kesintiye uğradı.")
+        isServiceRunning = true
+        Log.i(TAG, "onServiceConnected: Sabit başlatıcı servisi başarıyla bağlandı ve aktif tutuluyor.")
     }
 
     override fun onDestroy() {
         isServiceRunning = false
-        Log.i(TAG, "onDestroy: Erişilebilirlik servisi yok edildi.")
+        Log.i(TAG, "onDestroy: Sabit başlatıcı servisi durduruldu.")
         super.onDestroy()
-    }
-
-    override fun onKeyEvent(event: KeyEvent): Boolean {
-        if (event.keyCode == KeyEvent.KEYCODE_HOME) {
-            if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) {
-                // Kullanıcı ayarlardan 'Orijinal TV Başlatıcısına Geçici Dönüş' talep etmişse engelleme
-                if (System.currentTimeMillis() >= allowStockLauncherUntil) {
-                    Log.d(TAG, "onKeyEvent: KEYCODE_HOME yakalandı -> GS Launcher öne getiriliyor.")
-                    openLauncher()
-                } else {
-                    Log.d(TAG, "onKeyEvent: KEYCODE_HOME serbest bırakıldı (Geçici stock launcher izni aktif).")
-                }
-            }
-            return true // Olayı tüket; sistemin orijinal başlatıcıyı açmasını donanımsal düzeyde engelle!
-        }
-        return false
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         try {
-            if (event == null || event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
-            val pkg = event.packageName?.toString() ?: return
-            val cls = event.className?.toString() ?: ""
+            if (event == null) return
 
-            // Kendi penceremiz ise işlem yapma
-            if (pkg == packageName) return
+            if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                val pkg = event.packageName?.toString() ?: return
 
-            // Kullanıcı ayarlardan geçici izin vermişse müdahale etme
-            if (System.currentTimeMillis() < allowStockLauncherUntil) return
+                // Kendi uygulamamız ise işlem yapma
+                if (pkg == packageName) return
 
-            val shown = ComponentName(pkg, cls)
-            if (shown in stockHomes || STOCK_LAUNCHER_PACKAGES.contains(pkg)) {
-                Log.d(TAG, "onAccessibilityEvent: Stock başlatıcı penceresi tespit edildi ($pkg / $cls) -> GS Launcher öne alınıyor.")
-                openLauncher()
-            }
-        } catch (e: Throwable) {
-            Log.e(TAG, "onAccessibilityEvent işlenirken hata oluştu!", e)
-        }
-    }
+                // Ayarlar, İzinler veya Sistem Arayüzü ise ASLA engelleme
+                if (IGNORED_SYSTEM_PACKAGES.contains(pkg) ||
+                    pkg.contains("settings", ignoreCase = true) ||
+                    pkg.contains("permission", ignoreCase = true) ||
+                    pkg.contains("packageinstaller", ignoreCase = true)
+                ) {
+                    return
+                }
 
-    private fun openLauncher() {
-        val now = SystemClock.elapsedRealtime()
-        if (now - lastOpenedAt < REOPEN_GUARD_MS) return
-        lastOpenedAt = now
+                // Kullanıcı ayarlardan "Orijinal Sisteme Dön" dediyse geçici olarak engelleme
+                if (System.currentTimeMillis() < allowStockLauncherUntil) {
+                    return
+                }
 
-        try {
-            val launchIntent = packageManager.getLaunchIntentForPackage(packageName) ?: Intent(this, MainActivity::class.java)
-            launchIntent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK or
-                Intent.FLAG_ACTIVITY_SINGLE_TOP
-            )
-            startActivity(launchIntent)
-        } catch (e: Throwable) {
-            Log.e(TAG, "openLauncher: Launcher başlatılırken hata oluştu!", e)
-        }
-    }
+                // Sistem orijinal ekrana dönmeye çalışırsa GS Launcher'ı öne getir
+                if (STOCK_LAUNCHER_PACKAGES.contains(pkg)) {
+                    val className = event.className?.toString() ?: ""
+                    if (className.contains("Settings", ignoreCase = true) ||
+                        className.contains("Dialog", ignoreCase = true) ||
+                        className.contains("Preference", ignoreCase = true)
+                    ) {
+                        return
+                    }
 
-    private fun stockHomeActivities(): Set<ComponentName> {
-        return try {
-            val appListEntries = mutableSetOf<ComponentName>()
-            listOf(Intent.CATEGORY_LAUNCHER, Intent.CATEGORY_LEANBACK_LAUNCHER).forEach { cat ->
-                activities(cat).forEach { rInfo ->
-                    val act = rInfo.activityInfo ?: return@forEach
-                    val pName = act.packageName ?: return@forEach
-                    val aName = act.name ?: return@forEach
-                    appListEntries.add(ComponentName(pName, aName))
+                    Log.d(TAG, "Stock başlatıcı penceresi tespit edildi ($pkg) -> GS Launcher öne alınıyor.")
+                    val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+                    if (launchIntent != null) {
+                        launchIntent.addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        )
+                        startActivity(launchIntent)
+                    }
                 }
             }
-
-            val homeEntries = mutableSetOf<ComponentName>()
-            activities(Intent.CATEGORY_HOME).forEach { rInfo ->
-                val act = rInfo.activityInfo ?: return@forEach
-                val pName = act.packageName ?: return@forEach
-                val aName = act.name ?: return@forEach
-                val comp = ComponentName(pName, aName)
-
-                if (rInfo.priority >= 0 && pName != packageName && !appListEntries.contains(comp)) {
-                    homeEntries.add(comp)
-                }
-            }
-            Log.i(TAG, "stockHomeActivities: ${homeEntries.size} adet sistem ana ekranı bulundu: $homeEntries")
-            homeEntries
-        } catch (e: Throwable) {
-            Log.e(TAG, "stockHomeActivities taranırken hata, yerleşik paket listesi kullanılacak.", e)
-            emptySet()
+        } catch (t: Throwable) {
+            Log.e(TAG, "onAccessibilityEvent hatası", t)
         }
     }
 
-    private fun activities(category: String): List<ResolveInfo> {
-        return try {
-            val intent = Intent(Intent.ACTION_MAIN).addCategory(category)
-            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PackageManager.MATCH_ALL
-            } else {
-                0
-            }
-            packageManager.queryIntentActivities(intent, flags) ?: emptyList()
-        } catch (e: Throwable) {
-            Log.w(TAG, "activities sorgusu başarısız oldu (category=$category): ${e.message}")
-            emptyList()
-        }
+    override fun onInterrupt() {
+        isServiceRunning = false
     }
 }

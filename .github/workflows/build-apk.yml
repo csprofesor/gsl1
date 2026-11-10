@@ -61,15 +61,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v3.2.24' }}
-          name: "GS TV Launcher Ultra v3.2.24 (Build 50)"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v3.2.25' }}
+          name: "GS TV Launcher Ultra v3.2.25 (Build 51)"
           draft: false
           prerelease: false
           body: |
-            ## GS TV Launcher Ultra v3.2.24 (Build 50)
-            - 🛡️ **canRetrieveWindowContent='false' (Xiaomi Mi Box Güvenlik Düzeltmesi):** Ekran içeriği okuma izni kaldırılarak Xiaomi ve Android TV'nin servisi yüksek riskli algılayıp kapatması önlendi.
-            - 🎯 **Saf Matinee Paritesi:** Sadece `flagRequestFilterKeyEvents`, `canRequestFilterKeyEvents='true'`, `feedbackGeneric` ve `typeWindowStateChanged` kullanıldı; `TYPE_VIEW_CLICKED` temizlendi.
-            - ⚡ **Asenkron Paket Keşfi:** Servis bağlanma fonksiyonu bloke edilmeden 0ms içinde tamamlanacak şekilde optimize edildi.
+            ## GS TV Launcher Ultra v3.2.25 (Build 51)
+            - 🛡️ **v3.2.16 Orijinal Kararlı Yapısına Dönüş:** v3.2.19 eklentisinde dahil edilen donanımsal tuş yakalama (canRequestFilterKeyEvents) kaldırıldı; Xiaomi Mi Box'ın servisi tuş kaydedici sayıp kapatması tamamen engellendi.
+            - 🎯 **Saf Pencere Geçişi (typeWindowStateChanged):** Stock başlatıcılar (Google TV, Mi TV, Android TV) açıldığı anda 0ms gecikmeyle GS Launcher'ı öne getiren hafif ve onay istemeyen mimari geri getirildi.
+            - ⚡ **Sıfır İzin Kısıtlaması:** Ekran okuma veya tuş izleme izinleri istenmediği için TV ayarlarındaki anahtar anında açılır ve asla kendi kendine kapanmaz.
           files: |
             android/app/build/outputs/apk/release/app-release.apk
             android/app/build/outputs/bundle/release/app-release.aab
