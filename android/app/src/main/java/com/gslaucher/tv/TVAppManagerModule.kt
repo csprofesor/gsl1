@@ -32,6 +32,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 
@@ -572,6 +575,53 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
             promise.resolve(isRestricted)
         } catch (e: Exception) {
             promise.resolve(false)
+        }
+    }
+
+    /**
+     * Matinee Paritesi: TV cihazı üzerindeki yerel ADB portuna (127.0.0.1:5555) bağlanarak
+     * tek tıkla gerekli izinleri (Restricted Settings & Accessibility) otomatik verir ve
+     * kullanıcının hiçbir şey yapmasına gerek kalmadan servisi kalıcı açar.
+     */
+    @ReactMethod
+    fun setupLocalAdb(promise: Promise) {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val adb = LocalAdb(reactContext)
+                val result = adb.setUp()
+                when (result) {
+                    LocalAdb.SetupResult.DONE -> promise.resolve("DONE")
+                    LocalAdb.SetupResult.ADB_OFF -> promise.resolve("ADB_OFF")
+                    LocalAdb.SetupResult.NOT_ALLOWED -> promise.resolve("NOT_ALLOWED")
+                    LocalAdb.SetupResult.FAILED -> promise.resolve("FAILED")
+                }
+            } catch (e: Throwable) {
+                promise.resolve("ERROR: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * TV Geliştirici Seçeneklerini doğrudan açar (USB/Ağ Hata Ayıklama anahtarını açabilmek için).
+     */
+    @ReactMethod
+    fun openDeveloperSettings(promise: Promise) {
+        try {
+            val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (e: Throwable) {
+            val fallback = Intent(Settings.ACTION_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            try {
+                reactContext.startActivity(fallback)
+                promise.resolve(true)
+            } catch (err: Throwable) {
+                promise.resolve(false)
+            }
         }
     }
 

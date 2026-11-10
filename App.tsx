@@ -1469,6 +1469,26 @@ export default function App() {
   // Sabit Başlatıcı & Matinee Mimarisi
   const [sabitBaslaticiModalAcik, setSabitBaslaticiModalAcik] = useState(false);
   const [sabitBaslaticiDurum, setSabitBaslaticiDurum] = useState<{ aktif: boolean; kisitli: boolean; kontrolEdiliyor: boolean }>({ aktif: false, kisitli: false, kontrolEdiliyor: false });
+  const [adbYukleniyor, setAdbYukleniyor] = useState(false);
+  const [adbSonuc, setAdbSonuc] = useState<string | null>(null);
+
+  const tekTiklaOtomatikYetkilendir = async () => {
+    if (Platform.OS !== 'android' || !TVAppManager || !TVAppManager.setupLocalAdb) {
+      Alert.alert('Bilgi', 'Yerel ADB modülü bu cihazda desteklenmiyor.');
+      return;
+    }
+    setAdbYukleniyor(true);
+    setAdbSonuc(null);
+    try {
+      const res = await TVAppManager.setupLocalAdb();
+      setAdbYukleniyor(false);
+      setAdbSonuc(res);
+      await sabitBaslaticiDurumuKontrolEt();
+    } catch (err: any) {
+      setAdbYukleniyor(false);
+      setAdbSonuc(`Hata: ${err?.message || err}`);
+    }
+  };
 
   const sabitBaslaticiDurumuKontrolEt = async () => {
     if (Platform.OS !== 'android' || !TVAppManager) return;
@@ -1521,6 +1541,12 @@ export default function App() {
       if (TVAppManager.openHomeSettings) {
         TVAppManager.openHomeSettings().catch(() => {});
       }
+    }
+  };
+
+  const tvGelistiriciSecenekleriAc = async () => {
+    if (Platform.OS === 'android' && TVAppManager && TVAppManager.openDeveloperSettings) {
+      TVAppManager.openDeveloperSettings().catch(() => {});
     }
   };
 
@@ -9377,7 +9403,81 @@ export default function App() {
                   )}
                 </View>
 
-                {/* ⚙️ BUTON 1: TV ERİŞİLEBİLİRLİK MENÜSÜNÜ AÇ */}
+                {/* ⚡ SEÇENEK 1 (ÖNERİLEN): UYGULAMA İÇİ YEREL ADB İLE TEK TIKLA OTOMATİK SABİTLE */}
+                <View style={{ backgroundColor: 'rgba(99, 102, 241, 0.12)', borderColor: '#818CF8', borderWidth: 1.5, borderRadius: 12, padding: 12, marginBottom: 12 }}>
+                  <FocusableItem
+                    style={{ backgroundColor: adbYukleniyor ? '#4B5563' : '#6366F1', borderColor: '#FFFFFF', borderWidth: 1.5, borderRadius: 10, padding: 12 }}
+                    focusedStyle={{ transform: [{ scale: 1.02 }], backgroundColor: '#4F46E5', borderColor: '#FFFFFF' }}
+                    onPress={() => {
+                      if (!adbYukleniyor) {
+                        tekTiklaOtomatikYetkilendir();
+                      }
+                    }}
+                  >
+                    {() => (
+                      <View style={{ alignItems: 'center' }}>
+                        <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
+                          {adbYukleniyor ? '⏳ Otomatik Yetkilendiriliyor...' : '⚡ Seçenek 1 (Önerilen): Tek Tıkla Otomatik Sabitle'}
+                        </Text>
+                        <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 10, marginTop: 2 }}>
+                          {adbYukleniyor ? 'TV yerel portuyla iletişim kuruluyor, lütfen bekleyin...' : 'Bilgisayar veya telefon gerektirmez. Uygulama kendi kendine tüm kilitleri açar.'}
+                        </Text>
+                      </View>
+                    )}
+                  </FocusableItem>
+
+                  {/* ADB Sonuç Bildirimleri */}
+                  {adbSonuc === 'DONE' && (
+                    <View style={{ marginTop: 10, padding: 10, backgroundColor: 'rgba(16, 185, 129, 0.2)', borderRadius: 8, borderWidth: 1, borderColor: '#10B981' }}>
+                      <Text style={{ color: '#6EE7B7', fontSize: 11, fontWeight: '800' }}>
+                        ✅ Harika! Sabit Başlatıcı ve tüm güvenlik kilitleri tek tıkla açıldı. Artık kumandanızın Home tuşuna bastığınızda daima GS Launcher açılacaktır.
+                      </Text>
+                    </View>
+                  )}
+
+                  {adbSonuc === 'ADB_OFF' && (
+                    <View style={{ marginTop: 10, padding: 10, backgroundColor: 'rgba(245, 158, 11, 0.2)', borderRadius: 8, borderWidth: 1, borderColor: '#F59E0B' }}>
+                      <Text style={{ color: '#FCD34D', fontSize: 11, fontWeight: '800', marginBottom: 4 }}>
+                        ⚠️ TV Cihazınızda ADB (Hata Ayıklama) Kapalı!
+                      </Text>
+                      <Text style={{ color: '#FDE68A', fontSize: 10, marginBottom: 8, lineHeight: 14 }}>
+                        Tek tıkla sabitlemenin çalışması için TV'nizde Hata Ayıklama açık olmalıdır. Aşağıdaki butona basarak Geliştirici Seçeneklerini açın ve 'USB Hata Ayıklama'yı aktif edip bu ekrana dönün.
+                      </Text>
+                      <FocusableItem
+                        style={{ alignSelf: 'flex-start', backgroundColor: '#F59E0B', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 }}
+                        focusedStyle={{ backgroundColor: '#D97706' }}
+                        onPress={tvGelistiriciSecenekleriAc}
+                      >
+                        {() => (
+                          <Text style={{ color: '#000000', fontSize: 11, fontWeight: '900' }}>
+                            🛠️ TV Geliştirici Seçeneklerini Aç
+                          </Text>
+                        )}
+                      </FocusableItem>
+                    </View>
+                  )}
+
+                  {adbSonuc === 'NOT_ALLOWED' && (
+                    <View style={{ marginTop: 10, padding: 10, backgroundColor: 'rgba(56, 189, 248, 0.2)', borderRadius: 8, borderWidth: 1, borderColor: '#38BDF8' }}>
+                      <Text style={{ color: '#7DD3FC', fontSize: 11, fontWeight: '800', marginBottom: 4 }}>
+                        📺 TV Ekranında ADB İzin Onayı Bekleniyor!
+                      </Text>
+                      <Text style={{ color: '#BAE6FD', fontSize: 10, lineHeight: 14 }}>
+                        TV ekranınızda "USB/Ağ Hata Ayıklamaya izin verilsin mi?" uyarısı çıktıysa kumandanızla "Her zaman izin ver" kutusunu işaretleyip "Tamam"a basın, ardından yukarıdaki "Tek Tıkla Otomatik Sabitle" butonuna tekrar basın.
+                      </Text>
+                    </View>
+                  )}
+
+                  {adbSonuc && !['DONE', 'ADB_OFF', 'NOT_ALLOWED'].includes(adbSonuc) && (
+                    <View style={{ marginTop: 10, padding: 10, backgroundColor: 'rgba(239, 68, 68, 0.2)', borderRadius: 8, borderWidth: 1, borderColor: '#EF4444' }}>
+                      <Text style={{ color: '#FCA5A5', fontSize: 11, fontWeight: '700' }}>
+                        {adbSonuc}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* ⚙️ BUTON 2: TV ERİŞİLEBİLİRLİK MENÜSÜNÜ AÇ */}
                 <FocusableItem
                   style={{ backgroundColor: '#10B981', borderColor: '#FFFFFF', borderWidth: 1.5, borderRadius: 10, padding: 12, marginBottom: 10 }}
                   focusedStyle={{ transform: [{ scale: 1.02 }], backgroundColor: '#059669', borderColor: '#FFFFFF' }}
@@ -9386,7 +9486,7 @@ export default function App() {
                   {() => (
                     <View style={{ alignItems: 'center' }}>
                       <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
-                        ⚙️ Seçenek 1: TV Erişilebilirlik Menüsünü Aç
+                        ⚙️ Seçenek 2: TV Erişilebilirlik Menüsünü Aç (Manuel)
                       </Text>
                       <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 10, marginTop: 2 }}>
                         (Açılan TV menüsünde "GS Launcher Sabit Başlatıcı"yı AÇIK konuma getirin)
@@ -9395,7 +9495,7 @@ export default function App() {
                   )}
                 </FocusableItem>
 
-                {/* 🏠 BUTON 2: TV VARSAYILAN BAŞLATICI MENÜSÜNÜ AÇ */}
+                {/* 🏠 BUTON 3: TV VARSAYILAN BAŞLATICI MENÜSÜNÜ AÇ */}
                 <FocusableItem
                   style={{ backgroundColor: '#3B82F6', borderColor: '#FFFFFF', borderWidth: 1.5, borderRadius: 10, padding: 12, marginBottom: 12 }}
                   focusedStyle={{ transform: [{ scale: 1.02 }], backgroundColor: '#2563EB', borderColor: '#FFFFFF' }}
@@ -9404,7 +9504,7 @@ export default function App() {
                   {() => (
                     <View style={{ alignItems: 'center' }}>
                       <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
-                        🏠 Seçenek 2: TV Varsayılan Ana Ekran (Home App) Menüsünü Aç
+                        🏠 Seçenek 3: TV Varsayılan Ana Ekran (Home App) Menüsünü Aç
                       </Text>
                       <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 10, marginTop: 2 }}>
                         (Eğer TV'niz izin veriyorsa varsayılan başlatıcı olarak doğrudan GS Launcher'ı seçin)

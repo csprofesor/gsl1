@@ -1,7 +1,7 @@
 {
-  "version": "3.2.25",
-  "versionCode": 51,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.25/app-release.apk",
-  "shortUrl": "https://tinyurl.com/29ptn3hh",
-  "changelog": "v3.2.25 (Build 51): Sabit Başlatıcı v3.2.16 Orijinal Kararlı Yapısına Döndürüldü: 1) v3.2.19 eklenti eklemesinde dahil edilen canRequestFilterKeyEvents ve onKeyEvent kaldırıldı (bu yetkiler Mi Box tarafından tehlikeli tuş kaydedici sayılarak anahtarın anında kapanmasına yol açıyordu). 2) v3.2.16'da sorunsuz çalışan saf pencere geçişi (typeWindowStateChanged) mimarisine dönüldü. 3) Ekran okuma (canRetrieveWindowContent) ve gereksiz bayraklar tamamen temizlendi."
+  "version": "3.2.26",
+  "versionCode": 52,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.26/app-release.apk",
+  "shortUrl": "https://tinyurl.com/28k3psw7",
+  "changelog": "v3.2.26 (Build 52): Uygulama İçi Yerel ADB (LocalAdb) Mimarisi: 1) Matinee teknolojisi entegre edildi: Bilgisayar veya telefon gerektirmeden doğrudan TV üzerinde tek tıkla ACCESS_RESTRICTED_SETTINGS ve WRITE_SECURE_SETTINGS kilitleri otomatik açılır. 2) TV'deki Sabit Başlatıcı servisi tek tıkla sistem ayarlarından kalıcı olarak etkinleştirilir. 3) Cihazda ADB kapalıysa doğrudan TV Geliştirici Seçeneklerini açan rehber buton eklendi."
 }
