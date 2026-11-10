@@ -23,7 +23,7 @@ import java.net.Socket
  * TV'nin localhost'taki ADB servisine bağlanarak tek tıkla gerekli izinleri otomatik verir.
  * Mi Box ve Android TV'deki 'kendi kendine kapanma' ve 'restricted settings' engelini aşar.
  */
-class LocalAdb(private val context: Context) {
+class LocalAdb(context: Context) {
 
     private val appContext = context.applicationContext
     private val keyDir = File(appContext.filesDir, "adb")
@@ -83,14 +83,14 @@ class LocalAdb(private val context: Context) {
         if (!privateKey.exists() || !publicKey.exists()) {
             AdbKeyPair.generate(privateKey, publicKey)
         }
-        return Dadb.create(HOST, PORT, AdbKeyPair.read(privateKey, publicKey), timeoutMs)
+        return Dadb.create(HOST, PORT, AdbKeyPair.read(privateKey, publicKey), CONNECT_TIMEOUT_MS, timeoutMs)
     }
 
     companion object {
         private const val TAG = "LocalAdb"
         private const val HOST = "127.0.0.1"
         private const val PORT = 5555
-        private const val CONNECT_TIMEOUT_MS = 1_000
-        private const val SETUP_TIMEOUT_MS = 15_000
+        private const val CONNECT_TIMEOUT_MS = 3_000
+        private const val SETUP_TIMEOUT_MS = 60_000
     }
 }
