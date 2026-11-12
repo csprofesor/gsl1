@@ -1,7 +1,7 @@
 {
-  "version": "3.2.29",
-  "versionCode": 55,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.29/app-release.apk",
-  "shortUrl": "https://tinyurl.com/2aewphcd",
-  "changelog": "v3.2.29 (Build 55): Sabah Açılış / Standby Uyanış Koruması & Canlı Wi-Fi Tarama İyileştirmesi: 1) TV akşam kapatılıp sabah açıldığında (Standby / Screen Wake) GS Launcher'ın öne gelmesi dynamic broadcast receiver (ACTION_SCREEN_ON, ACTION_USER_PRESENT, ACTION_DREAMING_STOPPED) ile garantilendi. 2) Cold boot ve sistem başlangıcı için çok aşamalı başlatıcı koruması eklendi. 3) Wi-Fi taramasında donanım tarama bekleme süresi, Android TV konum izin doğrulaması ve 'cmd wifi' sistem motoru yedeklemesi entegre edilerek çevredeki tüm ağların anında listelenmesi sağlandı."
+  "version": "3.2.30",
+  "versionCode": 56,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.30/app-release.apk",
+  "shortUrl": "https://tinyurl.com/23v5em5b",
+  "changelog": "v3.2.30 (Build 56): Premium Minimalist İkon Sistemi & Profesyonel TV Arayüzü: 1) Projedeki 78 ikonun tamamı (Topbar, System, Glossy App Squircle) Apple TV, Google TV, Samsung One UI ve Nothing OS standartlarında 4x supersampling ile baştan sona yeniden çizildi. 2) Çocuksu 3D balon ve parlak oyuncak efektleri tamamen kaldırıldı; yerine derin Obsidian Glass zemin, 1.5px ultra-fine cam kenarlık ve optik dengeli saf beyaz geometrik vektör glifler getirildi. 3) Kategori sekmelerindeki ve butonlardaki çocuksu emojiler temizlendi. 4) Uygulama kartlarında ve kumanda odak (focus) durumunda görsel tutarlılık, netlik ve keskinlik sağlandı."
 }

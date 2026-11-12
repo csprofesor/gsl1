@@ -36,8 +36,8 @@ const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 import { TopbarIcons, SystemIcons, GlossyIcons } from './src/assets/icons';
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.22';
-const CURRENT_BUILD = 48;
+const CURRENT_VERSION = '3.2.30';
+const CURRENT_BUILD = 56;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/gstv18';
@@ -440,42 +440,41 @@ export const ozelTemaUret = (
   };
 };
 
-// Akıllı Çeşitli İkon & Renk Atayıcısı (2026 Glossy 3D İkon Paketi Paritesi)
-const getAppIconAndColor = (name: string, pkg: string): { icon: string; iconAsset?: any; color: string } => {
+// Akıllı Çeşitli İkon & Renk Atayıcısı (Minimalist Vektörel Obsidian Glass İkon Paketi)
+const getAppIconAndColor = (name: string, pkg: string): { icon: string; iconAsset: any; color: string } => {
   const n = name.toLowerCase();
   const p = pkg.toLowerCase();
 
-  if (n.includes('netflix') || p.includes('netflix')) return { icon: '🎬', iconAsset: GlossyIcons.netflix, color: '#831010' };
-  if (n.includes('prime') || p.includes('amazonvideo')) return { icon: '🍿', iconAsset: GlossyIcons.prime_video, color: '#00486D' };
-  if (n.includes('youtube') || n.includes('smarttube') || p.includes('youtube')) return { icon: '📺', iconAsset: GlossyIcons.youtube, color: '#8C1515' };
-  if (n.includes('disney')) return { icon: '✨', iconAsset: GlossyIcons.disney_plus, color: '#11235A' };
-  if (n.includes('hbo') || n.includes('max')) return { icon: '🟣', iconAsset: GlossyIcons.hbo_max, color: '#1E1B4B' };
-  if (n.includes('kodi')) return { icon: '❄️', iconAsset: GlossyIcons.media, color: '#134B70' };
-  if (n.includes('cloudstream')) return { icon: '☁️', iconAsset: GlossyIcons.video, color: '#1B3B6F' };
-  if (n.includes('nuvio')) return { icon: '💜', iconAsset: GlossyIcons.video, color: '#3A1448' };
-  if (n.includes('stremio')) return { icon: '🟣', iconAsset: GlossyIcons.video, color: '#2B1B4D' };
-  if (n.includes('spotify') || n.includes('music') || n.includes('müzik') || p.includes('spotify')) return { icon: '🎵', iconAsset: GlossyIcons.spotify, color: '#155E38' };
-  if (n.includes('vlc') || n.includes('mx player') || p.includes('videolan')) return { icon: '🎞️', iconAsset: GlossyIcons.video, color: '#9A3412' };
-  if (n.includes('plex') || n.includes('jellyfin')) return { icon: '📽️', iconAsset: GlossyIcons.video, color: '#78350F' };
-  if (n.includes('trt') || n.includes('canlı') || n.includes('tv') || n.includes('iptv') || n.includes('tivimate')) return { icon: '📡', iconAsset: GlossyIcons.live_tv, color: '#065F46' };
-  if (n.includes('exxen') || n.includes('tivibu') || n.includes('bein') || n.includes('sport') || n.includes('maç')) return { icon: '⚽', iconAsset: GlossyIcons.live_tv, color: '#1E3A8A' };
-  if (n.includes('game') || n.includes('oyun') || n.includes('retro') || n.includes('play')) return { icon: '🎮', iconAsset: GlossyIcons.apps, color: '#4C1D95' };
-  if (n.includes('download') || n.includes('indir')) return { icon: '⬇️', iconAsset: GlossyIcons.files, color: '#0F766E' };
-  if (n.includes('chrome') || n.includes('browser') || n.includes('tarayıcı') || n.includes('web')) return { icon: '🌐', iconAsset: GlossyIcons.chrome, color: '#1D4ED8' };
-  if (n.includes('file') || n.includes('dosya') || n.includes('explorer')) return { icon: '📁', iconAsset: GlossyIcons.files, color: '#374151' };
-  if (n.includes('ayar') || n.includes('setting')) return { icon: '⚙️', iconAsset: GlossyIcons.settings, color: '#334155' };
-  if (n.includes('temiz') || n.includes('clean') || n.includes('boost')) return { icon: '🧹', iconAsset: GlossyIcons.cleanup, color: '#047857' };
-  if (n.includes('galeri') || n.includes('foto') || n.includes('photo')) return { icon: '🖼️', iconAsset: GlossyIcons.gallery, color: '#701A75' };
-  if (n.includes('ses') || n.includes('mic') || n.includes('voice')) return { icon: '🎙️', iconAsset: GlossyIcons.music, color: '#0369A1' };
-  if (n.includes('mağaza') || n.includes('store') || n.includes('market')) return { icon: '🛍️', iconAsset: GlossyIcons.google_play, color: '#059669' };
+  if (n.includes('netflix') || p.includes('netflix')) return { icon: '', iconAsset: GlossyIcons.netflix, color: '#831010' };
+  if (n.includes('prime') || p.includes('amazonvideo')) return { icon: '', iconAsset: GlossyIcons.prime_video, color: '#00486D' };
+  if (n.includes('youtube') || n.includes('smarttube') || p.includes('youtube')) return { icon: '', iconAsset: GlossyIcons.youtube, color: '#8C1515' };
+  if (n.includes('disney')) return { icon: '', iconAsset: GlossyIcons.disney_plus, color: '#11235A' };
+  if (n.includes('hbo') || n.includes('max')) return { icon: '', iconAsset: GlossyIcons.hbo_max, color: '#1E1B4B' };
+  if (n.includes('kodi')) return { icon: '', iconAsset: GlossyIcons.media, color: '#134B70' };
+  if (n.includes('cloudstream')) return { icon: '', iconAsset: GlossyIcons.video, color: '#1B3B6F' };
+  if (n.includes('nuvio')) return { icon: '', iconAsset: GlossyIcons.video, color: '#3A1448' };
+  if (n.includes('stremio')) return { icon: '', iconAsset: GlossyIcons.video, color: '#2B1B4D' };
+  if (n.includes('spotify') || n.includes('music') || n.includes('müzik') || p.includes('spotify')) return { icon: '', iconAsset: GlossyIcons.spotify, color: '#155E38' };
+  if (n.includes('vlc') || n.includes('mx player') || p.includes('videolan')) return { icon: '', iconAsset: GlossyIcons.video, color: '#9A3412' };
+  if (n.includes('plex') || n.includes('jellyfin')) return { icon: '', iconAsset: GlossyIcons.video, color: '#78350F' };
+  if (n.includes('trt') || n.includes('canlı') || n.includes('tv') || n.includes('iptv') || n.includes('tivimate')) return { icon: '', iconAsset: GlossyIcons.live_tv, color: '#065F46' };
+  if (n.includes('exxen') || n.includes('tivibu') || n.includes('bein') || n.includes('sport') || n.includes('maç')) return { icon: '', iconAsset: GlossyIcons.live_tv, color: '#1E3A8A' };
+  if (n.includes('game') || n.includes('oyun') || n.includes('retro') || n.includes('play')) return { icon: '', iconAsset: GlossyIcons.apps, color: '#4C1D95' };
+  if (n.includes('download') || n.includes('indir')) return { icon: '', iconAsset: GlossyIcons.files, color: '#0F766E' };
+  if (n.includes('chrome') || n.includes('browser') || n.includes('tarayıcı') || n.includes('web')) return { icon: '', iconAsset: GlossyIcons.chrome, color: '#1D4ED8' };
+  if (n.includes('file') || n.includes('dosya') || n.includes('explorer')) return { icon: '', iconAsset: GlossyIcons.files, color: '#374151' };
+  if (n.includes('ayar') || n.includes('setting')) return { icon: '', iconAsset: GlossyIcons.settings, color: '#334155' };
+  if (n.includes('temiz') || n.includes('clean') || n.includes('boost')) return { icon: '', iconAsset: GlossyIcons.cleanup, color: '#047857' };
+  if (n.includes('galeri') || n.includes('foto') || n.includes('photo')) return { icon: '', iconAsset: GlossyIcons.gallery, color: '#701A75' };
+  if (n.includes('ses') || n.includes('mic') || n.includes('voice')) return { icon: '', iconAsset: GlossyIcons.music, color: '#0369A1' };
+  if (n.includes('mağaza') || n.includes('store') || n.includes('market')) return { icon: '', iconAsset: GlossyIcons.google_play, color: '#059669' };
 
-  // Farklı farklı dinamik 2026 3D Glossy ikonlar
-  const fallbackGlossy = [GlossyIcons.apps, GlossyIcons.media, GlossyIcons.video, GlossyIcons.favorites, GlossyIcons.more];
-  const fallbackIcons = ['📱', '⚡', '🌟', '🚀', '🔮', '💎', '🔥', '🎯', '💫', '🎨'];
+  // Profesyonel Apple TV / Google TV Obsidian Glass Fallback İkonları
+  const fallbackGlossy = [GlossyIcons.apps, GlossyIcons.media, GlossyIcons.video, GlossyIcons.favorites, GlossyIcons.more, GlossyIcons.files, GlossyIcons.screen_mirror];
   const fallbackColors = ['#1E293B', '#1B355A', '#2D1B4E', '#164E63', '#14532D', '#701A75', '#7C2D12'];
   const sum = (name + pkg).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return {
-    icon: fallbackIcons[sum % fallbackIcons.length],
+    icon: '',
     iconAsset: fallbackGlossy[sum % fallbackGlossy.length],
     color: fallbackColors[sum % fallbackColors.length],
   };
@@ -3796,7 +3795,7 @@ export default function App() {
       yeni === 'compact'
         ? '▫️ Kompakt (Yoğun)'
         : yeni === 'large'
-        ? '🎬 Büyük'
+        ? 'Geniş Ekran'
         : yeni === 'cinematic'
         ? '🌟 Sinematik Kartel'
         : '▪️ Standart (Dengeli)';
@@ -4809,7 +4808,7 @@ export default function App() {
                               <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>1.85 GB Boş</Text>
                             </View>
                             <View style={{ backgroundColor: '#0284C7', paddingVertical: 6, borderRadius: 8, alignItems: 'center' }}>
-                              <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>🧹 Hızlandır</Text>
+                              <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>Hızlandır</Text>
                             </View>
                           </View>
                         )}
@@ -4828,7 +4827,7 @@ export default function App() {
                         focusedStyle={{ backgroundColor: aktifTema.accent, transform: [{ scale: 1.05 }] }}
                         onPress={ramHizlandir}
                       >
-                        {() => <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>🧹 Hızlandır</Text>}
+                        {() => <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>Hızlandır</Text>}
                       </FocusableItem>
                     </View>
                   );
@@ -4861,7 +4860,7 @@ export default function App() {
                       >
                         {() => (
                           <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '900' }}>
-                            🧹 Hızlandır & RAM Boşalt
+                            Hızlandır & RAM Boşalt
                           </Text>
                         )}
                       </FocusableItem>
@@ -5034,7 +5033,7 @@ export default function App() {
                         focusedStyle={{ backgroundColor: aktifTema.accent, transform: [{ scale: 1.05 }] }}
                         onPress={canliUyduyaGec}
                       >
-                        {() => <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '900' }}>▶ TV Yayınına Geç</Text>}
+                        {() => <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '900' }}>TV Yayınına Geç</Text>}
                       </FocusableItem>
                     </View>
                   </View>
@@ -5072,7 +5071,7 @@ export default function App() {
                             <View>
                               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <View style={[styles.filmPlatformRozet, { backgroundColor: 'rgba(15, 23, 42, 0.85)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.3)' }]}>
-                                  <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>⭐ IMDb Trend</Text>
+                                  <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>IMDb Trend</Text>
                                 </View>
                                 <View style={styles.filmPuanRozet}>
                                   <Text style={styles.filmPuanYazi}>{aktifFilm.rating}</Text>
@@ -5405,7 +5404,7 @@ export default function App() {
                         />
                         <View style={[styles.filmPlatformRozet, { backgroundColor: 'rgba(15, 23, 42, 0.85)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.3)' }]}>
                           <Text style={[styles.filmPlatformYazi, { color: '#FFFFFF', fontWeight: '800' }]}>
-                            ⭐ IMDb En İyiler
+                            IMDb En İyiler
                           </Text>
                         </View>
                       </View>
@@ -5827,11 +5826,11 @@ export default function App() {
                   <View key={bolum.id} style={styles.kategoriKapsayici}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                       {[
-                        { id: 'all', title: '⭐ Tüm Uygulamalar' },
-                        { id: 'media', title: '🎬 Sinema & Dizi' },
-                        { id: 'tv', title: '📡 Canlı TV & Spor' },
-                        { id: 'games', title: '🎮 Oyunlar' },
-                        { id: 'tools', title: '🛠️ Araçlar & Sistem' },
+                        { id: 'all', title: 'Tüm Uygulamalar' },
+                        { id: 'media', title: 'Sinema & Dizi' },
+                        { id: 'tv', title: 'Canlı TV & Spor' },
+                        { id: 'games', title: 'Oyunlar' },
+                        { id: 'tools', title: 'Araçlar & Sistem' },
                       ].map((kat) => {
                         const aktif = seciliKategori === kat.id;
                         return (
@@ -5972,14 +5971,30 @@ export default function App() {
                                     resizeMode="contain"
                                   />
                                 ) : (
-                                  <Text style={[styles.appIkonMetin, { fontSize: cardDim.iconSize }]}>{app.icon}</Text>
+                                  <Image
+                                    source={app.iconAsset || GlossyIcons.apps}
+                                    style={{
+                                      width: cardDim.iconSize * 1.35,
+                                      height: cardDim.iconSize * 1.35,
+                                      marginBottom: 4,
+                                      borderRadius:
+                                        iconShape === 'circle'
+                                          ? (cardDim.iconSize * 1.35) / 2
+                                          : iconShape === 'squircle'
+                                          ? 12
+                                          : iconShape === 'rectangle'
+                                          ? 6
+                                          : 8,
+                                    }}
+                                    resizeMode="contain"
+                                  />
                                 )}
                                 <Text style={[styles.appIsim, { fontSize: cardDim.fontSize }]} numberOfLines={1}>
                                   {app.customName || app.name}
                                 </Text>
-                                {app.isFavorite && <Text style={[styles.favoriYildiz, { fontSize: cardDim.badgeSize }]}>⭐</Text>}
+                                {app.isFavorite && <Image source={GlossyIcons.favorites} style={{ width: cardDim.badgeSize * 1.4, height: cardDim.badgeSize * 1.4, position: 'absolute', top: 4, right: 4 }} resizeMode="contain" />}
                                 {kilitliPaketler.includes(app.packageName) && (
-                                  <Text style={[styles.kilitRozet, { fontSize: cardDim.badgeSize }]}>🔒</Text>
+                                  <Image source={SystemIcons.lock} style={{ width: cardDim.badgeSize * 1.2, height: cardDim.badgeSize * 1.2, position: 'absolute', top: 4, left: 4, tintColor: '#F59E0B' }} resizeMode="contain" />
                                 )}
                               </View>
                             )}
@@ -6063,7 +6078,7 @@ export default function App() {
                             style={[styles.tumunuGorButon, { backgroundColor: '#DC2626', marginRight: 8 }]}
                             focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
                           >
-                            {() => <Text style={[styles.tumunuGorYazi, { color: '#FFF' }]}>🔒 TV İznini Aç</Text>}
+                            {() => <Text style={[styles.tumunuGorYazi, { color: '#FFF' }]}>TV İznini Aç</Text>}
                           </FocusableItem>
                         )}
                         <FocusableItem
@@ -6073,7 +6088,7 @@ export default function App() {
                         >
                           {() => (
                             <Text style={[styles.tumunuGorYazi, { color: '#FFFFFF', fontWeight: '900' }]}>
-                              {tvTestAktif ? '🧹 Testi Sil' : '🧪 Test Et'}
+                              {tvTestAktif ? 'Testi Sil' : 'Test Et'}
                             </Text>
                           )}
                         </FocusableItem>
@@ -6088,7 +6103,7 @@ export default function App() {
                             style={[styles.tumunuGorButon, { backgroundColor: 'rgba(239, 68, 68, 0.25)', borderColor: '#EF4444' }]}
                             focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF', backgroundColor: 'rgba(239, 68, 68, 0.45)' }}
                           >
-                            {() => <Text style={[styles.tumunuGorYazi, { color: '#FFFFFF', fontWeight: '900' }]}>🗑️ Listeyi Sil</Text>}
+                            {() => <Text style={[styles.tumunuGorYazi, { color: '#FFFFFF', fontWeight: '900' }]}>Listeyi Sil</Text>}
                           </FocusableItem>
                         )}
                       </View>
@@ -6105,16 +6120,16 @@ export default function App() {
                             style={[styles.tumunuGorButon, { backgroundColor: '#7C3AED' }]}
                             focusedStyle={{ transform: [{ scale: 1.05 }], borderColor: '#FFFFFF' }}
                           >
-                            {() => <Text style={[styles.tumunuGorYazi, { color: '#FFF', fontWeight: '800' }]}>🔌 Eklentileri Bağla (Trakt / Stremio / TV)</Text>}
+                            {() => <Text style={[styles.tumunuGorYazi, { color: '#FFF', fontWeight: '800' }]}>Eklentileri Bağla (Trakt / Stremio / TV)</Text>}
                           </FocusableItem>
                         </View>
                         {!tvIzniVar ? (
                           <Text style={{ color: '#F87171', fontSize: 11, marginTop: 8, fontWeight: '700' }}>
-                            ⚠️ TV izleme verilerine erişim izni bekleniyor. Yukarıdaki "🔒 TV İznini Aç" butonuna basarak onaylayabilirsiniz.
+                            ⚠️ TV izleme verilerine erişim izni bekleniyor. Yukarıdaki "TV İznini Aç" butonuna basarak onaylayabilirsiniz.
                           </Text>
                         ) : (
                           <Text style={{ color: aktifTema.border, fontSize: 11, marginTop: 8, fontWeight: '700' }}>
-                            💡 Sistemin nasıl çalıştığını görmek için yukarıdaki "🧪 Test Et" butonuna basabilirsiniz.
+                            💡 Sistemin nasıl çalıştığını görmek için yukarıdaki "Test Et" butonuna basabilirsiniz.
                           </Text>
                         )}
                       </View>
@@ -6147,7 +6162,7 @@ export default function App() {
                                       },
                                     },
                                     {
-                                      text: '🗑️ Listeden Kaldır',
+                                      text: 'Listeden Kaldır',
                                       style: 'destructive',
                                       onPress: () => devamEtListesindenSil(item.id, item.systemProgramId),
                                     },
@@ -6313,7 +6328,7 @@ export default function App() {
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Image source={GS_ICON} style={styles.kontrolLogoResim} resizeMode="cover" />
                   <View>
-                    <Text style={styles.kontrolMerkeziBaslik}>⚙️ GS Launcher Ultra TV</Text>
+                    <Text style={styles.kontrolMerkeziBaslik}>GS Launcher Ultra TV</Text>
                     <Text style={styles.cihazBilgiYazi}>
                       {cihazBilgisi.manufacturer} {cihazBilgisi.model} • Android {cihazBilgisi.android} • Mi Box
                     </Text>
@@ -6578,7 +6593,7 @@ export default function App() {
                         {[
                           { id: 'compact', label: '▫️ Kompakt (Yoğun Izgara)' },
                           { id: 'standard', label: '▪️ Standart (Dengeli)' },
-                          { id: 'large', label: '🎬 Büyük (Geniş)' },
+                          { id: 'large', label: 'Geniş Ekran (Geniş)' },
                           { id: 'cinematic', label: '🌟 Sinematik Kartel' },
                         ].map((sz) => {
                           const sec = kartBoyutu === sz.id;
@@ -6690,7 +6705,7 @@ export default function App() {
                       <Text style={styles.ayarGrubuBaslik}>📐 Hazır Tasarım Şablonları (Presets):</Text>
                       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                         {[
-                          { id: 'sinematik', label: '🎬 Sinematik Akış', desc: 'Vitrin + Devam Et + Sinematik Kartlar' },
+                          { id: 'sinematik', label: 'Sinematik Akış', desc: 'Vitrin + Devam Et + Sinematik Kartlar' },
                           { id: 'minimalist', label: '▫️ Minimalist Izgara', desc: 'Sadece Uygulamalar + AMOLED Siyah' },
                           { id: 'klasik', label: '📺 Klasik TV', desc: 'Kategori Barları + Standart Kartlar' },
                           { id: 'gamer', label: '⚡ Cyberpunk Gamer', desc: 'Neon İkonlar + Pulse Animasyon' },
@@ -6756,7 +6771,7 @@ export default function App() {
                           </View>
                           <View style={{ backgroundColor: aktifTema.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
                             <Text style={{ color: aktifTema.textOnAccent, fontSize: 10, fontWeight: '900' }}>
-                              ⭐ IMDb En İyiler
+                              IMDb En İyiler
                             </Text>
                           </View>
                         </View>
@@ -7275,7 +7290,7 @@ export default function App() {
                         >
                           {() => (
                             <Text style={[styles.kategoriSecimPillYazi, vitrinGorunur && { color: aktifTema.textOnAccent, fontWeight: '900' }]}>
-                              🎬 Tavsiye Film Vitrini: {vitrinGorunur ? 'AÇIK' : 'KAPALI'}
+                              Tavsiye Film Vitrini: {vitrinGorunur ? 'AÇIK' : 'KAPALI'}
                             </Text>
                           )}
                         </FocusableItem>
@@ -7520,7 +7535,7 @@ export default function App() {
 
                     {/* Kumanda Renkli Tuş Atama Menüsü */}
                     <View style={styles.ayarGrubuKutusu}>
-                      <Text style={styles.ayarGrubuBaslik}>🎮 TV Kumandası Renkli Tuş Atamaları:</Text>
+                      <Text style={styles.ayarGrubuBaslik}>TV Kumandası Renkli Tuş Atamaları:</Text>
                       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                         <FocusableItem
                           style={[styles.modalKaydetKapatButon, { backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: aktifTema.border }]}
@@ -7682,11 +7697,11 @@ export default function App() {
                               onPress: tvIzlemeTestiYap,
                             },
                             {
-                              text: '🧹 Testi Sil',
+                              text: 'Testi Sil',
                               onPress: tvIzlemeTestiTemizle,
                             },
                             {
-                              text: tvIzniVar ? '⚙️ İzin Ayarları' : '🔓 İzin İste / Aç',
+                              text: tvIzniVar ? 'İzin Ayarları' : 'İzin İste / Aç',
                               onPress: tvIzniniIste,
                             },
                           ]
@@ -7871,7 +7886,7 @@ export default function App() {
                     setTimeout(calisanUygulamalariTazele, 800);
                   }}
                 >
-                  {() => <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>🧹 Tüm Arka Plan Uygulamalarını Kapat & RAM Boşalt</Text>}
+                  {() => <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF' }]}>Tüm Arka Plan Uygulamalarını Kapat & RAM Boşalt</Text>}
                 </FocusableItem>
               </View>
 
@@ -8008,7 +8023,7 @@ export default function App() {
                   >
                     {(isFocused) => (
                       <Text style={[styles.miniButonYazi, isFocused && { color: aktifTema.textOnAccent }]}>
-                        🗑️ Tüm Bildirimleri Temizle
+                        Tüm Bildirimleri Temizle
                       </Text>
                     )}
                   </FocusableItem>
@@ -8032,7 +8047,7 @@ export default function App() {
             <View style={[styles.modalPencere, { borderColor: aktifTema.border, width: 680 }]}>
               <View style={styles.modalBaslikSatir}>
                 <View>
-                  <Text style={styles.modalBaslik}>🎮 Kumanda Renkli Tuş Atama</Text>
+                  <Text style={styles.modalBaslik}>Kumanda Renkli Tuş Atama</Text>
                   <Text style={styles.modalAltBaslik}>
                     {seciliDuzenlenenTus
                       ? `"${seciliDuzenlenenTus.toUpperCase()}" tuşu için başlatılacak uygulamayı seçin:`
@@ -8115,7 +8130,7 @@ export default function App() {
                   >
                     {() => (
                       <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}>
-                        📡 Canlı TV / Dahili Uydu Girişi
+                        Canlı TV / Dahili Uydu Girişi
                       </Text>
                     )}
                   </FocusableItem>
@@ -8347,7 +8362,7 @@ export default function App() {
                     >
                       {() => (
                         <Text style={styles.aksiyonButonYazi}>
-                          {seciliAksiyonUygulama.isFavorite ? '⭐ Favorilerden Kaldır' : '⭐ Favorilere Ekle'}
+                          {seciliAksiyonUygulama.isFavorite ? 'Favorilerden Kaldır' : 'Favorilere Ekle'}
                         </Text>
                       )}
                     </FocusableItem>
@@ -8356,10 +8371,10 @@ export default function App() {
                     <Text style={styles.aksiyonKategoriBaslik}>Kategori Değiştir:</Text>
                     <View style={styles.aksiyonKategoriSatir}>
                       {[
-                        { id: 'media', label: '🎬 Sinema' },
-                        { id: 'tv', label: '📡 TV' },
-                        { id: 'games', label: '🎮 Oyun' },
-                        { id: 'tools', label: '🛠️ Araç' },
+                        { id: 'media', label: 'Sinema' },
+                        { id: 'tv', label: 'Canlı TV' },
+                        { id: 'games', label: 'Oyun' },
+                        { id: 'tools', label: 'Araç' },
                       ].map((k) => (
                         <FocusableItem
                           key={k.id}
@@ -8419,7 +8434,7 @@ export default function App() {
                       focusedStyle={{ borderColor: '#EF4444' }}
                       onPress={() => {
                         Alert.alert(
-                          '🗑️ Uygulamayı Kaldır',
+                          'Uygulamayı Kaldır',
                           `"${seciliAksiyonUygulama.name}" uygulaması cihazınızdan tamamen kaldırılsın mı?`,
                           [
                             { text: 'Vazgeç', style: 'cancel' },
@@ -8440,7 +8455,7 @@ export default function App() {
                         );
                       }}
                     >
-                      {() => <Text style={[styles.aksiyonButonYazi, { color: '#FCA5A5' }]}>🗑️ Uygulamayı Kaldır (Sil)</Text>}
+                      {() => <Text style={[styles.aksiyonButonYazi, { color: '#FCA5A5' }]}>Uygulamayı Kaldır</Text>}
                     </FocusableItem>
 
                     {/* Kapat ve Ana Ekrana Dön */}
@@ -8602,7 +8617,7 @@ export default function App() {
               <View style={{ flexDirection: 'row', marginBottom: 12 }}>
                 {[
                   { id: 'ozel', label: '📌 Özel Sıralama' },
-                  { id: 'favoriler', label: '⭐ Favoriler En Başa' },
+                  { id: 'favoriler', label: 'Favoriler En Başa' },
                   { id: 'alfabetik', label: '🔤 A-Z Alfabetik Sırala' },
                 ].map((s) => (
                   <FocusableItem
@@ -8668,7 +8683,11 @@ export default function App() {
                                   resizeMode="contain"
                                 />
                               ) : (
-                                <Text style={styles.kuruluAppIkon}>{meta.icon}</Text>
+                                <Image
+                                  source={meta.iconAsset || GlossyIcons.apps}
+                                  style={{ width: 36, height: 36, marginBottom: 4, borderRadius: 8 }}
+                                  resizeMode="contain"
+                                />
                               )}
                               <Text style={styles.kuruluAppBaslik} numberOfLines={1}>
                                 {app.name}
@@ -8676,7 +8695,7 @@ export default function App() {
 
                               {/* Görünürlük Durumu */}
                               <Text style={[styles.kuruluAppDurum, !gizli ? styles.metinYesil : { color: '#EF4444' }]}>
-                                {!gizli ? '👁️ Ekranda Gözüküyor' : '🚫 Gizlendi (Kapalı)'}
+                                {!gizli ? 'Ekranda Gözüküyor' : 'Gizlendi (Kapalı)'}
                               </Text>
 
                               {/* Favori Durumu */}
@@ -8685,7 +8704,7 @@ export default function App() {
                                 style={{ marginTop: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: favori ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.05)' }}
                               >
                                 <Text style={{ color: favori ? '#FBBF24' : 'rgba(255, 255, 255, 0.5)', fontSize: 9, fontWeight: '700' }}>
-                                  {favori ? '⭐ Favorilerde' : '☆ Favoriye Ekle'}
+                                  {favori ? 'Favorilerde' : 'Favoriye Ekle'}
                                 </Text>
                               </TouchableOpacity>
                             </>
@@ -8982,7 +9001,7 @@ export default function App() {
                             </FocusableItem>
                           )}
 
-                          {/* 🗑️ Kaldır / ➕ Yükle */}
+                          {/* Kaldır / Yükle */}
                           <FocusableItem
                             style={{
                               backgroundColor: item.gorunur ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
@@ -9003,7 +9022,7 @@ export default function App() {
                           >
                             {() => (
                               <Text style={{ color: item.gorunur ? '#EF4444' : '#10B981', fontSize: 11, fontWeight: '900' }}>
-                                {item.gorunur ? '🗑️ Kaldır' : '➕ Yükle'}
+                                {item.gorunur ? 'Kaldır' : 'Yükle'}
                               </Text>
                             )}
                           </FocusableItem>
@@ -9065,7 +9084,7 @@ export default function App() {
                             >
                               {() => (
                                 <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '900' }}>
-                                  {w.gorunur ? '🗑️ Ekranda Yüklü (Kaldır)' : '➕ Ekrana Yükle'}
+                                  {w.gorunur ? 'Ekranda Yüklü (Kaldır)' : 'Ekrana Yükle'}
                                 </Text>
                               )}
                             </FocusableItem>
@@ -9548,7 +9567,7 @@ export default function App() {
                       >
                         {() => (
                           <Text style={{ color: '#000000', fontSize: 11, fontWeight: '900' }}>
-                            🛠️ TV Geliştirici Seçeneklerini Aç
+                            TV Geliştirici Seçeneklerini Aç
                           </Text>
                         )}
                       </FocusableItem>
@@ -9584,7 +9603,7 @@ export default function App() {
                   {() => (
                     <View style={{ alignItems: 'center' }}>
                       <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
-                        ⚙️ Seçenek 2: TV Erişilebilirlik Menüsünü Aç (Manuel)
+                        Seçenek 2: TV Erişilebilirlik Menüsünü Aç (Manuel)
                       </Text>
                       <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 10, marginTop: 2 }}>
                         (Açılan TV menüsünde "GS Launcher Sabit Başlatıcı"yı AÇIK konuma getirin)
@@ -9749,7 +9768,7 @@ export default function App() {
                             [
                               { text: 'Vazgeç', style: 'cancel' },
                               {
-                                text: '⚙️ Sistem Wi-Fi Menüsünü Aç',
+                                text: 'Sistem Wi-Fi Menüsünü Aç',
                                 onPress: () => {
                                   if (Platform.OS === 'android' && TVAppManager && TVAppManager.openWifiSettings) {
                                     TVAppManager.openWifiSettings().catch(() => {});
@@ -10059,7 +10078,7 @@ export default function App() {
                           ]);
                         }}
                       >
-                        <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '700' }}>🗑️ Tümünü Temizle</Text>
+                        <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '700' }}>Tümünü Temizle</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -10129,7 +10148,7 @@ export default function App() {
                   >
                     {() => (
                       <Text style={[styles.modalKaydetKapatYazi, { color: aktifTema.textOnAccent, fontWeight: '800' }]}>
-                        ▶️ Ekran Koruyucuyu Şimdi Başlat
+                        Ekran Koruyucuyu Şimdi Başlat
                       </Text>
                     )}
                   </FocusableItem>
@@ -10212,7 +10231,7 @@ export default function App() {
                     focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
                     onPress={() => setOynaticiSeciciModalAcik(true)}
                   >
-                    {() => <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>⚙️ Uygulama Ekle / Düzenle</Text>}
+                    {() => <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>Uygulama Ekle / Düzenle</Text>}
                   </FocusableItem>
                 </View>
 
@@ -10260,7 +10279,7 @@ export default function App() {
                                 {app.iconUri ? (
                                   <Image source={{ uri: app.iconUri }} style={{ width: 36, height: 36, borderRadius: 8 }} resizeMode="cover" />
                                 ) : (
-                                  <Text style={{ fontSize: 24 }}>{app.icon || '🎬'}</Text>
+                                  <Image source={app.iconAsset || GlossyIcons.video} style={{ width: 36, height: 36, borderRadius: 8 }} resizeMode="contain" />
                                 )}
                                 <View style={{ flex: 1 }}>
                                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -10279,7 +10298,7 @@ export default function App() {
                                 </View>
                               </View>
                               <Text style={{ color: isFocused ? '#FFFFFF' : aktifTema.border, fontWeight: '900', fontSize: 13 }}>
-                                ▶ Başlat
+                                Başlat
                               </Text>
                             </View>
                           )}
@@ -10314,7 +10333,7 @@ export default function App() {
             <View style={[styles.modalPencereKucuk, { borderColor: aktifTema.border, maxHeight: '90%', width: '70%' }]}>
               <View style={styles.modalBaslikSatir}>
                 <View>
-                  <Text style={styles.modalBaslik}>🎬 Film Oynatıcı Uygulamaları</Text>
+                  <Text style={styles.modalBaslik}>Film Oynatıcı Uygulamaları</Text>
                   <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, marginTop: 2 }}>
                     Film kartlarına bastığınızda açılmasını istediğiniz uygulamaları seçin
                   </Text>
@@ -10510,7 +10529,7 @@ export default function App() {
                       >
                         {() => (
                           <Text style={[styles.modalKaydetKapatYazi, { color: '#FFFFFF', fontWeight: '700' }]}>
-                            🛠️ Mevcut Sürümü (v2.5.0) Yeniden Kur / Onar
+                            Mevcut Sürümü (v2.5.0) Yeniden Kur / Onar
                           </Text>
                         )}
                       </FocusableItem>
@@ -10781,7 +10800,7 @@ export default function App() {
                             }
                           }}
                         >
-                          {() => <Text style={[styles.tumunuGorYazi, { color: '#FFF', fontWeight: '900' }]}>🎬 Stremio'yu Aç</Text>}
+                          {() => <Text style={[styles.tumunuGorYazi, { color: '#FFF', fontWeight: '900' }]}>Stremio'yu Aç</Text>}
                         </FocusableItem>
                       </View>
                     </View>
