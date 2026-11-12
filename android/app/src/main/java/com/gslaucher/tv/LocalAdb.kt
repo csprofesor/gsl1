@@ -60,6 +60,13 @@ class LocalAdb(context: Context) {
             add("settings put secure enabled_accessibility_services $serviceComponent")
             add("settings put secure accessibility_enabled 1")
             add("dumpsys deviceidle whitelist +$pkg")
+            add("cmd appops set $pkg RUN_IN_BACKGROUND allow")
+            add("cmd appops set $pkg RUN_ANY_IN_BACKGROUND allow")
+            add("pm grant $pkg android.permission.ACCESS_FINE_LOCATION")
+            add("pm grant $pkg android.permission.ACCESS_COARSE_LOCATION")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                add("pm grant $pkg android.permission.NEARBY_WIFI_DEVICES")
+            }
         }
 
         if (!isListening()) return@withContext SetupResult.ADB_OFF

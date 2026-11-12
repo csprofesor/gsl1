@@ -1342,99 +1342,136 @@ class TVAppManagerModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun scanWifiNetworks(promise: Promise) {
-        try {
-            val wifiManager = reactContext.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
-            val result = Arguments.createArray()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val wifiManager = reactContext.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+                val result = Arguments.createArray()
 
-            if (wifiManager != null) {
-                try {
-                    wifiManager.startScan()
-                } catch (e: Exception) {}
+                if (wifiManager != null) {
+                    try {
+                        wifiManager.startScan()
+                    } catch (e: Exception) {}
 
-                val connectionInfo = try { wifiManager.connectionInfo } catch (e: Exception) { null }
-                val rawConnectedSsid = connectionInfo?.ssid?.replace("\"", "")?.trim() ?: ""
-                val connectedSsid = if (rawConnectedSsid == "<unknown ssid>") "" else rawConnectedSsid
-                val connectedRssi = connectionInfo?.rssi ?: -55
+                    // Wi-Fi donanımının kanalları tarayıp sonuçları güncellemesi için bekle
+                    kotlinx.coroutines.delay(1200L)
 
-                // SSID -> WifiNetworkItem
-                val networks = mutableMapOf<String, WifiNetworkItem>()
+                    val connectionInfo = try { wifiManager.connectionInfo } catch (e: Exception) { null }
+                    val rawConnectedSsid = connectionInfo?.ssid?.replace("\"", "")?.trim() ?: ""
+                    val connectedSsid = if (rawConnectedSsid == "<unknown ssid>") "" else rawConnectedSsid
+                    val connectedRssi = connectionInfo?.rssi ?: -55
 
-                // 1. Aktif bağlı ağı her zaman ilk sıraya koy (asla boş dönmesin)
-                if (connectedSsid.isNotEmpty()) {
-                    networks[connectedSsid] = WifiNetworkItem(
-                        ssid = connectedSsid,
-                        level = connectedRssi,
-                        frequency = 5000,
-                        capabilities = "[WPA2-PSK-CCMP][ESS]",
-                        isConnected = true,
-                        isSecure = true
+                    // SSID -> WifiNetworkItem
+                    val networks = mutableMapOf<String, WifiNetworkItem>()
+
+                    // 1. Aktif bağlı ağı her zaman ilk sıraya koy
+                    if (connectedSsid.isNotEmpty()) {
+                        networks[connectedSsid] = WifiNetworkItem(
+                            ssid = connectedSsid,
+                            level = connectedRssi,
+                            frequency = 5000,
+                            capabilities = "[WPA2-PSK-CCMP][ESS]",
+                            isConnected = true,
+                            isSecure = true
+                        )
+                    }
+
+                    // 2. Gerçek tarama sonuçlarını ekle/güncelle
+                    try {
+                        val scanResults = wifiManager.scanResults
+                        if (scanResults != null) {
+                            for (scan in scanResults) {
+                                val s = scan.SSID?.trim() ?: ""
+                                if (s.isEmpty()) continue
+                                val isConn = (s == connectedSsid && connectedSsid.isNotEmpty())
+                                val isSecure = scan.capabilities?.contains("WPA") == true || scan.capabilities?.contains("WEP") == true
+                                val existing = networks[s]
+                                if (existing == null || scan.level > existing.level) {
+                                    networks[s] = WifiNetworkItem(
+                                        ssid = s,
+                                        level = scan.level,
+                                        frequency = scan.frequency,
+                                        capabilities = scan.capabilities ?: "",
+                                        isConnected = isConn,
+                                        isSecure = isSecure
+                                    )
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {}
+
+                    // 3. Eğer scanResults boş geldiyse (Android TV konum kısıtlaması nedeniyle),
+                    // sistemin doğrudan 'cmd wifi list-scan-results' çıktısını ayrıştırıp listeye ekle
+                    if (networks.size <= 1) {
+                        try {
+                            val process = Runtime.getRuntime().exec("cmd wifi list-scan-results")
+                            val reader = java.io.BufferedReader(java.io.InputStreamReader(process.inputStream))
+                            var line: String?
+                            while (reader.readLine().also { line = it } != null) {
+                                val l = line?.trim() ?: continue
+                                val parts = l.split("\\s+".toRegex())
+                                if (parts.size >= 5 && parts[0].contains(":")) {
+                                    val freq = parts[1].toIntOrNull() ?: 2400
+                                    val level = parts[2].toIntOrNull() ?: -70
+                                    val flags = parts[3]
+                                    val ssid = parts.drop(4).joinToString(" ").trim()
+                                    if (ssid.isNotEmpty() && !networks.containsKey(ssid)) {
+                                        val isConn = (ssid == connectedSsid && connectedSsid.isNotEmpty())
+                                        val isSec = flags.contains("WPA") || flags.contains("WEP")
+                                        networks[ssid] = WifiNetworkItem(
+                                            ssid = ssid,
+                                            level = level,
+                                            frequency = freq,
+                                            capabilities = flags,
+                                            isConnected = isConn,
+                                            isSecure = isSec
+                                        )
+                                    }
+                                }
+                            }
+                            reader.close()
+                        } catch (_: Throwable) {}
+                    }
+
+                    // 4. Android TV'de kayıtlı / bilinen ağları ekle
+                    try {
+                        val configured = wifiManager.configuredNetworks
+                        if (configured != null) {
+                            for (cfg in configured) {
+                                val s = cfg.SSID?.replace("\"", "")?.trim() ?: ""
+                                if (s.isNotEmpty() && !networks.containsKey(s)) {
+                                    networks[s] = WifiNetworkItem(
+                                        ssid = s,
+                                        level = -65,
+                                        frequency = 2400,
+                                        capabilities = "[WPA2-PSK-CCMP][ESS]",
+                                        isConnected = s == connectedSsid,
+                                        isSecure = true
+                                    )
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {}
+
+                    val sorted = networks.values.sortedWith(
+                        compareByDescending<WifiNetworkItem> { it.isConnected }
+                            .thenByDescending { it.level }
                     )
-                }
 
-                // 2. Android TV'de kayıtlı / bilinen ağları ekle
-                try {
-                    val configured = wifiManager.configuredNetworks
-                    if (configured != null) {
-                        for (cfg in configured) {
-                            val s = cfg.SSID?.replace("\"", "")?.trim() ?: ""
-                            if (s.isNotEmpty() && !networks.containsKey(s)) {
-                                networks[s] = WifiNetworkItem(
-                                    ssid = s,
-                                    level = -65,
-                                    frequency = 2400,
-                                    capabilities = "[WPA2-PSK-CCMP][ESS]",
-                                    isConnected = s == connectedSsid,
-                                    isSecure = true
-                                )
-                            }
-                        }
+                    for (w in sorted) {
+                        val item = Arguments.createMap()
+                        item.putString("ssid", w.ssid)
+                        item.putInt("level", w.level)
+                        item.putInt("frequency", w.frequency)
+                        item.putString("capabilities", w.capabilities)
+                        item.putBoolean("isConnected", w.isConnected)
+                        item.putBoolean("isSecure", w.isSecure)
+                        result.pushMap(item)
                     }
-                } catch (e: Exception) {}
-
-                // 3. Gerçek tarama sonuçlarını ekle/güncelle
-                try {
-                    val scanResults = wifiManager.scanResults
-                    if (scanResults != null) {
-                        for (scan in scanResults) {
-                            val s = scan.SSID?.trim() ?: ""
-                            if (s.isEmpty()) continue
-                            val isConn = (s == connectedSsid && connectedSsid.isNotEmpty())
-                            val isSecure = scan.capabilities?.contains("WPA") == true || scan.capabilities?.contains("WEP") == true
-                            val existing = networks[s]
-                            if (existing == null || scan.level > existing.level) {
-                                networks[s] = WifiNetworkItem(
-                                    ssid = s,
-                                    level = scan.level,
-                                    frequency = scan.frequency,
-                                    capabilities = scan.capabilities ?: "",
-                                    isConnected = isConn,
-                                    isSecure = isSecure
-                                )
-                            }
-                        }
-                    }
-                } catch (e: Exception) {}
-
-                // Sıralama: Önce bağlı olan, sonra sinyal gücüne göre
-                val sorted = networks.values.sortedWith(
-                    compareByDescending<WifiNetworkItem> { it.isConnected }
-                        .thenByDescending { it.level }
-                )
-
-                for (w in sorted) {
-                    val item = Arguments.createMap()
-                    item.putString("ssid", w.ssid)
-                    item.putInt("level", w.level)
-                    item.putInt("frequency", w.frequency)
-                    item.putString("capabilities", w.capabilities)
-                    item.putBoolean("isConnected", w.isConnected)
-                    item.putBoolean("isSecure", w.isSecure)
-                    result.pushMap(item)
                 }
+                promise.resolve(result)
+            } catch (e: Exception) {
+                promise.resolve(Arguments.createArray())
             }
-            promise.resolve(result)
-        } catch (e: Exception) {
-            promise.resolve(Arguments.createArray())
         }
     }
 

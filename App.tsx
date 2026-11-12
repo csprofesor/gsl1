@@ -19,6 +19,7 @@ import {
   Image,
   DeviceEventEmitter,
   AppState,
+  PermissionsAndroid,
 } from 'react-native';
 
 const { TVAppManager } = NativeModules;
@@ -3598,17 +3599,30 @@ export default function App() {
   // Yakındaki Wi-Fi Ağlarını Uygulama İçinde Tara
   const wifiAglariniTara = useCallback(async () => {
     setWifiTaraniyor(true);
-    if (Platform.OS === 'android' && TVAppManager && TVAppManager.scanWifiNetworks) {
+    if (Platform.OS === 'android') {
       try {
-        const list = await TVAppManager.scanWifiNetworks();
-        if (Array.isArray(list)) {
-          setWifiAgListesi(list);
+        if (PermissionsAndroid && PermissionsAndroid.PERMISSIONS && PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION) {
+          await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION).catch(() => {});
         }
       } catch {}
+      if (TVAppManager && TVAppManager.scanWifiNetworks) {
+        try {
+          const list = await TVAppManager.scanWifiNetworks();
+          if (Array.isArray(list)) {
+            setWifiAgListesi(list);
+          }
+        } catch {}
+      }
     }
     setWifiTaraniyor(false);
     wifiBilgisiGuncelle();
   }, [wifiBilgisiGuncelle]);
+
+  useEffect(() => {
+    if (wifiModalAcik) {
+      wifiAglariniTara();
+    }
+  }, [wifiModalAcik, wifiAglariniTara]);
 
   useEffect(() => {
     wifiBilgisiGuncelle();
