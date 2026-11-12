@@ -22,10 +22,11 @@ const TILE_COLORS: Record<number, { bg: string; text: string }> = {
 
 interface Game2048Props {
   onScoreUpdate?: (score: number) => void;
+  onGameOver?: (finalScore: number) => void;
   remoteEvent?: { eventType: string; key?: string } | null;
 }
 
-export const Game2048: React.FC<Game2048Props> = ({ onScoreUpdate, remoteEvent }) => {
+export const Game2048: React.FC<Game2048Props> = ({ onScoreUpdate, onGameOver, remoteEvent }) => {
   const [board, setBoard] = useState<number[][]>([
     [0, 0, 0, 0],
     [0, 0, 0, 0],
@@ -145,6 +146,7 @@ export const Game2048: React.FC<Game2048Props> = ({ onScoreUpdate, remoteEvent }
         // 2048 ulaşıldı mı?
         if (withTile.some((r) => r.some((v) => v === 2048))) {
           setWon(true);
+          onGameOver?.(nextScore + 2048);
         }
 
         // Oyun bitti mi kontrolü
@@ -158,6 +160,7 @@ export const Game2048: React.FC<Game2048Props> = ({ onScoreUpdate, remoteEvent }
         }
         if (!hasMoves) {
           setGameOver(true);
+          onGameOver?.(nextScore);
         }
       }
     },

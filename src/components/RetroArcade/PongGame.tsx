@@ -10,10 +10,11 @@ const WINNING_SCORE = 7;
 
 interface PongGameProps {
   onScoreUpdate?: (score: number) => void;
+  onGameOver?: (finalScore: number) => void;
   remoteEvent?: { eventType: string; key?: string } | null;
 }
 
-export const PongGame: React.FC<PongGameProps> = ({ onScoreUpdate, remoteEvent }) => {
+export const PongGame: React.FC<PongGameProps> = ({ onScoreUpdate, onGameOver, remoteEvent }) => {
   const [playerY, setPlayerY] = useState((COURT_H - PADDLE_H) / 2);
   const [aiY, setAiY] = useState((COURT_H - PADDLE_H) / 2);
   const [ball, setBall] = useState({ x: COURT_W / 2, y: COURT_H / 2 });
@@ -146,6 +147,7 @@ export const PongGame: React.FC<PongGameProps> = ({ onScoreUpdate, remoteEvent }
         if (nextAiScore >= WINNING_SCORE) {
           setWinner('AI');
           setIsPlaying(false);
+          onGameOver?.(playerScore * 100);
         } else {
           resetBall(false);
         }
@@ -158,6 +160,7 @@ export const PongGame: React.FC<PongGameProps> = ({ onScoreUpdate, remoteEvent }
         if (nextPlayerScore >= WINNING_SCORE) {
           setWinner('PLAYER');
           setIsPlaying(false);
+          onGameOver?.(nextPlayerScore * 100 + 500); // Kazanma bonusu
         } else {
           resetBall(true);
         }

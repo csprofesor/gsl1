@@ -13,10 +13,11 @@ type Alien = { id: number; x: number; y: number; alive: boolean; row: number };
 
 interface SpaceGameProps {
   onScoreUpdate?: (score: number) => void;
+  onGameOver?: (finalScore: number) => void;
   remoteEvent?: { eventType: string; key?: string } | null;
 }
 
-export const SpaceGame: React.FC<SpaceGameProps> = ({ onScoreUpdate, remoteEvent }) => {
+export const SpaceGame: React.FC<SpaceGameProps> = ({ onScoreUpdate, onGameOver, remoteEvent }) => {
   const [shipX, setShipX] = useState((GAME_W - SHIP_W) / 2);
   const [bullets, setBullets] = useState<Bullet[]>([]);
   const [aliens, setAliens] = useState<Alien[]>([]);
@@ -217,6 +218,7 @@ export const SpaceGame: React.FC<SpaceGameProps> = ({ onScoreUpdate, remoteEvent
           if (reachedBottom) {
             setGameOver(true);
             setIsPlaying(false);
+            onGameOver?.(score);
           }
 
           return moved;

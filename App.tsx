@@ -37,8 +37,8 @@ import { TopbarIcons, SystemIcons, GlossyIcons } from './src/assets/icons';
 import { RetroArcadeModal, RETRO_GAMES_LIST, RetroGameId } from './src/components/RetroArcade';
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.31';
-const CURRENT_BUILD = 57;
+const CURRENT_VERSION = '3.2.32';
+const CURRENT_BUILD = 58;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/gstv18';

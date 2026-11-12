@@ -1,7 +1,7 @@
 {
-  "version": "3.2.31",
-  "versionCode": 57,
-  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.31/app-release.apk",
-  "shortUrl": "https://tinyurl.com/2xtbdmc4",
-  "changelog": "v3.2.31 (Build 57): GS Retro TV Arcade (Kumanda ile Oynanabilen Oyunlar): 1) TV kumandasıyla (Yukarı, Aşağı, Sol, Sağ ve OK tuşları) doğrudan oynanabilen 5 efsanevi retro oyun entegre edildi: Retro Snake 97, Retro Pong TV (Yapay Zeka Rakip), Space Defender (Galaksi Savunması), Brick Breaker TV (Tuğla Kırıcı) ve Retro 2048 Arcade. 2) Ana ekrandaki Retro Oyunlar widget'ı ve Kategori sekmesindeki 'Oyunlar' bölümü canlı arcade salonuna dönüştürüldü. 3) TV kumandası tuş dinleyicisi useTVEventHandler ve donanımsal Geri tuşu ile tam uyum sağlandı."
+  "version": "3.2.32",
+  "versionCode": 58,
+  "apkUrl": "https://github.com/csprofesor/gsl1/releases/download/v3.2.32/app-release.apk",
+  "shortUrl": "https://tinyurl.com/2bktt42s",
+  "changelog": "v3.2.32 (Build 58): GS Retro TV Arcade Canlı Yarışma & Global Liderlik Tablosu: 1) Retro oyunları oynayan tüm kullanıcılar arasında canlı Top 10 sıralaması ve skor yarışı entegre edildi. 2) TV kumandasıyla kolayca oyuncu takma adı seçme / değiştirme profili eklendi. 3) Oyun sonlarında skorlar otomatik olarak buluta gönderilir ve anlık Türkiye/Global sıralama derecesi gösterilir. 4) Her retro oyun (Snake 97, Pong TV, Space Defender, Brick Breaker, Retro 2048) için ayrı canlı şampiyonluk tablosu sağlandı."
 }

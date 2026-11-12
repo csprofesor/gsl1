@@ -12,10 +12,11 @@ type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 
 interface SnakeGameProps {
   onScoreUpdate?: (score: number) => void;
+  onGameOver?: (finalScore: number) => void;
   remoteEvent?: { eventType: string; key?: string } | null;
 }
 
-export const SnakeGame: React.FC<SnakeGameProps> = ({ onScoreUpdate, remoteEvent }) => {
+export const SnakeGame: React.FC<SnakeGameProps> = ({ onScoreUpdate, onGameOver, remoteEvent }) => {
   const [snake, setSnake] = useState<Point[]>([
     { x: 8, y: 8 },
     { x: 7, y: 8 },
@@ -120,6 +121,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onScoreUpdate, remoteEvent
         ) {
           setGameOver(true);
           setIsPlaying(false);
+          onGameOver?.(score);
           return prevSnake;
         }
 
@@ -127,6 +129,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = ({ onScoreUpdate, remoteEvent
         if (prevSnake.some((seg) => seg.x === newHead.x && seg.y === newHead.y)) {
           setGameOver(true);
           setIsPlaying(false);
+          onGameOver?.(score);
           return prevSnake;
         }
 

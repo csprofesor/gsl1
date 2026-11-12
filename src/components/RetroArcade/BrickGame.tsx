@@ -18,10 +18,11 @@ type Brick = { id: number; x: number; y: number; alive: boolean; color: string; 
 
 interface BrickGameProps {
   onScoreUpdate?: (score: number) => void;
+  onGameOver?: (finalScore: number) => void;
   remoteEvent?: { eventType: string; key?: string } | null;
 }
 
-export const BrickGame: React.FC<BrickGameProps> = ({ onScoreUpdate, remoteEvent }) => {
+export const BrickGame: React.FC<BrickGameProps> = ({ onScoreUpdate, onGameOver, remoteEvent }) => {
   const [paddleX, setPaddleX] = useState((GAME_W - PADDLE_W) / 2);
   const [ball, setBall] = useState({ x: GAME_W / 2, y: GAME_H - 50 });
   const [bricks, setBricks] = useState<Brick[]>([]);
@@ -199,6 +200,7 @@ export const BrickGame: React.FC<BrickGameProps> = ({ onScoreUpdate, remoteEvent
         if (updated.length > 0 && updated.every((b) => !b.alive)) {
           setGameWon(true);
           setIsPlaying(false);
+          onGameOver?.(score + 1000); // Temizleme bonusu
         }
 
         return updated;
@@ -211,6 +213,7 @@ export const BrickGame: React.FC<BrickGameProps> = ({ onScoreUpdate, remoteEvent
           if (nextL <= 0) {
             setGameOver(true);
             setIsPlaying(false);
+            onGameOver?.(score);
           } else {
             resetBallOnPaddle();
           }
