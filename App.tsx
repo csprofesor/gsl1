@@ -34,10 +34,11 @@ export const sonEtkilesimiGuncelle = () => {
 const GS_ICON = require('./src/assets/gs_icon.png');
 const BG_WALLPAPER = require('./src/assets/tv_wallpaper.jpg');
 import { TopbarIcons, SystemIcons, GlossyIcons } from './src/assets/icons';
+import { RetroArcadeModal, RETRO_GAMES_LIST, RetroGameId } from './src/components/RetroArcade';
 
 // Sürüm Bilgisi ve Dinamik Güncelleme Kaynağı
-const CURRENT_VERSION = '3.2.30';
-const CURRENT_BUILD = 56;
+const CURRENT_VERSION = '3.2.31';
+const CURRENT_BUILD = 57;
 const GITHUB_REPO_API = 'https://api.github.com/repos/csprofesor/gsl1/releases/latest';
 const VERSION_MANIFEST_URL = 'https://raw.githubusercontent.com/csprofesor/gsl1/main/version.json';
 const LATEST_RELEASE_APK = 'https://tinyurl.com/gstv18';
@@ -80,7 +81,7 @@ export const VARSAYILAN_ANA_EKRAN_DUZENI: AnaEkranBolumItem[] = [
   { id: 'widget_trakt', baslik: 'Trakt & İzleme Senkronu', ikon: '🍿', gorunur: false, sekil: 'genis', aciklama: 'Trakt.tv bağlantı durumu ve son izleme geçmişi' },
   { id: 'widget_foto', baslik: 'Aile Fotoğrafı Canlı Çerçeve', ikon: '🖼️', gorunur: false, sekil: 'kare', aciklama: 'Telefondan yüklenen fotoğraflarla mini canlı albüm' },
   { id: 'widget_tv', baslik: 'Canlı TV Kanalları', ikon: '📡', gorunur: false, sekil: 'standart', aciklama: 'Sistem TV uygulamalarından çekilen canlı kanallar' },
-  { id: 'widget_oyunlar', baslik: 'Retro Oyunlar & Emülatörler', ikon: '🎮', gorunur: false, sekil: 'standart', aciklama: 'Kurulu oyunlar ve arcade emülatör başlatıcı rafı' },
+  { id: 'widget_oyunlar', baslik: 'Retro Oyunlar (Kumanda Destekli)', ikon: '🎮', gorunur: true, sekil: 'standart', aciklama: 'TV kumandasıyla doğrudan oynanabilen nostaljik arcade oyunları' },
 ];
 
 export const GUNCEL_HABERLER = [
@@ -1466,6 +1467,11 @@ export default function App() {
   const [aktifDuzenSekme, setAktifDuzenSekme] = useState<'sirala' | 'ekle' | 'sekil'>('sirala');
   const [fotoWidgetIndex, setFotoWidgetIndex] = useState(0);
 
+  // Retro TV Arcade Oyun Sistemi (Kumanda Destekli)
+  const [retroArcadeAcik, setRetroArcadeAcik] = useState(false);
+  const [seciliRetroOyun, setSeciliRetroOyun] = useState<RetroGameId>('snake');
+  const [arcadeRemoteEvent, setArcadeRemoteEvent] = useState<{ eventType: string; key?: string } | null>(null);
+
   // Renk Kartelası Açılır Kapanır Akordeon
   const [renkPaletiAcik, setRenkPaletiAcik] = useState(false);
 
@@ -1840,6 +1846,10 @@ export default function App() {
 
   useTVEventHandler((evt) => {
     sonEtkilesimiGuncelle();
+    if (retroArcadeAcik) {
+      setArcadeRemoteEvent({ eventType: evt.eventType, key: (evt as any).key });
+      return;
+    }
     if (ekranKoruyucuAcikRef.current) {
       setEkranKoruyucuAcik(false);
     }
@@ -5779,43 +5789,67 @@ export default function App() {
                 return (
                   <View key={bolum.id} style={{ marginHorizontal: 26, marginVertical: 8 }}>
                     <View style={[styles.widgetKapsayiciGenis, { borderColor: '#8B5CF6', backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Text style={{ fontSize: 18 }}>🎮</Text>
-                          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>Retro Oyunlar & Emülatörler</Text>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Image source={GlossyIcons.apps} style={{ width: 22, height: 22 }} resizeMode="contain" />
+                          <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '900' }}>GS Retro TV Arcade</Text>
+                          <View style={{ backgroundColor: '#8B5CF6', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                            <Text style={{ color: '#FFF', fontSize: 9, fontWeight: '900' }}>KUMANDA DESTEKLİ</Text>
+                          </View>
                         </View>
-                        <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>TV Arcade Modu</Text>
+                        <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>
+                          Yön Tuşları & [OK] ile Anında Oyna
+                        </Text>
                       </View>
-                      <View style={{ flexDirection: 'row', gap: 10 }}>
-                        {[
-                          { ad: 'RetroArch', ikon: '🕹️', paket: 'com.retroarch' },
-                          { ad: 'PPSSPP', ikon: '🎮', paket: 'org.ppsspp.ppsspp' },
-                          { ad: 'Mupen64', ikon: '👾', paket: 'org.mupen64plusae.v3.alpha' },
-                          { ad: 'Dolphin', ikon: '🐬', paket: 'org.dolphinemu.dolphinemu' },
-                        ].map((g) => (
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -4 }}>
+                        {RETRO_GAMES_LIST.map((game) => (
                           <FocusableItem
-                            key={g.ad}
+                            key={game.id}
                             style={{
-                              flex: 1,
+                              width: 148,
                               backgroundColor: 'rgba(255,255,255,0.06)',
-                              borderRadius: 10,
-                              paddingVertical: 10,
+                              borderRadius: 12,
+                              padding: 12,
+                              marginHorizontal: 5,
                               alignItems: 'center',
-                              borderWidth: 1,
-                              borderColor: 'rgba(255,255,255,0.1)',
+                              borderWidth: 1.2,
+                              borderColor: 'rgba(255,255,255,0.14)',
                             }}
-                            focusedStyle={{ backgroundColor: aktifTema.accent, borderColor: '#FFFFFF', transform: [{ scale: 1.05 }] }}
-                            onPress={() => uygulamaBaslat(g.paket)}
+                            focusedStyle={{
+                              backgroundColor: game.accent,
+                              borderColor: '#FFFFFF',
+                              transform: [{ scale: 1.06 }],
+                            }}
+                            onPress={() => {
+                              setSeciliRetroOyun(game.id);
+                              setRetroArcadeAcik(true);
+                            }}
                           >
-                            {() => (
+                            {(isFocused) => (
                               <>
-                                <Text style={{ fontSize: 24, marginBottom: 4 }}>{g.ikon}</Text>
-                                <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800' }}>{g.ad}</Text>
+                                <View style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center', marginBottom: 8, borderWidth: 1, borderColor: isFocused ? '#FFFFFF' : game.accent }}>
+                                  <Image
+                                    source={game.id === 'snake' ? GlossyIcons.media : game.id === 'pong' ? GlossyIcons.video : game.id === 'space' ? GlossyIcons.screen_mirror : game.id === 'brick' ? GlossyIcons.cleanup : GlossyIcons.apps}
+                                    style={{ width: 26, height: 26, tintColor: isFocused ? '#FFFFFF' : game.accent }}
+                                    resizeMode="contain"
+                                  />
+                                </View>
+                                <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '800', textAlign: 'center' }} numberOfLines={1}>
+                                  {game.title}
+                                </Text>
+                                <Text style={{ color: isFocused ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)', fontSize: 9, marginTop: 2, textAlign: 'center' }} numberOfLines={1}>
+                                  {game.subtitle}
+                                </Text>
+                                <View style={{ marginTop: 6, backgroundColor: isFocused ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                                  <Text style={{ color: isFocused ? '#FFFFFF' : game.accent, fontSize: 8, fontWeight: '800' }}>
+                                    {isFocused ? 'OYNA [OK]' : game.badge}
+                                  </Text>
+                                </View>
                               </>
                             )}
                           </FocusableItem>
                         ))}
-                      </View>
+                      </ScrollView>
                     </View>
                   </View>
                 );
@@ -5884,6 +5918,49 @@ export default function App() {
                     </View>
 
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yatayListe}>
+                      {seciliKategori === 'games' &&
+                        RETRO_GAMES_LIST.map((game) => (
+                          <FocusableItem
+                            key={`retro-${game.id}`}
+                            style={[
+                              styles.appKarti,
+                              {
+                                backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                                borderColor: game.accent,
+                                borderRadius: 16,
+                                width: cardDim.width,
+                                height: cardDim.height,
+                                padding: cardDim.padding,
+                              },
+                            ]}
+                            focusedStyle={[styles.appKartiOdak, { borderColor: '#FFFFFF', backgroundColor: game.accent, transform: [{ scale: 1.08 }] }]}
+                            onPress={() => {
+                              setSeciliRetroOyun(game.id);
+                              setRetroArcadeAcik(true);
+                            }}
+                          >
+                            {(isFocused) => (
+                              <View style={[styles.appKartIcerik, { justifyContent: 'center', alignItems: 'center' }]}>
+                                <Image
+                                  source={game.id === 'snake' ? GlossyIcons.media : game.id === 'pong' ? GlossyIcons.video : game.id === 'space' ? GlossyIcons.screen_mirror : game.id === 'brick' ? GlossyIcons.cleanup : GlossyIcons.apps}
+                                  style={{
+                                    width: cardDim.iconSize * 1.35,
+                                    height: cardDim.iconSize * 1.35,
+                                    marginBottom: 4,
+                                    tintColor: isFocused ? '#FFFFFF' : game.accent,
+                                  }}
+                                  resizeMode="contain"
+                                />
+                                <Text style={[styles.appIsim, { fontSize: cardDim.fontSize }]} numberOfLines={1}>
+                                  {game.title}
+                                </Text>
+                                <View style={{ position: 'absolute', top: 2, right: 2, backgroundColor: game.accent, paddingHorizontal: 4, paddingVertical: 1, borderRadius: 3 }}>
+                                  <Text style={{ color: '#FFF', fontSize: 8, fontWeight: '900' }}>ARCADE</Text>
+                                </View>
+                              </View>
+                            )}
+                          </FocusableItem>
+                        ))}
                       {goruntulenenUygulamalar.map((app) => {
                         const borderRad =
                           iconShape === 'circle'
@@ -11119,6 +11196,15 @@ export default function App() {
             </View>
           </View>
         </Modal>
+
+        {/* Retro TV Arcade Modalı (Kumanda ile Oynanabilen Oyunlar) */}
+        <RetroArcadeModal
+          visible={retroArcadeAcik}
+          initialGameId={seciliRetroOyun}
+          onClose={() => setRetroArcadeAcik(false)}
+          remoteEvent={arcadeRemoteEvent}
+          FocusableItemComponent={FocusableItem}
+        />
 
         {/* KUMANDA KISAYOLLARI VE HIZLI YARDIM BİLGİ BANDI */}
         <View style={styles.kumandaKilavuzBant}>
